@@ -1,0 +1,24 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"command": "./build.sh",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"label": "build"
+		},
+		{
+			"label": "Run",
+			"type": "shell",
+			"command": "/Applications/Mesen-2.app/Contents/MacOS/Mesen demo.smc",
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"problemMatcher": []
+		},
+	]
+}

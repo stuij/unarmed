@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "configurations": [
+      {
+        "name": "run fceux",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "/Applications/Mesen-2.app/Contents/MacOS/Mesen demo.smc",
+        "presentation": {
+          "reveal": "always",
+        }
+      }
+    ]
+  }
