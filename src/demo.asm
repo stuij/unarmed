@@ -5,8 +5,9 @@
 .a8     ; A is 8 bits
 
 .define ROM_NAME "demo"
-.include "header.inc"
+.include "meta-data.inc"
 .include "macros.inc"
+.include "io.inc"
 
 .segment "VECTORS"
     .word 0, 0, 0, 0, 0, 0, 0, 0
@@ -19,20 +20,20 @@ reset:
 
     ; Clear PPU registers
     ldx #$33
-@loop:  stz $2100,x
-    stz $4200,x
+@loop:  stz INIDISP,x
+    stz NMITIMEN,x
     dex
     bpl @loop
 
     ; Set background color to $03E0
     lda #$E0
-    sta $2122
+    sta CGDATA
     lda #$03
-    sta $2122
+    sta CGDATA
 
     ; Maximum screen brightness
     lda #$0F
-    sta $2100
+    sta INIDISP
 
 forever:
     jmp forever
