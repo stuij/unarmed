@@ -1,3 +1,5 @@
+*.asm
+*.dbg
 *.o
 *.smc
 .DS_Store
