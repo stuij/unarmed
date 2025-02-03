@@ -1,10 +1,3 @@
-.macro init_cpu
-    clc
-    xce
-    rep #$10        ; X/Y 16-bit
-    sep #$20        ; A 8-bit
-.endmacro
-
 .macro setA8
 	sep #$20
 .endmacro
