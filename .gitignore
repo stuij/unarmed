@@ -3,3 +3,4 @@
 *.o
 *.smc
 .DS_Store
+build

@@ -109,13 +109,13 @@ forever:
 .segment "RODATA"
 
 town_tiles:
-.incbin"assets/town-256.tiles"
+.incbin"assets/town.tiles"
 town_tiles_end:
 
 town_palette:
-.incbin"assets/town-256.palette"
+.incbin"assets/town.palette"
 town_palette_end:
 
 town_map:
-.incbin"assets/town-256.map"
+.incbin"assets/town.map"
 town_map_end:

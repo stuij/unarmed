@@ -5,7 +5,7 @@
         "name": "run fceux",
         "type": "node-terminal",
         "request": "launch",
-        "command": "/Applications/Mesen-2.app/Contents/MacOS/Mesen demo.smc",
+        "command": "/Applications/Mesen-2.app/Contents/MacOS/Mesen build/demo.smc",
         "presentation": {
           "reveal": "always",
         }
