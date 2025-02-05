@@ -1386,6 +1386,11 @@ JOY3H = $421D
 JOY4L = $421E
 JOY4H = $421F
 
+JOY_UP    = $0800
+JOY_DOWN  = $0400
+JOY_LEFT  = $0200
+JOY_RIGHT = $0100
+
 ; Math
 ; ----
 
