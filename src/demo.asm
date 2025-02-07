@@ -85,8 +85,8 @@ main:
     ;; set up bg registers
     lda #1 ; mode 1
     sta BGMODE
-    lda #(VRAM_MAP_BASE >> 10) ; still 0
-    sta BG1SC ; set bg 2 tile map
+    lda #((VRAM_MAP_BASE >> 10) << 2)
+    sta BG2SC ; set bg 2 tile map
     ; set bg 2 char vram base addr (implicitly setting bg1 to 0, but we don't
     ; care)
     lda #((VRAM_CHR_BASE >> 12) << 4)
