@@ -62,9 +62,9 @@ reset_handler:
 
     jmp main
 
-
-VRAM_MAP_BASE = $0000
-VRAM_CHR_BASE = $1000
+VRAM_SPRITE_BASE = $2000
+VRAM_CHR_BASE = $6000
+VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
 
 .a8
 .i16
@@ -135,8 +135,61 @@ main:
      cpx #(town_tiles_end - town_tiles)
      bne @char_loop
 
+    ;; sprites
+    ; set sprite base
+    lda #(VRAM_SPRITE_BASE >> 13)
+    sta OBJSEL
+
+    ; load sprites
+    lda #$80
+    sta CGADD ; set to begin of palette mem
+    ldx #(demo_sprite_palette_end - demo_sprite_palette) ; # of palette entries
+    ldy #0
+@sprite_palette_loop:
+    lda demo_sprite_palette, y
+    sta CGDATA
+    iny
+    dex
+    bne @sprite_palette_loop
+
+    lda #$80
+    sta VMAIN
+
+    ; load map
+    ldx #VRAM_MAP_BASE
+    stx VMADDL
+    ldx #0
+
+
+
+    ldx #VRAM_SPRITE_BASE
+    stx VMADDL
+    ldx #0
+@sprite_char_loop:
+     lda demo_sprite_tiles,x
+     sta VMDATAL
+     inx
+     lda demo_sprite_tiles,x
+     sta VMDATAH
+     inx
+     cpx #(demo_sprite_tiles_end - demo_sprite_tiles)
+     bne @sprite_char_loop
+
+    ; set up sprite OAM data
+    stz OAMADDL             ; set the OAM address to ...
+    stz OAMADDH             ; ...at $0000
+    ; OAM data for first sprite
+    lda # (256/2 - 8)       ; horizontal position of first sprite
+    sta OAMDATA
+    lda #200                ; vertical position of first sprite
+    sta OAMDATA
+    lda #$00                ; name of first sprite
+    sta OAMDATA
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAMDATA
+
     ; turn on BG2
-    lda #2
+    lda #$12
     sta TM
 
     ; Maximum screen brightness
@@ -250,3 +303,12 @@ town_palette_end:
 town_map:
 .incbin"assets/town.map"
 town_map_end:
+
+;; sprites
+demo_sprite_tiles:
+.incbin"assets/demo-sprites.tiles"
+demo_sprite_tiles_end:
+
+demo_sprite_palette:
+.incbin"assets/demo-sprites.palette"
+demo_sprite_palette_end:

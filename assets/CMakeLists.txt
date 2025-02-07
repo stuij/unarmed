@@ -17,4 +17,19 @@ foreach(BG ${BGS})
   list(APPEND BG_BINS ${BG}.map ${BG}.palette ${BG}.tiles)
 endforeach()
 
-add_custom_target(ASSETS ALL DEPENDS ${BG_BINS})
+
+# list of sprite sheets
+set(SHEETS demo-sprites)
+
+# add the custom commands for each sprite sheet
+foreach(SH ${SHEETS})
+  add_custom_command(
+    OUTPUT ${SH}.palette ${SH}.tiles
+    COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-sprite-sheet.sh ${CMAKE_CURRENT_SOURCE_DIR}/sprites/${SH}.png ${SH}
+    )
+
+  # build a list of all the results
+  list(APPEND SPRITE_BINS ${SH}.palette ${SH}.tiles)
+endforeach()
+
+add_custom_target(ASSETS ALL DEPENDS ${BG_BINS} ${SPRITE_BINS})
