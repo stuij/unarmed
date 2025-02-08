@@ -5,6 +5,7 @@
 .include "meta-data.inc"
 .include "macros.inc"
 .include "io.inc"
+.include "init.inc"
 
 .segment "VECTORS"
 .word 0, 0                          ;; Native mode handlers
@@ -49,16 +50,11 @@ reset_handler:
 	setXY16
     setA8
 
-    ; Clear PPU registers
-    ldx #$33
-@loop:
-    stz INIDISP,x
-    stz NMITIMEN,x
-    dex
-    bpl @loop
-
-    lda #$80
-    sta INIDISP ; Turn off screen (forced blank)
+    ;; clear all
+    jsr clear_registers
+    jsr clear_VRAM
+    jsr clear_CGRAM
+    jsr clear_OAMRAM
 
     jmp main
 
@@ -183,10 +179,17 @@ main:
     sta OAMDATA
     lda #200                ; vertical position of first sprite
     sta OAMDATA
-    lda #$00                ; name of first sprite
+    lda #$00                ; name (place) of first sprite
     sta OAMDATA
     lda #$20                ; no flip, prio 2, palette 0
     sta OAMDATA
+
+    stz OAMADDL             ; set the OAM
+    lda #1                  ;   address to
+    sta OAMADDH             ;   $0200
+    lda #$fe                ; set top bit of x to 0, set 16x16 tile. keep rest of tiles at 1
+    sta OAMDATA
+
 
     ; turn on BG2
     lda #$12

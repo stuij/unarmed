@@ -5,4 +5,5 @@ target_compile_options( ${PROJECT_NAME}
 
 target_sources( ${PROJECT_NAME}
     PRIVATE demo.asm
+    PRIVATE init.asm
     )
