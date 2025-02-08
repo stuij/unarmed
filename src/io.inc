@@ -1697,8 +1697,33 @@ BBAD7 = $4371
 ; $4000-$41FF, $4200-$421F, $4300-$437F.
 ;
 ; HDMA uses these registers for its table address instead.
-;
-;
+A1T0L = $4302
+A1T1L = $4312
+A1T2L = $4322
+A1T3L = $4332
+A1T4L = $4342
+A1T5L = $4352
+A1T6L = $4362
+A1T7L = $4372
+
+A1T0H = $4303
+A1T1H = $4313
+A1T2H = $4323
+A1T3H = $4333
+A1T4H = $4343
+A1T5H = $4353
+A1T6H = $4363
+A1T7H = $4373
+
+A1B0 = $4304
+A1B1 = $4314
+A1B2 = $4324
+A1B3 = $4334
+A1B4 = $4344
+A1B5 = $4354
+A1B6 = $4364
+A1B7 = $4374
+
 ; DASnL, DASnH - DMA Byte-Counter ($43n5, $43n6 read/write) (n = 0..7)
 ;
 ;   DASnH       DASnL
@@ -1719,8 +1744,24 @@ BBAD7 = $4371
 ; Once the DMA finishes, these registers will be zero.
 ;
 ; HDMA uses these registers for its indirect address instead.
-;
-;
+DAS0L = $4305
+DAS1L = $4315
+DAS2L = $4325
+DAS3L = $4335
+DAS4L = $4345
+DAS5L = $4355
+DAS6L = $4365
+DAS7L = $4375
+
+DAS0H = $4306
+DAS1H = $4316
+DAS2H = $4326
+DAS3H = $4336
+DAS4H = $4346
+DAS5H = $4356
+DAS6H = $4366
+DAS7H = $4376
+
 ; Configuration registers (HDMA)
 ; ------------------------------
 ;
@@ -1752,8 +1793,15 @@ BBAD7 = $4371
 ;
 ; This must be set manually by the program to control the indirect HDMA
 ; bank. (DASnL/DASnH are automatically updated from the table.)
-;
-;
+DASB0 = $4307
+DASB1 = $4317
+DASB2 = $4327
+DASB3 = $4337
+DASB4 = $4347
+DASB5 = $4357
+DASB6 = $4367
+DASB7 = $4377
+
 ; Other HDMA registers
 ; --------------------
 ;
