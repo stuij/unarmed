@@ -1,3 +1,6 @@
+.ifndef MACROS_INC
+MACROS_INC = 1
+
 .macro setA8
 	sep #$20
 .endmacro
@@ -21,3 +24,5 @@
 .macro setXY16
 	rep #$10
 .endmacro
+
+.endif

@@ -1,3 +1,6 @@
+.ifndef META_INC
+META_INC = 1
+
 ; Sets up processor basics and ROM headers/vectors
 
 .segment "HEADER"     ; +$7FE0 in file
@@ -10,3 +13,4 @@
     .byte 0,0,0,0
     .word $AAAA,$5555 ; dummy checksum and complement
 
+.endif

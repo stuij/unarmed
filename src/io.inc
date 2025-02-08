@@ -1,3 +1,7 @@
+.ifndef IO_INC
+IO_INC = 1
+
+
 ; Register types:
 ; R - Readable
 ; W - Writeable
@@ -1914,3 +1918,5 @@ DASB7 = $4377
 ; For example: if you wanted the second HDMA entry to apply to scanline 24, use
 ; X=23 for the first entry, which causes the next entry to apply at the end of
 ; scanline 23, so the change will be visible on scanline 24.
+
+.endif
