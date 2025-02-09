@@ -26,6 +26,11 @@
 
 
 .segment "ZEROPAGE"
+W0:
+B0H:
+.res 1
+B0L:
+.res 1
 in_nmi:
 ; data read from joypad 13
 joy1: .res 2
@@ -75,8 +80,8 @@ wait_nmi:
     beq @check_again
     rts
 
-.i16
 .a8
+.i16
 main:
     ;; set up bg registers
     lda #1 ; mode 1
@@ -118,18 +123,12 @@ main:
      bne @map_loop
 
     ; load tiles
-    ldx #VRAM_CHR_BASE
-    stx VMADDL
-    ldx #0
-@char_loop:
-     lda town_tiles,x
-     sta VMDATAL
-     inx
-     lda town_tiles,x
-     sta VMDATAH
-     inx
-     cpx #(town_tiles_end - town_tiles)
-     bne @char_loop
+    ldy #(town_tiles_end - town_tiles) ; size of transfer
+    sty <W0
+    lda #^town_tiles
+    ldx #.loword(town_tiles)
+    ldy #VRAM_CHR_BASE
+    jsr dma_to_vram
 
     ;; sprites
     ; set sprite base
@@ -270,6 +269,29 @@ check_left_button_done:
 
     jmp game_loop
 
+
+; dma_to_vram
+; arguments:
+;   - a: src bank
+;   - x: src loword
+;   - y: dst VRAM base address
+;   - stack: size
+.a8
+.i16
+dma_to_vram:
+    sta A1B0 ; set bank of source address
+    stx A1T0L ; set loword of source address
+    sty VMADDL ; set VRAM base address
+    ldy <W0 ; get size from zero page word reg 1
+    sty DAS0L ; set DMA byte counter
+
+    lda #$18 ; $2118, VMDATAL
+    sta BBAD0 ; so set DMA destination to VMDATAL
+    lda #1
+    sta DMAP0 ; transfer mode, 2 registers 1 write
+    lda #1
+    sta MDMAEN ; start dma, channel 0
+    rts
 
 
 
