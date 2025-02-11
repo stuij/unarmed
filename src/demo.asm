@@ -47,6 +47,7 @@ bg2_x: .res 2
 .i16    ; X/Y are 16 bits
 .a8     ; A is 8 bits
 reset_handler:
+    sei
     clc
     xce
 	; FYI: coming out of emulation mode, the M and X bits of the
@@ -54,6 +55,15 @@ reset_handler:
 	; are set to 8 bit.
 	setXY16
     setA8
+    cld                     ; clear decimal flag
+    lda #$80                ; force v-blanking
+    sta INIDISP
+    stz NMITIMEN            ; disable NMI
+    ; set the stack pointer to $1fff
+    ldx #$1fff              ; load X with $1fff
+    txs                     ; copy X to stack pointer
+    phk
+    plb                     ; set b to current bank
 
     ;; clear all
     jsr clear_registers
