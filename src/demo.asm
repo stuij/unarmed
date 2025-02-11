@@ -93,34 +93,25 @@ main:
     lda #((VRAM_CHR_BASE >> 12) << 4)
     sta BG12NBA
 
-    ; let's copy over some binary data
-    ;; first the palette
-    stz CGADD ; set to begin of palette mem
-    ldx #(town_palette_end - town_palette) ; # of palette entries
-    ldy #0
-@palette_loop:
-    lda town_palette, y
-    sta CGDATA
-    iny
-    dex
-    bne @palette_loop
-
     lda #$80
     sta VMAIN
 
+    ; let's copy over some binary data
+    ;; first the palette
+    ldy #(town_palette_end - town_palette) ; # of palette entries
+    sty <W0
+    lda #^town_palette
+    ldx #.loword(town_palette)
+    ldy #00000
+    jsr dma_to_palette
+
     ; load map
-    ldx #VRAM_MAP_BASE
-    stx VMADDL
-    ldx #0
-@map_loop:
-     lda town_map,x
-     sta VMDATAL
-     inx
-     lda town_map,x
-     sta VMDATAH
-     inx
-     cpx #(town_map_end - town_map)
-     bne @map_loop
+    ldy #(town_map_end - town_map)
+    sty <W0
+    lda #^town_map
+    ldx #.loword(town_map)
+    ldy #VRAM_MAP_BASE
+    jsr dma_to_vram
 
     ; load tiles
     ldy #(town_tiles_end - town_tiles) ; size of transfer
@@ -136,39 +127,20 @@ main:
     sta OBJSEL
 
     ; load sprites
-    lda #$80
-    sta CGADD ; set to begin of palette mem
-    ldx #(demo_sprite_palette_end - demo_sprite_palette) ; # of palette entries
-    ldy #0
-@sprite_palette_loop:
-    lda demo_sprite_palette, y
-    sta CGDATA
-    iny
-    dex
-    bne @sprite_palette_loop
+    ldy #(demo_sprite_palette_end - demo_sprite_palette) ; # of palette entries
+    sty <W0
+    lda #^demo_sprite_palette
+    ldx #.loword(demo_sprite_palette)
+    ldy #$80 ; sprite palette offset
+    jsr dma_to_palette
 
-    lda #$80
-    sta VMAIN
-
-    ; load map
-    ldx #VRAM_MAP_BASE
-    stx VMADDL
-    ldx #0
-
-
-
-    ldx #VRAM_SPRITE_BASE
-    stx VMADDL
-    ldx #0
-@sprite_char_loop:
-     lda demo_sprite_tiles,x
-     sta VMDATAL
-     inx
-     lda demo_sprite_tiles,x
-     sta VMDATAH
-     inx
-     cpx #(demo_sprite_tiles_end - demo_sprite_tiles)
-     bne @sprite_char_loop
+    ; load sprite tiles
+    ldy #(demo_sprite_tiles_end - demo_sprite_tiles)
+    sty <W0
+    lda #^demo_sprite_tiles
+    ldx #.loword(demo_sprite_tiles)
+    ldy #VRAM_SPRITE_BASE
+    jsr dma_to_vram
 
     ; set up sprite OAM data
     stz OAMADDL             ; set the OAM address to ...
@@ -189,7 +161,6 @@ main:
     lda #$fe                ; set top bit of x to 0, set 16x16 tile. keep rest of tiles at 1
     sta OAMDATA
 
-
     ; turn on BG2
     lda #$12
     sta TM
@@ -205,7 +176,6 @@ main:
     ; set program variables
     lda #00000
     sta bg2_x
-    
 
     jmp game_loop
 
@@ -285,7 +255,7 @@ dma_to_vram:
     ldy <W0 ; get size from zero page word reg 1
     sty DAS0L ; set DMA byte counter
 
-    lda #$18 ; $2118, VMDATAL
+    lda #<VMDATAL
     sta BBAD0 ; so set DMA destination to VMDATAL
     lda #1
     sta DMAP0 ; transfer mode, 2 registers 1 write
@@ -293,7 +263,29 @@ dma_to_vram:
     sta MDMAEN ; start dma, channel 0
     rts
 
+; dma_to_palette
+; arguments:
+;   - a: src bank
+;   - x: src loword
+;   - y: dst VRAM base address
+;   - stack: size
+.a8
+.i16
+dma_to_palette:
+    sta A1B0 ; set bank of source address
+    stx A1T0L ; set loword of source address
+    tya ; CGADD is a byte
+    sta CGADD ; set VRAM base address
+    ldy <W0 ; get size from zero page word reg 1
+    sty DAS0L ; set DMA byte counter
 
+    lda #<CGDATA
+    sta BBAD0 ; so set DMA destination to VMDATAL
+    lda #00
+    sta DMAP0 ; transfer mode, 1 register, 1 write
+    lda #1
+    sta MDMAEN ; start dma, channel 0
+    rts
 
 nmi_handler:
     bit RDNMI ; it is required to read this register
