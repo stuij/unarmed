@@ -42,6 +42,10 @@ joy1_held: .res 2
 bg2_x: .res 2
 
 
+.segment "BSS"
+OAM_MIRROR: .res 512
+
+
 .code
 
 .i16    ; X/Y are 16 bits
@@ -69,7 +73,8 @@ reset_handler:
     jsr clear_registers
     jsr clear_VRAM
     jsr clear_CGRAM
-    jsr clear_OAMRAM
+    jsr clear_OAM_mirror
+    jsr dma_OAM
 
     jmp main
 
@@ -296,6 +301,70 @@ dma_to_palette:
     lda #1
     sta MDMAEN ; start dma, channel 0
     rts
+
+SpriteUpperEmpty: ;my sprite code assumes hi table of zero
+DMAZero:
+.word $FFFF
+
+SpriteEmptyVal:
+.byte $FF ; 224
+
+
+.a8
+.i16
+clear_OAM_mirror:
+;fills the buffer with 224 for low table
+;and $00 for high table
+	php
+	setA8
+	setXY16
+	ldx #.loword(OAM_MIRROR)
+	stx WMADDL ;WRAM_ADDR_L
+	stz WMADDH ;WRAM_ADDR_H
+
+	ldx #$8008 ;fixed transfer to WRAM data 2180
+	stx DMAP0
+	ldx	#.loword(SpriteEmptyVal)
+	stx A1T0L ; and 4303
+	lda #^SpriteEmptyVal ;bank #
+	sta A1B0
+	ldx #$200 ;size 512 bytes
+	stx DAS0L ;and 4306
+	lda #1
+	sta MDMAEN ; DMA_ENABLE start dma, channel 0
+
+	ldx	#.loword(SpriteUpperEmpty)
+	stx A1T0L ; and 4303
+	lda #^SpriteUpperEmpty ;bank #
+	sta A1B0
+	ldx #$0020 ;size 32 bytes
+	stx DAS0L ;and 4306
+	lda #1
+	sta MDMAEN ; DMA_ENABLE start dma, channel 0
+	plp
+	rts
+
+.a16
+.i8
+dma_OAM:
+;copy from OAM_MIRROR to the OAM RAM
+	php
+	setA16
+	setXY8
+	stz OAMADDL ;OAM address
+
+	lda #$0400 ;1 reg 1 write, 2104 oam data
+	sta DMAP0
+	lda #.loword(OAM_MIRROR)
+	sta A1T0L ; source
+	ldx #^OAM_MIRROR
+	stx A1B0 ; bank
+	lda #$220
+	sta DAS0L ; length
+	ldx #1
+	stx MDMAEN ; DMA_ENABLE start dma, channel 0
+	plp
+	rts
 
 nmi_handler:
     bit RDNMI ; it is required to read this register
