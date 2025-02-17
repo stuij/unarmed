@@ -397,7 +397,7 @@ town_palette:
 town_palette_end:
 
 town_map:
-.incbin"assets/town.map"
+.incbin"assets/town-map.map"
 town_map_end:
 
 ;; sprites

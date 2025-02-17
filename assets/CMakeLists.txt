@@ -6,7 +6,7 @@ target_compile_options( ${PROJECT_NAME}
 # list of backgrounds
 set(BGS town)
 
-# add the custom commands for each background
+# add the custom commands for each background tileset
 foreach(BG ${BGS})
   add_custom_command(
     OUTPUT ${BG}.map ${BG}.palette ${BG}.tiles
@@ -15,6 +15,19 @@ foreach(BG ${BGS})
 
   # build a list of all the results
   list(APPEND BG_BINS ${BG}.map ${BG}.palette ${BG}.tiles)
+endforeach()
+
+# add the custom commands for each background map
+set(MAPS town-map)
+
+foreach(MAP ${MAPS})
+  add_custom_command(
+    OUTPUT ${MAP}.map
+    COMMAND ${PROJECT_SOURCE_DIR}/bin/tmj-to-map-bin.py ${CMAKE_CURRENT_SOURCE_DIR}/backgrounds/${MAP}.tmj ${MAP}.map
+    )
+
+  # build a list of all the results
+  list(APPEND MAP_BINS ${MAP}.map)
 endforeach()
 
 
@@ -32,4 +45,4 @@ foreach(SH ${SHEETS})
   list(APPEND SPRITE_BINS ${SH}.palette ${SH}.tiles)
 endforeach()
 
-add_custom_target(ASSETS ALL DEPENDS ${BG_BINS} ${SPRITE_BINS})
+add_custom_target(ASSETS ALL DEPENDS ${BG_BINS} ${SPRITE_BINS} ${MAP_BINS})

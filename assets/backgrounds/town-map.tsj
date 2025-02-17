@@ -1,0 +1,14 @@
+{ "columns":16,
+ "image":"town.png",
+ "imageheight":8,
+ "imagewidth":128,
+ "margin":0,
+ "name":"town",
+ "spacing":0,
+ "tilecount":16,
+ "tiledversion":"1.11.2",
+ "tileheight":8,
+ "tilewidth":8,
+ "type":"tileset",
+ "version":"1.10"
+}
