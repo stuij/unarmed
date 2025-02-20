@@ -29,6 +29,31 @@
 .word .loword(spinloop_handler)     ; IRQBRK
 
 
+.segment "RODATA"
+
+;; backgrounds
+town_tiles:
+.incbin"assets/town.tiles"
+town_tiles_end:
+
+town_palette:
+.incbin"assets/town.palette"
+town_palette_end:
+
+town_map:
+.incbin"assets/town-map.map"
+town_map_end:
+
+;; sprites
+demo_sprite_tiles:
+.incbin"assets/demo-sprites.tiles"
+demo_sprite_tiles_end:
+
+demo_sprite_palette:
+.incbin"assets/demo-sprites.palette"
+demo_sprite_palette_end:
+
+
 .segment "ZEROPAGE"
 W0:
 B0H:
@@ -51,6 +76,8 @@ OAM_MIRROR: .res 512
 
 
 .code
+
+;; handlers
 
 .i16    ; X/Y are 16 bits
 .a8     ; A is 8 bits
@@ -82,9 +109,24 @@ reset_handler:
 
     jmp main
 
-VRAM_SPRITE_BASE = $2000
-VRAM_CHR_BASE = $6000
-VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
+
+    nmi_handler:
+    bit RDNMI ; it is required to read this register
+              ; in the NMI handler
+    inc in_nmi
+    rti
+
+irq_handler:
+	bit TIMEUP	; it is required to read this register
+				; in the IRQ handler
+@loop:
+    jmp @loop
+
+; This shouldn't get called, so if it does we'd like to know more
+; in a controlled manner, instead of say branching to $00000 and
+; crashing out violently.
+spinloop_handler:
+    jmp spinloop_handler
 
 .a8
 .i16
@@ -99,9 +141,131 @@ wait_nmi:
     beq @check_again
     rts
 
+
+;; setup lib code
+
+; dma_to_vram
+; arguments:
+;   - a: src bank
+;   - x: src loword
+;   - y: dst VRAM base address
+;   - stack: size
 .a8
 .i16
-main:
+dma_to_vram:
+    sta A1B0 ; set bank of source address
+    stx A1T0L ; set loword of source address
+    sty VMADDL ; set VRAM base address
+    ldy <W0 ; get size from zero page word reg 1
+    sty DAS0L ; set DMA byte counter
+
+    lda #<VMDATAL
+    sta BBAD0 ; so set DMA destination to VMDATAL
+    lda #1
+    sta DMAP0 ; transfer mode, 2 registers 1 write
+    lda #1
+    sta MDMAEN ; start dma, channel 0
+    rts
+
+; dma_to_palette
+; arguments:
+;   - a: src bank
+;   - x: src loword
+;   - y: dst VRAM base address
+;   - stack: size
+.a8
+.i16
+dma_to_palette:
+    sta A1B0 ; set bank of source address
+    stx A1T0L ; set loword of source address
+    tya ; CGADD is a byte
+    sta CGADD ; set VRAM base address
+    ldy <W0 ; get size from zero page word reg 1
+    sty DAS0L ; set DMA byte counter
+
+    lda #<CGDATA
+    sta BBAD0 ; so set DMA destination to VMDATAL
+    lda #00
+    sta DMAP0 ; transfer mode, 1 register, 1 write
+    lda #1
+    sta MDMAEN ; start dma, channel 0
+    rts
+
+SpriteUpperEmpty:
+DMAZero:
+.word $FFFF
+
+SpriteEmptyVal:
+.byte $FF ; 224
+
+.a8
+.i16
+clear_OAM_mirror:
+;fills the buffer with 224 for low table
+;and $00 for high table
+	php
+	setA8
+	setXY16
+	ldx #.loword(OAM_MIRROR)
+	stx WMADDL ;WRAM_ADDR_L
+	stz WMADDH ;WRAM_ADDR_H
+
+	ldx #$8008 ;fixed transfer to WRAM data 2180
+	stx DMAP0
+	ldx	#.loword(SpriteEmptyVal)
+	stx A1T0L ; and 4303
+	lda #^SpriteEmptyVal ;bank #
+	sta A1B0
+	ldx #$200 ;size 512 bytes
+	stx DAS0L ;and 4306
+	lda #1
+	sta MDMAEN ; DMA_ENABLE start dma, channel 0
+
+	ldx	#.loword(SpriteUpperEmpty)
+	stx A1T0L ; and 4303
+	lda #^SpriteUpperEmpty ;bank #
+	sta A1B0
+	ldx #$0020 ;size 32 bytes
+	stx DAS0L ;and 4306
+	lda #1
+	sta MDMAEN ; DMA_ENABLE start dma, channel 0
+	plp
+	rts
+
+.a16
+.i8
+dma_OAM:
+;copy from OAM_MIRROR to the OAM RAM
+	php
+	setA16
+	setXY8
+	stz OAMADDL ;OAM address
+
+	lda #$0400 ;1 reg 1 write, 2104 oam data
+	sta DMAP0
+	lda #.loword(OAM_MIRROR)
+	sta A1T0L ; source
+	ldx #^OAM_MIRROR
+	stx A1B0 ; bank
+	lda #$220
+	sta DAS0L ; length
+	ldx #1
+	stx MDMAEN ; DMA_ENABLE start dma, channel 0
+	plp
+	rts
+
+
+;; game specific
+
+VRAM_SPRITE_BASE = $2000
+VRAM_CHR_BASE = $6000
+VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
+
+
+;; set up data
+init_game_data:
+	setA8
+	setXY16
     ;; set up bg registers
     lda #1 ; mode 1
     sta BGMODE
@@ -161,49 +325,22 @@ main:
     ldy #VRAM_SPRITE_BASE
     jsr dma_to_vram
 
-    ; set up sprite OAM data
-    stz OAMADDL             ; set the OAM address to ...
-    stz OAMADDH             ; ...at $0000
-    ; OAM data for first sprite
-    lda # (256/2 - 8)       ; horizontal position of first sprite
-    sta OAMDATA
-    lda #200                ; vertical position of first sprite
-    sta OAMDATA
-    lda #$00                ; name (place) of first sprite
-    sta OAMDATA
-    lda #$20                ; no flip, prio 2, palette 0
-    sta OAMDATA
+    setA8
+	setXY16
+    ; init sound
+    lda     #$7f
+    pha
+    plb
+    ; DB = $7f
+    jsl     Tad_Init
 
-    stz OAMADDL             ; set the OAM
-    lda #1                  ;   address to
-    sta OAMADDH             ;   $0200
-    lda #$fe                ; set top bit of x to 0, set 16x16 tile. keep rest of tiles at 1
-    sta OAMDATA
+    phk
+    plb
+    ; DB = $80
 
-    ; turn on BG2
-    lda #$12
-    sta TM
+    rts
 
-    ; Maximum screen brightness
-    lda #$0F
-    sta INIDISP
-
-    ; enable NMI, turn on automatic joypad polling
-    lda #$81
-    sta NMITIMEN
-
-    ; set program variables
-    lda #00000
-    sta bg2_x
-
-    jmp game_loop
-
-game_loop:
-    jsr wait_nmi ; wait for NMI / V-Blank
-
-    ; we're in vblank. first we should do video memory update things
-    ; ...
-
+read_input:
     setA8
 wait_for_joypad:
     lda HVBJOY            ; get joypad status
@@ -224,20 +361,39 @@ wait_for_joypad:
     tya                              ; get input from last frame
     and joy1                         ; filter held buttons from last frame...
     sta joy1_held                    ; ...store them
+    setA8
 
-check_right_button:
-    lda #$0000                       ; set A to zero
-    ora joy1_trigger                 ; check whether the right button was pressed this frame...
-    ora joy1_held                    ; ...or held from last frame
-    and #JOY_RIGHT
-    beq check_right_button_done         ; if neither has occured, move on
-    ; else, move bg
+    rts
+
+
+handle_right_joy1:
     setA8
     lda bg2_x
     inc
     sta bg2_x
     sta BG2HOFS
     stz BG2HOFS
+    rts
+
+handle_left_joy1:
+setA8
+    lda bg2_x
+    dec
+    sta bg2_x
+    sta BG2HOFS
+    stz BG2HOFS
+    rts
+
+handle_input:
+check_right_button:
+    setA16
+    lda #$0000                       ; set A to zero
+    ora joy1_trigger                 ; check whether the right button was pressed this frame...
+    ora joy1_held                    ; ...or held from last frame
+    and #JOY_RIGHT
+    beq check_right_button_done         ; if neither has occured, move on
+    ; else, move bg
+    jsr handle_right_joy1
 check_right_button_done:
 
 check_left_button:
@@ -248,167 +404,84 @@ check_left_button:
     and #JOY_LEFT
     beq check_left_button_done         ; if neither has occured, move on
     ; else, move bg
-    setA8
-    lda bg2_x
-    dec
-    sta bg2_x
-    sta BG2HOFS
-    stz BG2HOFS
+    jsr handle_left_joy1
 check_left_button_done:
+    rts
+
+
+load_song:
+    setA8
+	setXY16
+    pha
+    ; Reset TAD State
+    ldx     #256
+    jsr     Tad_SetTransferSize
+    jsr     Tad_SongsStartImmediately
+    pla
+    jsr     Tad_LoadSong
+
+@loop:
+    jsr     Tad_IsSongLoaded
+    bcs     @return
+    jsl     Tad_Process
+    bra     @loop
+@return:
+    rts
+
+
+game_loop:
+    jsr wait_nmi ; wait for NMI / V-Blank
+
+    ; we're in vblank. first we should do video memory update things
+    ; ...
+
+    jsr read_input
+    jsr handle_input
 
     jmp game_loop
 
 
-; dma_to_vram
-; arguments:
-;   - a: src bank
-;   - x: src loword
-;   - y: dst VRAM base address
-;   - stack: size
 .a8
 .i16
-dma_to_vram:
-    sta A1B0 ; set bank of source address
-    stx A1T0L ; set loword of source address
-    sty VMADDL ; set VRAM base address
-    ldy <W0 ; get size from zero page word reg 1
-    sty DAS0L ; set DMA byte counter
+main:
+    jsr init_game_data
 
-    lda #<VMDATAL
-    sta BBAD0 ; so set DMA destination to VMDATAL
-    lda #1
-    sta DMAP0 ; transfer mode, 2 registers 1 write
-    lda #1
-    sta MDMAEN ; start dma, channel 0
-    rts
+    ; set up sprite OAM data
+    stz OAMADDL             ; set the OAM address to ...
+    stz OAMADDH             ; ...at $0000
+    ; OAM data for first sprite
+    lda # (256/2 - 8)       ; horizontal position of first sprite
+    sta OAMDATA
+    lda #200                ; vertical position of first sprite
+    sta OAMDATA
+    lda #$00                ; name (place) of first sprite
+    sta OAMDATA
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAMDATA
 
-; dma_to_palette
-; arguments:
-;   - a: src bank
-;   - x: src loword
-;   - y: dst VRAM base address
-;   - stack: size
-.a8
-.i16
-dma_to_palette:
-    sta A1B0 ; set bank of source address
-    stx A1T0L ; set loword of source address
-    tya ; CGADD is a byte
-    sta CGADD ; set VRAM base address
-    ldy <W0 ; get size from zero page word reg 1
-    sty DAS0L ; set DMA byte counter
+    stz OAMADDL             ; set the OAM
+    lda #1                  ;   address to
+    sta OAMADDH             ;   $0200
+    lda #$fe                ; set top bit of x to 0, set 16x16 tile. keep rest of tiles at 1
+    sta OAMDATA
 
-    lda #<CGDATA
-    sta BBAD0 ; so set DMA destination to VMDATAL
-    lda #00
-    sta DMAP0 ; transfer mode, 1 register, 1 write
-    lda #1
-    sta MDMAEN ; start dma, channel 0
-    rts
+    lda     #1
+    jsr load_song
 
-SpriteUpperEmpty: ;my sprite code assumes hi table of zero
-DMAZero:
-.word $FFFF
+    ; turn on BG2
+    lda #$12
+    sta TM
 
-SpriteEmptyVal:
-.byte $FF ; 224
+    ; Maximum screen brightness
+    lda #$0F
+    sta INIDISP
 
+    ; enable NMI, turn on automatic joypad polling
+    lda #$81
+    sta NMITIMEN
 
-.a8
-.i16
-clear_OAM_mirror:
-;fills the buffer with 224 for low table
-;and $00 for high table
-	php
-	setA8
-	setXY16
-	ldx #.loword(OAM_MIRROR)
-	stx WMADDL ;WRAM_ADDR_L
-	stz WMADDH ;WRAM_ADDR_H
+    ; set program variables
+    lda #00000
+    sta bg2_x
 
-	ldx #$8008 ;fixed transfer to WRAM data 2180
-	stx DMAP0
-	ldx	#.loword(SpriteEmptyVal)
-	stx A1T0L ; and 4303
-	lda #^SpriteEmptyVal ;bank #
-	sta A1B0
-	ldx #$200 ;size 512 bytes
-	stx DAS0L ;and 4306
-	lda #1
-	sta MDMAEN ; DMA_ENABLE start dma, channel 0
-
-	ldx	#.loword(SpriteUpperEmpty)
-	stx A1T0L ; and 4303
-	lda #^SpriteUpperEmpty ;bank #
-	sta A1B0
-	ldx #$0020 ;size 32 bytes
-	stx DAS0L ;and 4306
-	lda #1
-	sta MDMAEN ; DMA_ENABLE start dma, channel 0
-	plp
-	rts
-
-.a16
-.i8
-dma_OAM:
-;copy from OAM_MIRROR to the OAM RAM
-	php
-	setA16
-	setXY8
-	stz OAMADDL ;OAM address
-
-	lda #$0400 ;1 reg 1 write, 2104 oam data
-	sta DMAP0
-	lda #.loword(OAM_MIRROR)
-	sta A1T0L ; source
-	ldx #^OAM_MIRROR
-	stx A1B0 ; bank
-	lda #$220
-	sta DAS0L ; length
-	ldx #1
-	stx MDMAEN ; DMA_ENABLE start dma, channel 0
-	plp
-	rts
-
-nmi_handler:
-    bit RDNMI ; it is required to read this register
-              ; in the NMI handler
-    inc in_nmi
-    rti
-
-irq_handler:
-	bit TIMEUP	; it is required to read this register
-				; in the IRQ handler
-@loop:
-    jmp @loop
-
-; This shouldn't get called, so if it does we'd like to know more
-; in a controlled manner, instead of say branching to $00000 and
-; crashing out violently.
-spinloop_handler:
-    jmp spinloop_handler
-
-
-.segment "RODATA"
-
-;; backgrounds
-town_tiles:
-.incbin"assets/town.tiles"
-town_tiles_end:
-
-town_palette:
-.incbin"assets/town.palette"
-town_palette_end:
-
-town_map:
-.incbin"assets/town-map.map"
-town_map_end:
-
-;; sprites
-demo_sprite_tiles:
-.incbin"assets/demo-sprites.tiles"
-demo_sprite_tiles_end:
-
-demo_sprite_palette:
-.incbin"assets/demo-sprites.palette"
-demo_sprite_palette_end:
+    jmp game_loop
