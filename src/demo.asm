@@ -79,8 +79,8 @@ OAM_MIRROR: .res 512
 
 ;; handlers
 
-.i16    ; X/Y are 16 bits
 .a8     ; A is 8 bits
+.i16    ; X/Y are 16 bits
 reset_handler:
     sei
     clc
@@ -106,6 +106,9 @@ reset_handler:
     jsr clear_CGRAM
     jsr clear_OAM_mirror
     jsr dma_OAM
+    ;; dma_OAM sets a16/xy8
+    setA8
+	setXY16
 
     jmp main
 
@@ -122,24 +125,12 @@ irq_handler:
 @loop:
     jmp @loop
 
+
 ; This shouldn't get called, so if it does we'd like to know more
 ; in a controlled manner, instead of say branching to $00000 and
 ; crashing out violently.
 spinloop_handler:
     jmp spinloop_handler
-
-.a8
-.i16
-wait_nmi:
-    ;should work fine regardless of size of A
-    lda in_nmi ;load A register with previous in_nmi
-@check_again:
-	wai ;wait for an interrupt
-    cmp in_nmi  ;compare A to current in_nmi
-                ;wait for it to change
-                ;make sure it was an nmi interrupt
-    beq @check_again
-    rts
 
 
 ;; setup lib code
@@ -191,12 +182,14 @@ dma_to_palette:
     sta MDMAEN ; start dma, channel 0
     rts
 
+
 SpriteUpperEmpty:
 DMAZero:
 .word $FFFF
 
 SpriteEmptyVal:
 .byte $FF ; 224
+
 
 .a8
 .i16
@@ -232,6 +225,7 @@ clear_OAM_mirror:
 	plp
 	rts
 
+
 .a16
 .i8
 dma_OAM:
@@ -262,6 +256,8 @@ VRAM_CHR_BASE = $6000
 VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
 
 
+.a8
+.i16
 ;; set up data
 init_game_data:
 	setA8
@@ -340,6 +336,9 @@ init_game_data:
 
     rts
 
+
+.a8
+.i16
 read_input:
     setA8
 wait_for_joypad:
@@ -366,6 +365,8 @@ wait_for_joypad:
     rts
 
 
+.a8
+.i16
 handle_right_joy1:
     setA8
     lda bg2_x
@@ -375,6 +376,9 @@ handle_right_joy1:
     stz BG2HOFS
     rts
 
+
+.a8
+.i16
 handle_left_joy1:
 setA8
     lda bg2_x
@@ -384,7 +388,13 @@ setA8
     stz BG2HOFS
     rts
 
+
+
+.a16
+.i16
 handle_input:
+    setA16
+    setXY16
 check_right_button:
     setA16
     lda #$0000                       ; set A to zero
@@ -395,9 +405,9 @@ check_right_button:
     ; else, move bg
     jsr handle_right_joy1
 check_right_button_done:
-
-check_left_button:
     setA16
+    setXY16
+check_left_button:
     lda #$0000                       ; set A to zero
     ora joy1_trigger                 ; check whether the up button was pressed this frame...
     ora joy1_held                    ; ...or held from last frame
@@ -409,6 +419,8 @@ check_left_button_done:
     rts
 
 
+.a8
+.i16
 load_song:
     setA8
 	setXY16
@@ -429,7 +441,26 @@ load_song:
     rts
 
 
+.a8
+.i16
+wait_nmi:
+    ;should work fine regardless of size of A
+    lda in_nmi ;load A register with previous in_nmi
+@check_again:
+	wai ;wait for an interrupt
+    cmp in_nmi  ;compare A to current in_nmi
+                ;wait for it to change
+                ;make sure it was an nmi interrupt
+    beq @check_again
+    rts
+
+
+.a8
+.i16
 game_loop:
+    setA8
+	setXY16
+
     jsr wait_nmi ; wait for NMI / V-Blank
 
     ; we're in vblank. first we should do video memory update things
@@ -444,6 +475,9 @@ game_loop:
 .a8
 .i16
 main:
+	setA8
+	setXY16
+
     jsr init_game_data
 
     ; set up sprite OAM data
