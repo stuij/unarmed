@@ -2,10 +2,14 @@
 .smart
 
 .define ROM_NAME "demo"
+
 .include "meta-data.inc"
 .include "macros.inc"
 .include "io.inc"
+
 .include "init.inc"
+.include "../build/assets/audio.inc"
+.include "../terrific-audio-driver/audio-driver/ca65-api/tad-audio.inc"
 
 .segment "VECTORS"
 .word 0, 0                          ;; Native mode handlers

@@ -45,4 +45,13 @@ foreach(SH ${SHEETS})
   list(APPEND SPRITE_BINS ${SH}.palette ${SH}.tiles)
 endforeach()
 
-add_custom_target(ASSETS ALL DEPENDS ${BG_BINS} ${SPRITE_BINS} ${MAP_BINS})
+set(TAD_PROD audio)
+
+set(TAD_OUT_FILES ${TAD_PROD}.asm ${TAD_PROD}.bin ${TAD_PROD}.inc)
+
+add_custom_command(
+    OUTPUT ${TAD_OUT_FILES}
+    COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-sound.sh ../../terrific-audio-driver/examples/example-project.terrificaudio ${TAD_OUT_FILES}
+    )
+
+add_custom_target(ASSETS ALL DEPENDS ${BG_BINS} ${SPRITE_BINS} ${MAP_BINS} ${TAD_OUT_FILES})
