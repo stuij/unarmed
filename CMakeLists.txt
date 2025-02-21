@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.21 FATAL_ERROR )
 
-set( MEMORY_MAP_FILE ${CMAKE_CURRENT_SOURCE_DIR}/lorom128.cfg )
+set( MEMORY_MAP_FILE ${CMAKE_CURRENT_SOURCE_DIR}/lorom256.cfg )
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
 
 project( demo

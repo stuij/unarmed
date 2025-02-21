@@ -74,15 +74,14 @@ bg2_x: .res 2
 .segment "BSS"
 OAM_MIRROR: .res 512
 
-
 .code
-
 ;; handlers
 
 .a8     ; A is 8 bits
 .i16    ; X/Y are 16 bits
 reset_handler:
-    sei
+    jml :+
+:   sei
     clc
     xce
 	; FYI: coming out of emulation mode, the M and X bits of the
@@ -97,6 +96,10 @@ reset_handler:
     ; set the stack pointer to $1fff
     ldx #$1fff              ; load X with $1fff
     txs                     ; copy X to stack pointer
+
+    lda     #$01            ; Enable FastROM. Should not be necessary
+    sta     MEMSEL          ; when FastROM is enabled in header?
+
     phk
     plb                     ; set b to current bank
 
@@ -114,13 +117,15 @@ reset_handler:
 
 
     nmi_handler:
-    bit RDNMI ; it is required to read this register
+    jml :+
+:   bit RDNMI ; it is required to read this register
               ; in the NMI handler
     inc in_nmi
     rti
 
 irq_handler:
-	bit TIMEUP	; it is required to read this register
+    jml :+
+:   bit TIMEUP	; it is required to read this register
 				; in the IRQ handler
 @loop:
     jmp @loop
@@ -130,7 +135,8 @@ irq_handler:
 ; in a controlled manner, instead of say branching to $00000 and
 ; crashing out violently.
 spinloop_handler:
-    jmp spinloop_handler
+    jml :+
+:   jmp spinloop_handler
 
 
 ;; setup lib code
