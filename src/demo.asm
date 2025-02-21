@@ -1,9 +1,9 @@
 .p816   ; 65816 processor
 .smart
 
-.define ROM_NAME "demo"
+.define ROM_NAME "demo" ; max 21 chars
 
-.include "meta-data.inc"
+.include "header.inc"
 .include "macros.inc"
 .include "io.inc"
 

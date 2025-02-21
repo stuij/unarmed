@@ -13,7 +13,7 @@ add_executable( ${PROJECT_NAME} "" )
 add_subdirectory( assets )
 add_subdirectory( src )
 set_target_properties( ${PROJECT_NAME}
-    PROPERTIES SUFFIX ".smc" )
+    PROPERTIES SUFFIX ".sfc" )
 
 add_dependencies( ${PROJECT_NAME} ASSETS )
 
@@ -21,3 +21,9 @@ add_dependencies( ${PROJECT_NAME} ASSETS )
 if( NOT DEFINED MEMORY_MAP_FILE )
   message( FATAL_ERROR "Path to memory map file not set!" )
 endif( NOT DEFINED MEMORY_MAP_FILE )
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND superfamicheck ${PROJECT_NAME}.sfc -f -s
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Fixing header..."
+)
