@@ -1390,10 +1390,45 @@ JOY3H = $421D
 JOY4L = $421E
 JOY4H = $421F
 
-JOY_UP    = $0800
-JOY_DOWN  = $0400
-JOY_LEFT  = $0200
-JOY_RIGHT = $0100
+;    JOY1H       JOY1L
+; 15  bit  8   7  bit  0
+; ---- ----   ---- ----
+; BYsS UDLR   AXlr 0000
+; |||| ||||   |||| ||||
+; |||| ||||   |||| ++++- Signature
+; |||| ||||   ||++------ L/R shoulder buttons
+; |||| ||||   ++-------- A/X buttons
+; |||| ++++------------- D-pad
+; ||++------------------ Select (s) and Start (S)
+; ++-------------------- B/Y buttons
+JOY_B      = $8000
+JOY_Y      = $4000
+JOY_SELECT = $2000
+JOY_START  = $1000
+JOY_UP     = $0800
+JOY_DOWN   = $0400
+JOY_LEFT   = $0200
+JOY_RIGHT  = $0100
+JOY_A      = $0080
+JOY_X      = $0040
+JOY_L      = $0020
+JOY_R      = $0010
+
+JOY_B_SH      = $8000
+JOY_Y_SH      = 14
+JOY_SELECT_SH = 13
+JOY_START_SH  = 12
+JOY_UP_SH     = 11
+JOY_DOWN_SH   = 10
+JOY_LEFT_SH   = 9
+JOY_RIGHT_SH  = 8
+JOY_A_SH      = 7
+JOY_X_SH      = 6
+JOY_L_SH      = 5
+JOY_R_SH      = 4
+
+
+
 
 ; Math
 ; ----

@@ -56,9 +56,14 @@ demo_sprite_palette_end:
 
 .segment "ZEROPAGE"
 W0:
+B0L:
+.res 1
 B0H:
 .res 1
-B0L:
+W1:
+B1L:
+.res 1
+B1H:
 .res 1
 in_nmi:
 ; data read from joypad 13
@@ -69,7 +74,7 @@ joy1_trigger: .res 2
 joy1_held: .res 2
 ; background 1 horizontal offset
 bg2_x: .res 2
-
+bg2_y: .res 2
 
 .segment "BSS"
 OAM_MIRROR: .res 512
@@ -373,55 +378,62 @@ wait_for_joypad:
 
 .a8
 .i16
-handle_right_joy1:
-    setA8
-    lda bg2_x
-    inc
+move_bg_horz:
+    clc
+    adc bg2_x
     sta bg2_x
+    ;; this is one of those latching regs
     sta BG2HOFS
+    ;; we're effectively lobbing off the top two bits of the offset..
     stz BG2HOFS
     rts
 
+handle_joy1_horz:
+.addr move_bg_horz
 
 .a8
 .i16
-handle_left_joy1:
-setA8
-    lda bg2_x
-    dec
-    sta bg2_x
-    sta BG2HOFS
-    stz BG2HOFS
+move_bg_vert:
+    clc
+    adc bg2_y
+    sta bg2_y
+    ;; this is one of those latching regs
+    sta BG2VOFS
+    ;; we're effectively lobbing off the top two bits of the offset..
+    stz BG2VOFS
     rts
 
 
+handle_joy1_vert:
+.addr move_bg_vert
+
+
+.a16
+.i16
+move_sprite:
+    rts
 
 .a16
 .i16
 handle_input:
     setA16
     setXY16
-check_right_button:
+    ;; handle left and right
     setA16
-    lda #$0000                       ; set A to zero
-    ora joy1_trigger                 ; check whether the right button was pressed this frame...
-    ora joy1_held                    ; ...or held from last frame
-    and #JOY_RIGHT
-    beq check_right_button_done         ; if neither has occured, move on
-    ; else, move bg
-    jsr handle_right_joy1
-check_right_button_done:
+    lda #0000
+    ora joy1_trigger
+    ora joy1_held
+    sta W1
+    bit_tribool JOY_RIGHT_SH, JOY_LEFT_SH
+    ldx #0
+    setA8
+    jsr (.loword(handle_joy1_horz), x)
     setA16
-    setXY16
-check_left_button:
-    lda #$0000                       ; set A to zero
-    ora joy1_trigger                 ; check whether the up button was pressed this frame...
-    ora joy1_held                    ; ...or held from last frame
-    and #JOY_LEFT
-    beq check_left_button_done         ; if neither has occured, move on
-    ; else, move bg
-    jsr handle_left_joy1
-check_left_button_done:
+    lda W1
+        bit_tribool JOY_DOWN_SH, JOY_UP_SH
+    ldx #0
+    setA8
+    jsr (.loword(handle_joy1_vert), x)
     rts
 
 
@@ -475,6 +487,7 @@ game_loop:
     jsr read_input
     jsr handle_input
 
+    ;; jsr dma_OAM
     jmp game_loop
 
 
@@ -490,9 +503,9 @@ main:
     stz OAMADDL             ; set the OAM address to ...
     stz OAMADDH             ; ...at $0000
     ; OAM data for first sprite
-    lda # (256/2 - 8)       ; horizontal position of first sprite
+    lda #(256/2 - 8)       ; horizontal position of first sprite
     sta OAMDATA
-    lda #200                ; vertical position of first sprite
+    lda #100                ; vertical position of first sprite
     sta OAMDATA
     lda #$00                ; name (place) of first sprite
     sta OAMDATA
@@ -523,5 +536,6 @@ main:
     ; set program variables
     lda #00000
     sta bg2_x
+    sta bg2_y
 
     jmp game_loop
