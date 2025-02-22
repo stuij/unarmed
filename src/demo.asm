@@ -92,8 +92,8 @@ reset_handler:
 	; FYI: coming out of emulation mode, the M and X bits of the
 	; status registers are set to one. So resp. A and X/Y
 	; are set to 8 bit.
-	setXY16
-    setA8
+	I16
+    A8
     cld                     ; clear decimal flag
     lda #$80                ; force v-blanking
     sta INIDISP
@@ -115,8 +115,8 @@ reset_handler:
     jsr clear_OAM_mirror
     jsr dma_OAM
     ;; dma_OAM sets a16/xy8
-    setA8
-	setXY16
+    A8
+	I16
 
     jmp main
 
@@ -208,8 +208,8 @@ clear_OAM_mirror:
 ;fills the buffer with 224 for low table
 ;and $00 for high table
 	php
-	setA8
-	setXY16
+	A8
+	I16
 	ldx #.loword(OAM_MIRROR)
 	stx WMADDL ;WRAM_ADDR_L
 	stz WMADDH ;WRAM_ADDR_H
@@ -242,8 +242,8 @@ clear_OAM_mirror:
 dma_OAM:
 ;copy from OAM_MIRROR to the OAM RAM
 	php
-	setA16
-	setXY8
+	A16
+	I8
 	stz OAMADDL ;OAM address
 
 	lda #$0400 ;1 reg 1 write, 2104 oam data
@@ -271,8 +271,8 @@ VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
 .i16
 ;; set up data
 init_game_data:
-	setA8
-	setXY16
+	A8
+	I16
     ;; set up bg registers
     lda #1 ; mode 1
     sta BGMODE
@@ -332,8 +332,8 @@ init_game_data:
     ldy #VRAM_SPRITE_BASE
     jsr dma_to_vram
 
-    setA8
-	setXY16
+    A8
+	I16
     ; init sound
     lda     #$7f
     pha
@@ -351,13 +351,13 @@ init_game_data:
 .a8
 .i16
 read_input:
-    setA8
+    A8
 wait_for_joypad:
     lda HVBJOY            ; get joypad status
     lsr a                 ; check whether joypad done reading...
     bcs wait_for_joypad   ; ...if not, wait a bit more
 
-    setA16
+    A16
     ; read joypad
     rep #$20                         ; set A to 16-bit
     lda JOY1L                        ; get new input from this frame
@@ -371,7 +371,7 @@ wait_for_joypad:
     tya                              ; get input from last frame
     and joy1                         ; filter held buttons from last frame...
     sta joy1_held                    ; ...store them
-    setA8
+    A8
 
     rts
 
@@ -416,23 +416,21 @@ move_sprite:
 .a16
 .i16
 handle_input:
-    setA16
-    setXY16
+    AI16
     ;; handle left and right
-    setA16
     lda #0000
     ora joy1_trigger
     ora joy1_held
     sta W1
     bit_tribool JOY_RIGHT_SH, JOY_LEFT_SH
     ldx #0
-    setA8
+    A8
     jsr (.loword(handle_joy1_horz), x)
-    setA16
+    A16
     lda W1
         bit_tribool JOY_DOWN_SH, JOY_UP_SH
     ldx #0
-    setA8
+    A8
     jsr (.loword(handle_joy1_vert), x)
     rts
 
@@ -440,8 +438,8 @@ handle_input:
 .a8
 .i16
 load_song:
-    setA8
-	setXY16
+    A8
+	I16
     pha
     ; Reset TAD State
     ldx     #256
@@ -476,9 +474,8 @@ wait_nmi:
 .a8
 .i16
 game_loop:
-    setA8
-	setXY16
-
+    A8
+	I16
     jsr wait_nmi ; wait for NMI / V-Blank
 
     ; we're in vblank. first we should do video memory update things
@@ -494,8 +491,8 @@ game_loop:
 .a8
 .i16
 main:
-	setA8
-	setXY16
+	A8
+	I16
 
     jsr init_game_data
 
