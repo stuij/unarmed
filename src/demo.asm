@@ -333,7 +333,7 @@ init_game_data:
     jsr dma_to_vram
 
     A8
-	I16
+    I16
     ; init sound
     lda     #$7f
     pha
@@ -375,60 +375,61 @@ wait_for_joypad:
 
     rts
 
-
+;; horizontal joypad callbacks
 .a8
 .i16
 move_bg_horz:
     clc
     adc bg2_x
     sta bg2_x
-    ;; this is one of those latching regs
-    sta BG2HOFS
-    ;; we're effectively lobbing off the top two bits of the offset..
-    stz BG2HOFS
+    rts
+
+move_sprite_horz:
+    clc
+    adc OAM_MIRROR
+    sta OAM_MIRROR
     rts
 
 handle_joy1_horz:
-.addr move_bg_horz
+.addr move_sprite_horz
 
+;; vertical joypad callbacks
 .a8
 .i16
 move_bg_vert:
     clc
     adc bg2_y
     sta bg2_y
-    ;; this is one of those latching regs
-    sta BG2VOFS
-    ;; we're effectively lobbing off the top two bits of the offset..
-    stz BG2VOFS
+    rts
+
+move_sprite_vert:
+    clc
+    adc OAM_MIRROR + 1
+    sta OAM_MIRROR + 1
     rts
 
 
 handle_joy1_vert:
-.addr move_bg_vert
+.addr move_sprite_vert
 
-
-.a16
-.i16
-move_sprite:
-    rts
 
 .a16
 .i16
 handle_input:
-    AI16
-    ;; handle left and right
+    ; what are we pressing
     lda #0000
     ora joy1_trigger
     ora joy1_held
     sta W1
+    ; handle left and right
     bit_tribool JOY_RIGHT_SH, JOY_LEFT_SH
     ldx #0
     A8
     jsr (.loword(handle_joy1_horz), x)
+    ; handle up and down
     A16
     lda W1
-        bit_tribool JOY_DOWN_SH, JOY_UP_SH
+    bit_tribool JOY_DOWN_SH, JOY_UP_SH
     ldx #0
     A8
     jsr (.loword(handle_joy1_vert), x)
@@ -484,7 +485,19 @@ game_loop:
     jsr read_input
     jsr handle_input
 
-    ;; jsr dma_OAM
+    lda bg2_x
+    ;; this is one of those latching regs
+    sta BG2HOFS
+    ;; we're effectively lobbing off the top two bits of the offset..
+    stz BG2HOFS
+
+    lda bg2_y
+    ;; this is one of those latching regs
+    sta BG2VOFS
+    ;; we're effectively lobbing off the top two bits of the offset..
+    stz BG2VOFS
+
+    jsr dma_OAM
     jmp game_loop
 
 
@@ -497,23 +510,17 @@ main:
     jsr init_game_data
 
     ; set up sprite OAM data
-    stz OAMADDL             ; set the OAM address to ...
-    stz OAMADDH             ; ...at $0000
-    ; OAM data for first sprite
     lda #(256/2 - 8)       ; horizontal position of first sprite
-    sta OAMDATA
+    sta OAM_MIRROR
     lda #100                ; vertical position of first sprite
-    sta OAMDATA
+    sta OAM_MIRROR + 1
     lda #$00                ; name (place) of first sprite
-    sta OAMDATA
+    sta OAM_MIRROR + 2
     lda #$20                ; no flip, prio 2, palette 0
-    sta OAMDATA
+    sta OAM_MIRROR + 3
 
-    stz OAMADDL             ; set the OAM
-    lda #1                  ;   address to
-    sta OAMADDH             ;   $0200
     lda #$fe                ; set top bit of x to 0, set 16x16 tile. keep rest of tiles at 1
-    sta OAMDATA
+    sta OAMDATA + 200
 
     lda     #1
     jsr load_song
