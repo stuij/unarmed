@@ -113,11 +113,11 @@ reset_handler:
     jsr clear_VRAM
     jsr clear_CGRAM
     jsr clear_OAM_mirror
+    A16
+    I8
     jsr dma_OAM
-    ;; dma_OAM sets a16/xy8
     A8
 	I16
-
     jmp main
 
 
@@ -208,8 +208,6 @@ clear_OAM_mirror:
 ;fills the buffer with 224 for low table
 ;and $00 for high table
 	php
-	A8
-	I16
 	ldx #.loword(OAM_MIRROR)
 	stx WMADDL ;WRAM_ADDR_L
 	stz WMADDH ;WRAM_ADDR_H
@@ -242,8 +240,6 @@ clear_OAM_mirror:
 dma_OAM:
 ;copy from OAM_MIRROR to the OAM RAM
 	php
-	A16
-	I8
 	stz OAMADDL ;OAM address
 
 	lda #$0400 ;1 reg 1 write, 2104 oam data
@@ -271,8 +267,6 @@ VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
 .i16
 ;; set up data
 init_game_data:
-	A8
-	I16
     ;; set up bg registers
     lda #1 ; mode 1
     sta BGMODE
@@ -345,13 +339,18 @@ init_game_data:
     plb
     ; DB = $80
 
+
+    ; set init program variables
+    lda #00000
+    sta bg2_x
+    sta bg2_y
+
     rts
 
 
 .a8
 .i16
 read_input:
-    A8
 wait_for_joypad:
     lda HVBJOY            ; get joypad status
     lsr a                 ; check whether joypad done reading...
@@ -371,19 +370,18 @@ wait_for_joypad:
     tya                              ; get input from last frame
     and joy1                         ; filter held buttons from last frame...
     sta joy1_held                    ; ...store them
-    A8
 
     rts
 
 ;; horizontal joypad callbacks
 .a8
-.i16
 move_bg_horz:
     clc
     adc bg2_x
     sta bg2_x
     rts
 
+.a8
 move_sprite_horz:
     clc
     adc OAM_MIRROR
@@ -395,13 +393,13 @@ handle_joy1_horz:
 
 ;; vertical joypad callbacks
 .a8
-.i16
 move_bg_vert:
     clc
     adc bg2_y
     sta bg2_y
     rts
 
+.a8
 move_sprite_vert:
     clc
     adc OAM_MIRROR + 1
@@ -439,8 +437,6 @@ handle_input:
 .a8
 .i16
 load_song:
-    A8
-	I16
     pha
     ; Reset TAD State
     ldx     #256
@@ -471,20 +467,8 @@ wait_nmi:
     beq @check_again
     rts
 
-
 .a8
-.i16
-game_loop:
-    A8
-	I16
-    jsr wait_nmi ; wait for NMI / V-Blank
-
-    ; we're in vblank. first we should do video memory update things
-    ; ...
-
-    jsr read_input
-    jsr handle_input
-
+update_bgs:
     lda bg2_x
     ;; this is one of those latching regs
     sta BG2HOFS
@@ -496,17 +480,37 @@ game_loop:
     sta BG2VOFS
     ;; we're effectively lobbing off the top two bits of the offset..
     stz BG2VOFS
+    rts
 
+.a8
+.i16
+update_vram:
+    jsr update_bgs
+    A16
+    I8
     jsr dma_OAM
+    A8
+    I16
+    rts
+
+.a8
+.i16
+game_loop:
+    jsr wait_nmi ; wait for NMI / V-Blank
+    ; we're in vblank, so first upddate video memory things
+    jsr update_vram
+
+    jsr read_input
+    ;; we already are and stay in A16
+    jsr handle_input
+    ;; handle_input sets A8
+
     jmp game_loop
 
 
 .a8
 .i16
 main:
-	A8
-	I16
-
     jsr init_game_data
 
     ; set up sprite OAM data
@@ -522,8 +526,11 @@ main:
     lda #$fe                ; set top bit of x to 0, set 16x16 tile. keep rest of tiles at 1
     sta OAMDATA + 200
 
+
+    ;; play some music
     lda     #1
     jsr load_song
+
 
     ; turn on BG2
     lda #$12
@@ -533,13 +540,10 @@ main:
     lda #$0F
     sta INIDISP
 
+
     ; enable NMI, turn on automatic joypad polling
     lda #$81
     sta NMITIMEN
 
-    ; set program variables
-    lda #00000
-    sta bg2_x
-    sta bg2_y
 
     jmp game_loop
