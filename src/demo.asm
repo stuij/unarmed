@@ -210,10 +210,10 @@ dma_to_palette:
 
 SpriteUpperEmpty:
 DMAZero:
-.word $FFFF
+.word $0000
 
 SpriteEmptyVal:
-.byte $FF ; 224
+.byte $e0 ; 224
 
 
 .a8
