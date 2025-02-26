@@ -454,16 +454,49 @@ handle_movement:
     A16
     clc
     adc RDMPYL          ; add y to x, tile offset is in A
+    sta W0              ; save tile offset to W0 for later
     tax
+    ldy town_coll, x    ; coll map entry
+    bne collision       ; if not zero, collision
+    ;; check middle left
+    clc
+    adc #$20            ; check tile below
+    tax
+    ldy town_coll, x    ; coll map entry
+    bne collision       ; if not zero, collision
+    ;; check middle left
+    clc
+    adc #$20            ; check tile below
+    tax
+    ldy town_coll, x    ; coll map entry
+    bne collision       ; if not zero, collision
+    ;; check middle left
+    lda W0
+    clc
+    adc #$1            ; check tile below
+    tax
+    ldy town_coll, x    ; coll map entry
+    bne collision       ; if not zero, collision
+    ;; check middle left
+    clc
+    adc #$20            ; check tile below
+    tax
+    ldy town_coll, x    ; coll map entry
+    bne collision       ; if not zero, collision
+    ;; check middle left
+    clc
+    adc #$20            ; check tile below
+    tax
+    ldy town_coll, x    ; coll map entry
+    bne collision       ; if not zero, collision
     A8
-    lda town_coll, x    ; coll map entry
-    bne :+              ; if not zero, collision
-
     lda W2              ; reload new x
     sta OAM_MIRROR
     lda W1              ; reload and save new y
     sta OAM_MIRROR + 1
-:   rts
+collision:
+    A8
+    rts
 
 
 .a16
