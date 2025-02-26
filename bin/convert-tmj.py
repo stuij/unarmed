@@ -34,16 +34,24 @@ def encode_tile(tile_idx):
     nr = tile_idx & 0x0FFFFFFF
     bottom_byte = nr if nr == 0 else nr - 1
 
-    return pack("BB", bottom_byte, top_byte)
+    return pack("BB", bottom_byte & 0xFF, top_byte)
     
+def encode_collision_map(tile_idx):
+    nr = tile_idx & 0x0FFFFFFF
+    return pack("B", nr if nr == 0 else 1)
 
 def encode_map(layer, out):
     if layer['width'] != 32 or layer['height'] != 32:
         error("map isn't 32x32")
 
-    with open(out, "wb") as f:
+    with open(out + ".map", "wb") as f:
         for tile in layer['data']:
             f.write(encode_tile(tile))
+
+    with open(out + ".coll", "wb") as f:
+        for tile in layer['data']:
+            f.write(encode_collision_map(tile))
+
 
 
 def main(file_in, file_out):

@@ -23,7 +23,7 @@ set(MAPS town-map)
 foreach(MAP ${MAPS})
   add_custom_command(
     OUTPUT ${MAP}.map
-    COMMAND ${PROJECT_SOURCE_DIR}/bin/tmj-to-map-bin.py ${CMAKE_CURRENT_SOURCE_DIR}/backgrounds/${MAP}.tmj ${MAP}.map
+    COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-tmj.py ${CMAKE_CURRENT_SOURCE_DIR}/backgrounds/${MAP}.tmj ${MAP}
     )
 
   # build a list of all the results

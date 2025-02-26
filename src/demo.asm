@@ -44,6 +44,10 @@ town_map:
 .incbin"assets/town-map.map"
 town_map_end:
 
+town_coll:
+.incbin"assets/town-map.coll"
+town_coll_end:
+
 ;; sprites
 demo_sprite_tiles:
 .incbin"assets/demo-sprites.tiles"
@@ -65,6 +69,16 @@ B1L:
 .res 1
 B1H:
 .res 1
+W2:
+B2L:
+.res 1
+B2H:
+.res 1
+W3:
+B3L:
+.res 1
+B3H:
+.res 1
 in_nmi:
 ; data read from joypad 13
 joy1: .res 2
@@ -73,8 +87,8 @@ joy1_trigger: .res 2
 ; held buttons read from joypad 1
 joy1_held: .res 2
 ; background 1 horizontal offset
-bg2_x: .res 2
-bg2_y: .res 2
+map_x: .res 2
+map_y: .res 2
 
 .segment "BSS"
 OAM_MIRROR: .res 512
@@ -342,8 +356,8 @@ init_game_data:
 
     ; set init program variables
     lda #00000
-    sta bg2_x
-    sta bg2_y
+    sta map_x
+    sta map_y
 
     rts
 
@@ -373,30 +387,33 @@ wait_for_joypad:
 
     rts
 
+;; collison checking
+; town_coll
+
+
+
 ;; horizontal joypad callbacks
 .a8
 move_bg_horz:
     clc
-    adc bg2_x
-    sta bg2_x
+    adc map_x
+    sta map_x
     rts
 
 .a8
 move_sprite_horz:
+
     clc
     adc OAM_MIRROR
     sta OAM_MIRROR
     rts
 
-handle_joy1_horz:
-.addr move_sprite_horz
-
 ;; vertical joypad callbacks
 .a8
 move_bg_vert:
     clc
-    adc bg2_y
-    sta bg2_y
+    adc map_y
+    sta map_y
     rts
 
 .a8
@@ -407,8 +424,46 @@ move_sprite_vert:
     rts
 
 
-handle_joy1_vert:
-.addr move_sprite_vert
+handle_player_movement:
+.addr handle_movement
+
+.a8
+.i16
+;; B0L - horizontal tribool
+;; B0H - vertical tribool
+handle_movement:
+    ;; first find out what is our next position
+    lda OAM_MIRROR + 1  ; load y of first sprite
+    clc
+    adc B3H             ; add/subtract tibool to/from y
+    sta W1              ; save y for later
+    rshift 3            ; divide by 8, truncating to get y tile offset
+    ; multiply Y by 32
+    sta WRMPYA ; set first nr to muliply: y offset
+    lda #$20
+    sta WRMPYB ; set second nr to multiply row size
+    ;; now calculate X tile offset while we wait (more than) 8 cycles for
+    ;; multiplication to complete
+    lda #$00
+    xba                 ; make sure that B is 0x00
+    lda OAM_MIRROR      ; load x of first sprite
+    clc
+    adc B3L             ; add/subtract tribool to/from x
+    sta W2              ; save x for later
+    rshift 3            ; divide by 8 to get x tile offset
+    A16
+    clc
+    adc RDMPYL          ; add y to x, tile offset is in A
+    tax
+    A8
+    lda town_coll, x    ; coll map entry
+    bne :+              ; if not zero, collision
+
+    lda W2              ; reload new x
+    sta OAM_MIRROR
+    lda W1              ; reload and save new y
+    sta OAM_MIRROR + 1
+:   rts
 
 
 .a16
@@ -421,16 +476,15 @@ handle_input:
     sta W1
     ; handle left and right
     bit_tribool JOY_RIGHT_SH, JOY_LEFT_SH
-    ldx #0
     A8
-    jsr (.loword(handle_joy1_horz), x)
-    ; handle up and down
+    sta B3L
     A16
     lda W1
     bit_tribool JOY_DOWN_SH, JOY_UP_SH
-    ldx #0
     A8
-    jsr (.loword(handle_joy1_vert), x)
+    sta B3H
+    ldx #0
+    jsr (.loword(handle_player_movement), x)
     rts
 
 
@@ -469,13 +523,13 @@ wait_nmi:
 
 .a8
 update_bgs:
-    lda bg2_x
+    lda map_x
     ;; this is one of those latching regs
     sta BG2HOFS
     ;; we're effectively lobbing off the top two bits of the offset..
     stz BG2HOFS
 
-    lda bg2_y
+    lda map_y
     ;; this is one of those latching regs
     sta BG2VOFS
     ;; we're effectively lobbing off the top two bits of the offset..
