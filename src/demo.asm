@@ -3,6 +3,7 @@
 
 .define ROM_NAME "demo" ; max 21 chars
 
+.include "defines.inc"
 .include "header.inc"
 .include "macros.inc"
 .include "io.inc"
@@ -10,6 +11,8 @@
 .include "init.inc"
 .include "../build/assets/audio.inc"
 .include "../terrific-audio-driver/audio-driver/ca65-api/tad-audio.inc"
+.include "assets.inc"
+.include "data.inc"
 
 .segment "VECTORS"
 .word 0, 0                          ;; Native mode handlers
@@ -28,70 +31,6 @@
 .word .loword(reset_handler)        ; RESET
 .word .loword(spinloop_handler)     ; IRQBRK
 
-
-.segment "RODATA"
-
-;; backgrounds
-town_tiles:
-.incbin"assets/town.tiles"
-town_tiles_end:
-
-town_palette:
-.incbin"assets/town.palette"
-town_palette_end:
-
-town_map:
-.incbin"assets/town-map.map"
-town_map_end:
-
-town_coll:
-.incbin"assets/town-map.coll"
-town_coll_end:
-
-;; sprites
-demo_sprite_tiles:
-.incbin"assets/demo-sprites.tiles"
-demo_sprite_tiles_end:
-
-demo_sprite_palette:
-.incbin"assets/demo-sprites.palette"
-demo_sprite_palette_end:
-
-
-.segment "ZEROPAGE"
-W0:
-B0L:
-.res 1
-B0H:
-.res 1
-W1:
-B1L:
-.res 1
-B1H:
-.res 1
-W2:
-B2L:
-.res 1
-B2H:
-.res 1
-W3:
-B3L:
-.res 1
-B3H:
-.res 1
-in_nmi:
-; data read from joypad 13
-joy1: .res 2
-; trigger read from joypad 1
-joy1_trigger: .res 2
-; held buttons read from joypad 1
-joy1_held: .res 2
-; background 1 horizontal offset
-map_x: .res 2
-map_y: .res 2
-
-.segment "BSS"
-OAM_MIRROR: .res 512
 
 .code
 ;; handlers
@@ -272,11 +211,6 @@ dma_OAM:
 
 ;; game specific
 
-VRAM_SPRITE_BASE = $2000
-VRAM_CHR_BASE = $6000
-VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
-
-
 .a8
 .i16
 ;; set up data
@@ -355,9 +289,44 @@ init_game_data:
 
 
     ; set init program variables
-    lda #00000
-    sta map_x
-    sta map_y
+    ldx #0
+    stx map_x
+    stx map_y
+
+    ldx player_table ; so the first one, p1
+    phx
+    pld              ; set dp to it
+
+    ldx #0
+    stx player::h_velo
+    stx player::v_velo
+
+    ; p1 start position
+    ; $80 pixel offset and $00 subpixels
+    ldx #$8000
+    stx player::x_pos
+    stx player::y_pos
+
+    ldx #move_state::idle
+    stx player::move_state
+
+    ldx #face_dir::right
+    stx player::face_dir
+
+    phk
+    plb ;; set dp back
+
+    ;; set oam for sprite 1 directly.
+    ;; this and the above sprite init data should all be done with some
+    ;; kind of generalized player sprite init routine
+    lda #$00                ; name (place) of first sprite
+    sta OAM_MIRROR + 2
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + 3
+
+    lda #$fe                ; set top bit of x to 0, set 16x16 tile.
+                            ; keep rest of tiles at 1
+    sta OAMDATA + 200
 
     rts
 
@@ -373,88 +342,154 @@ wait_for_joypad:
     A16
     ; read joypad
     rep #$20                         ; set A to 16-bit
-    lda JOY1L                        ; get new input from this frame
-    ldy joy1                         ; get input from last frame
-    sta joy1                         ; store new input from this frame
+
+    ldx #0 ;; we use this for both the offset into the player table
+           ;; as well as the offset into the joypad info hw regs, as both are
+           ;; spaced one word apart.
+joy_loop:
+    stx .loword(W1)
+    lda .loword(player_table), x
+    tdc ;; remapping dp to player x
+
+    lda JOY1L, x                     ; get new input from this frame
+    ldy player::joy                 ; get input from last frame
+    sta player::joy                 ; store new input from this frame
     tya                              ; check for newly pressed buttons...
-    eor joy1                         ; filter buttons that were not pressed last frame
-    and joy1                         ; filter held buttons from last frame
-    sta joy1_trigger                 ; ...and store them
+    eor player::joy                  ; filter buttons that were not pressed last frame
+    and player::joy                  ; filter held buttons from last frame
+    sta player::joy_trigger          ; ...and store them
     ; second, check for buttons held from last frame
     tya                              ; get input from last frame
-    and joy1                         ; filter held buttons from last frame...
-    sta joy1_held                    ; ...store them
+    and player::joy                  ; filter held buttons from last frame...
+    sta player::joy_held             ; ...store them
+    ; for convenience store the or of trigger and held
+    ora player::joy_trigger
+    sta player::joy_trigger_held
 
-    rts
+    ; set some conveniet things
+    bit_tribool JOY_RIGHT_SH, JOY_LEFT_SH
+    sta player::h_tribool
+    lda player::joy_trigger_held
+    bit_tribool JOY_DOWN_SH, JOY_UP_SH
+    sta player::v_tribool
 
-;; collison checking
-; town_coll
-
-
-
-;; horizontal joypad callbacks
-.a8
-move_bg_horz:
-    clc
-    adc map_x
-    sta map_x
-    rts
-
-.a8
-move_sprite_horz:
-
-    clc
-    adc OAM_MIRROR
-    sta OAM_MIRROR
-    rts
-
-;; vertical joypad callbacks
-.a8
-move_bg_vert:
-    clc
-    adc map_y
-    sta map_y
-    rts
-
-.a8
-move_sprite_vert:
-    clc
-    adc OAM_MIRROR + 1
-    sta OAM_MIRROR + 1
+    ;; and increment x and redo for
+    lda .loword(W1)
+    inc
+    inc
+    tax
+    cmp #8
+    beq joy_loop
     rts
 
 
-handle_player_movement:
-.addr handle_movement
+idle:
+    ;; are we instructed to jump?
+    lda player::joy_trigger_held
+    and JOY_B
+    beq idle_done ;; zero set, so nothing is happening
+    ;; state change to jump
+    lda #move_state::jump_up
+    sta player::move_state
 
-.a8
+
+idle_done:
+    rts
+
+
+run:
+    rts
+
+
+jump_up:
+    rts
+
+
+jump_down:
+    rts
+
+
+cling:
+    rts
+
+climb:
+    rts
+
+; jump table of player movement states
+move_table:
+.addr idle
+.addr run
+.addr jump_up
+.addr jump_down
+.addr cling
+.addr climb
+
+
+;; my current thinking is:
+;; - first handle all movement to see what new coordinate
+;;   our sprite would end up
+;; - then do collision tests, for now only with terrain
+;; - if collision, this will mean a new state, and we need to process the
+;; aftermath
+;;
+;; - sprites have a bounding box that we need to check for collisions.
+;;   depending on which direction we move in, we can check different points
+;;   of this box. So say we go left, we check left up and left down,
+;;   we fall left, we check left up, left down and right down
+;;   we might want to check 6 points so we don't allow impaling ourselves horizontally on
+;;   8x8 blocks
+.a16
 .i16
-;; B0L - horizontal tribool
-;; B0H - vertical tribool
+handle_player_movement:
+    lda player::move_state
+    asl
+    tax
+    jsr (.loword(move_table), x)
+
+    jsr check_collisions
+    rts
+
+
+.a16
+.i16
 handle_movement:
-    ;; first find out what is our next position
-    lda OAM_MIRROR + 1  ; load y of first sprite
-    clc
-    adc B3H             ; add/subtract tibool to/from y
-    sta W1              ; save y for later
-    rshift 3            ; divide by 8, truncating to get y tile offset
+    ;; loop over player movement
+    ldx #0
+    phx
+player_movement_loop:
+    lda .loword(player_table), x
+    tdc ;; remapping dp to player x
+    jsr handle_player_movement
+    plx
+    inc
+    inc
+    phx
+    cmp #8
+    bne player_movement_loop
+    plx
+    rts
+
+
+.a16
+.i16
+check_collisions:
+    lda player::y_new  ; load y of first sprite
+    rshift 2                ; remove sub-pixels
+    rshift 3                ; divide by 8, truncating to get y tile offset
+    A8
     ; multiply Y by 32
     sta WRMPYA ; set first nr to muliply: y offset
     lda #$20
     sta WRMPYB ; set second nr to multiply row size
     ;; now calculate X tile offset while we wait (more than) 8 cycles for
     ;; multiplication to complete
-    lda #$00
-    xba                 ; make sure that B is 0x00
-    lda OAM_MIRROR      ; load x of first sprite
-    clc
-    adc B3L             ; add/subtract tribool to/from x
-    sta W2              ; save x for later
-    rshift 3            ; divide by 8 to get x tile offset
     A16
+    lda player::x_new   ; load y of first sprite
+    rshift 2            ; remove sub-pixels
+    rshift 3            ; divide by 8 to get x tile offset
     clc
     adc RDMPYL          ; add y to x, tile offset is in A
-    sta W0              ; save tile offset to W0 for later
+    sta .loword(W0)     ; save tile offset to W0 for later
     tax
     ldy town_coll, x    ; coll map entry
     bne collision       ; if not zero, collision
@@ -471,9 +506,9 @@ handle_movement:
     ldy town_coll, x    ; coll map entry
     bne collision       ; if not zero, collision
     ;; check middle left
-    lda W0
+    lda .loword(W0)
     clc
-    adc #$1            ; check tile below
+    adc #$1            ; check top right
     tax
     ldy town_coll, x    ; coll map entry
     bne collision       ; if not zero, collision
@@ -489,37 +524,15 @@ handle_movement:
     tax
     ldy town_coll, x    ; coll map entry
     bne collision       ; if not zero, collision
-    A8
-    lda W2              ; reload new x
-    sta OAM_MIRROR
-    lda W1              ; reload and save new y
-    sta OAM_MIRROR + 1
+    rts
 collision:
-    A8
+    ;; in this naive implementation, any collision means that
+    ;; we want to revert back to the original state
+    lda player::x_pos
+    sta player::x_new
+    lda player::y_pos
+    sta player::y_new
     rts
-
-
-.a16
-.i16
-handle_input:
-    ; what are we pressing
-    lda #0000
-    ora joy1_trigger
-    ora joy1_held
-    sta W1
-    ; handle left and right
-    bit_tribool JOY_RIGHT_SH, JOY_LEFT_SH
-    A8
-    sta B3L
-    A16
-    lda W1
-    bit_tribool JOY_DOWN_SH, JOY_UP_SH
-    A8
-    sta B3H
-    ldx #0
-    jsr (.loword(handle_player_movement), x)
-    rts
-
 
 .a8
 .i16
@@ -580,18 +593,24 @@ update_vram:
     I16
     rts
 
+prepare_for_vram:
+    lda player_table + player::x_new
+    rshift 2
+    sta OAM_MIRROR
+    lda player_table + player::y_new
+    rshift 2
+    sta OAM_MIRROR + 1
+
 .a8
 .i16
 game_loop:
     jsr wait_nmi ; wait for NMI / V-Blank
     ; we're in vblank, so first upddate video memory things
     jsr update_vram
-
     jsr read_input
-    ;; we already are and stay in A16
-    jsr handle_input
-    ;; handle_input sets A8
-
+    A8
+    jsr handle_movement
+    jsr prepare_for_vram
     jmp game_loop
 
 
@@ -600,22 +619,8 @@ game_loop:
 main:
     jsr init_game_data
 
-    ; set up sprite OAM data
-    lda #(256/2 - 8)       ; horizontal position of first sprite
-    sta OAM_MIRROR
-    lda #100                ; vertical position of first sprite
-    sta OAM_MIRROR + 1
-    lda #$00                ; name (place) of first sprite
-    sta OAM_MIRROR + 2
-    lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + 3
-
-    lda #$fe                ; set top bit of x to 0, set 16x16 tile. keep rest of tiles at 1
-    sta OAMDATA + 200
-
-
     ;; play some music
-    lda     #1
+    lda #1
     jsr load_song
 
 
