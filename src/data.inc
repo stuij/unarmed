@@ -22,24 +22,9 @@ B3L:
 .res 1
 B3H:
 .res 1
+
 in_nmi:
-
-;; current player reference
-P: .res 2
-
-player_table:
-.word .loword(p1)
-.word .loword(p2)
-.word .loword(p3)
-.word .loword(p4)
-
-
-v_velo_init:
-.word V_VELO_INIT
-h_velo_max:
-.word H_VELO_MAX
-v_velo_down_max:
-.word V_VELO_DOWN_MAX
+.res 2
 
 ;; map data
 map_x: .res 2

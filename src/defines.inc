@@ -8,9 +8,11 @@ VRAM_CHR_BASE = $6000
 VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
 
 ;; move state of player, potential other things
+H_VELO_INC = $1 ; 1 subpixel
 H_VELO_MAX = $60
-V_VELO_INIT = $ce
-V_VELO_DOWN_MAX = $FF
+V_VELO_INIT = $FFD0 ;; -30
+V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
+V_VELO_DOWN_MAX = $42
 
 .enum move_state
     idle
@@ -51,9 +53,9 @@ V_VELO_DOWN_MAX = $FF
     y_pos       .word
     x_new       .word
     y_new       .word
-    v_velo      .word
     h_velo      .word
-    velo_init   .word
+    v_velo      .word
+    v_velo_dec  .word
     bbox .tag bbox
 .endstruct
 

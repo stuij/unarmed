@@ -78,7 +78,7 @@ reset_handler:
     jml :+
 :   bit RDNMI ; it is required to read this register
               ; in the NMI handler
-    inc in_nmi
+    inc .loword(in_nmi)
     rti
 
 irq_handler:
@@ -293,29 +293,39 @@ init_game_data:
     stx map_x
     stx map_y
 
-    ldx player_table ; so the first one, p1
-    phx
-    pld              ; set dp to it
+    A16
+    ;; ldx is still 0
+player_init_loop:
+    lda .loword(player_table), x ; player struct under x offset
+    tcd ; set dp to it
 
-    ldx #0
-    stx player::h_velo
-    stx player::v_velo
+    ldy #0
+    sty player::h_velo
+    sty player::v_velo
+    sty player::joy
 
     ; p1 start position
-    ; $80 pixel offset and $00 subpixels
-    ldx #$8000
-    stx player::x_pos
-    stx player::y_pos
+    ; $80 pixel offset and $0 subpixels
+    ldy #$800
+    sty player::x_pos
+    sty player::y_pos
 
-    ldx #move_state::idle
-    stx player::move_state
+    ldy #move_state::idle
+    sty player::move_state
 
-    ldx #face_dir::right
-    stx player::face_dir
+    ldy #face_dir::right
+    sty player::face_dir
+    txa
+    inc
+    inc
+    tax
+    cpx #8
+    bne player_init_loop
 
-    phk
-    plb ;; set dp back
+    lda #0
+    tcd
 
+    A8
     ;; set oam for sprite 1 directly.
     ;; this and the above sprite init data should all be done with some
     ;; kind of generalized player sprite init routine
@@ -349,7 +359,7 @@ wait_for_joypad:
 joy_loop:
     stx .loword(W1)
     lda .loword(player_table), x
-    tdc ;; remapping dp to player x
+    tcd ;; remapping dp to player x
 
     lda JOY1L, x                     ; get new input from this frame
     ldy player::joy                 ; get input from last frame
@@ -378,36 +388,61 @@ joy_loop:
     inc
     inc
     tax
-    cmp #8
-    beq joy_loop
+    cpx #8
+    bne joy_loop
+    lda $0
+    tcd
     rts
+
+
+jump:
+    ;; change player pos based on velocity
+    lda player::y_pos
+    clc
+    adc player::v_velo ; at some point this will go negative,
+                       ; which is excellent as that means we're going down now
+    sta player::y_new
+
+    ;; decrease velocity
+    lda player::v_velo
+    clc ; carry set means we're not borrowing
+    adc player::v_velo_dec
+    sta player::v_velo
+    rts
+
+
+
+init_jump:
+    lda #V_VELO_INIT
+    sta player::v_velo
+    lda #V_VELO_DEC
+    sta player::v_velo_dec
+    lda #move_state::jump_up
+    sta player::move_state
+    asl ;; times 2 to get proper fn offset
+    tax
+    jmp (.loword(move_table), x)
 
 
 idle:
     ;; are we instructed to jump?
     lda player::joy_trigger_held
-    and JOY_B
-    beq idle_done ;; zero set, so nothing is happening
+    and #JOY_B
+    beq still_idle ;; zero set, no match
     ;; state change to jump
-    lda #move_state::jump_up
-    sta player::move_state
+    jmp init_jump
 
-
-idle_done:
+still_idle:
+    ;; new x/y is old x/y
+    lda player::x_pos
+    sta player::x_new
+    lda player::y_pos
+    sta player::y_new
     rts
 
 
 run:
     rts
-
-
-jump_up:
-    rts
-
-
-jump_down:
-    rts
-
 
 cling:
     rts
@@ -419,11 +454,17 @@ climb:
 move_table:
 .addr idle
 .addr run
-.addr jump_up
-.addr jump_down
+.addr jump ;; both jump_up and jump_down states
+.addr jump ;; lead us to the jump callback for now.
 .addr cling
 .addr climb
 
+
+player_table:
+.addr .loword(p1)
+.addr .loword(p2)
+.addr .loword(p3)
+.addr .loword(p4)
 
 ;; my current thinking is:
 ;; - first handle all movement to see what new coordinate
@@ -458,15 +499,18 @@ handle_movement:
     phx
 player_movement_loop:
     lda .loword(player_table), x
-    tdc ;; remapping dp to player x
+    tcd ;; remapping dp to player x
     jsr handle_player_movement
-    plx
+    pla
     inc
     inc
+    tax
     phx
-    cmp #8
+    cpx #8
     bne player_movement_loop
-    plx
+    plx ; clear the stack
+    lda $0
+    tcd
     rts
 
 
@@ -474,7 +518,7 @@ player_movement_loop:
 .i16
 check_collisions:
     lda player::y_new  ; load y of first sprite
-    rshift 2                ; remove sub-pixels
+    rshift 4                ; remove sub-pixels
     rshift 3                ; divide by 8, truncating to get y tile offset
     A8
     ; multiply Y by 32
@@ -485,7 +529,7 @@ check_collisions:
     ;; multiplication to complete
     A16
     lda player::x_new   ; load y of first sprite
-    rshift 2            ; remove sub-pixels
+    rshift 4            ; remove sub-pixels
     rshift 3            ; divide by 8 to get x tile offset
     clc
     adc RDMPYL          ; add y to x, tile offset is in A
@@ -558,10 +602,10 @@ load_song:
 .i16
 wait_nmi:
     ;should work fine regardless of size of A
-    lda in_nmi ;load A register with previous in_nmi
+    lda .loword(in_nmi) ;load A register with previous in_nmi
 @check_again:
 	wai ;wait for an interrupt
-    cmp in_nmi  ;compare A to current in_nmi
+    cmp .loword(in_nmi)  ;compare A to current in_nmi
                 ;wait for it to change
                 ;make sure it was an nmi interrupt
     beq @check_again
@@ -593,12 +637,23 @@ update_vram:
     I16
     rts
 
-prepare_for_vram:
-    lda player_table + player::x_new
-    rshift 2
+.a16
+.i16
+finalise:
+    ;; for shame, make this more fancy
+
+    ;; we now know x and y won't change anymore, so lock them into x/y_pos
+    ;; also write them to the OAM mirror
+    lda p1 + player::x_new
+    sta p1 + player::x_pos
+    rshift 4
+    A8
     sta OAM_MIRROR
-    lda player_table + player::y_new
-    rshift 2
+    A16
+    lda p1 + player::y_new
+    sta p1 + player::y_pos
+    rshift 4
+    A8
     sta OAM_MIRROR + 1
 
 .a8
@@ -608,9 +663,10 @@ game_loop:
     ; we're in vblank, so first upddate video memory things
     jsr update_vram
     jsr read_input
-    A8
+    A16
     jsr handle_movement
-    jsr prepare_for_vram
+    jsr finalise
+    A8
     jmp game_loop
 
 
@@ -636,6 +692,5 @@ main:
     ; enable NMI, turn on automatic joypad polling
     lda #$81
     sta NMITIMEN
-
 
     jmp game_loop
