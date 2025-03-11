@@ -315,6 +315,12 @@ player_init_loop:
 
     ldy #face_dir::right
     sty player::face_dir
+
+    ldy #3
+    sty player::bbox + bbox::bottom_left + point::x_off
+    ldy #$9
+    sty player::bbox + bbox::bottom_left + point::y_off
+
     txa
     inc
     inc
@@ -396,6 +402,12 @@ joy_loop:
 
 
 jump:
+    ;; decrease velocity
+    lda player::v_velo
+    clc ; carry set means we're not borrowing
+    adc player::v_velo_dec
+    sta player::v_velo
+
     ;; change player pos based on velocity
     lda player::y_pos
     clc
@@ -403,11 +415,6 @@ jump:
                        ; which is excellent as that means we're going down now
     sta player::y_new
 
-    ;; decrease velocity
-    lda player::v_velo
-    clc ; carry set means we're not borrowing
-    adc player::v_velo_dec
-    sta player::v_velo
     rts
 
 
@@ -517,8 +524,21 @@ player_movement_loop:
 .a16
 .i16
 check_collisions:
+    ;; set up stack pointer
+    tsc ;; pull current stack pointer to A
+    pha ;; push to stack, so we can easily reset later
+
+    sec
+    sbc #$e ;; make room for 5 stack arguments (we just pushed the sp so we got
+            ;; one 16bit arg less)
+    tcs
+
     lda player::y_new  ; load y of first sprite
     rshift 4                ; remove sub-pixels
+    tay
+    and 7
+    sta $b, s               ; position of y within tile
+    tya
     rshift 3                ; divide by 8, truncating to get y tile offset
     A8
     ; multiply Y by 32
@@ -528,47 +548,80 @@ check_collisions:
     ;; now calculate X tile offset while we wait (more than) 8 cycles for
     ;; multiplication to complete
     A16
-    lda player::x_new   ; load y of first sprite
+    lda player::x_new   ; load x of first sprite
     rshift 4            ; remove sub-pixels
+    tax
+    and 7
+    sta $9, s           ; position of x within tile
+    txa
     rshift 3            ; divide by 8 to get x tile offset
     clc
     adc RDMPYL          ; add y to x, tile offset is in A
-    sta .loword(W0)     ; save tile offset to W0 for later
-    tax
-    ldy town_coll, x    ; coll map entry
-    bne collision       ; if not zero, collision
-    ;; check middle left
+    sta $7, s           ; save tile offset to stack for later
+    ;; So now we have our base
+    ;; Our stack, growing down looks like:
+    ;; - top-left corner y offset into 8x8 tile
+    ;; - top-left corner x offset into 8x8 tile
+    ;; - top-left corner offset into collision map <- SP
+    ;;
+    ;; below the stack is augmented with:
+    ;; - running offset in collision map for individual point
+    ;;
+    ;; in y: y coord
+    ;; in x: x coord
+    ;;
+    ;; From here on it becomes a game of iterating over the points of our
+    ;; bounding box and figuring out if they cause a collision. If so, by how
+    ;; much should we move backwards from our point of travel to snap to the
+    ;; grid.
+    ;;
+    ;; We should also check if one pixel beyond our bounding box is a surface we
+    ;; want to walk on/cling to. Once we get there I guess we will chop this fn
+    ;; up for some code reusability.
+    ;;
+    ;; First up, see if we need to move the offset into the collision map for y
+    lda $b, s
+    A8
     clc
-    adc #$20            ; check tile below
-    tax
-    ldy town_coll, x    ; coll map entry
-    bne collision       ; if not zero, collision
-    ;; check middle left
+    adc player::bbox + bbox::bottom_left + point::y_off
+    A16
+    sta 3, s ;; save offset for if we need to do micro pushback
+    rshift 3 ;; truncate to see if we're spilling over into another tile
+    beq y_no_spill  ; we're not spilling over
+    A8
+    sta WRMPYA      ; unfortunately we have to do more muliplications
+    lda #$20
+    sta WRMPYB ; set second nr to multiply row size
+    A16
+    lda $7, s  ; collision map tile from stack 4 cycles
+    clc        ; 2 cycles
+    adc RDMPYL ; 4 cycles = enough cycles before reading to make up
+               ; multiplication budget
+    sta $5, s   ; push collision map tile for this point (we need other tile later)
+    bra point_x_calc
+y_no_spill: ;; y didn't spill. to keep symmetry with above basic block, push unmodified
+            ;; collision map tile to stack
+    lda $7, s
+    sta $5, s
+point_x_calc:
+    ;; calc possible x collision tile, and check collision before we start
+    ;; thinking about calculating possible sprite pushback to grid coords
+    lda $9, s
+    A8
     clc
-    adc #$20            ; check tile below
-    tax
-    ldy town_coll, x    ; coll map entry
-    bne collision       ; if not zero, collision
-    ;; check middle left
-    lda .loword(W0)
+    adc player::bbox + bbox::bottom_left + point::x_off ; again, do x in the meantime
+    A16
+    sta 1, s
+    rshift 3
     clc
-    adc #$1            ; check top right
+    adc 5, s ;; add to point-local collision map offset
+    sta 5, s
     tax
-    ldy town_coll, x    ; coll map entry
+    A8
+    lda town_coll, x    ; check collision map for point
+    A16
     bne collision       ; if not zero, collision
-    ;; check middle left
-    clc
-    adc #$20            ; check tile below
-    tax
-    ldy town_coll, x    ; coll map entry
-    bne collision       ; if not zero, collision
-    ;; check middle left
-    clc
-    adc #$20            ; check tile below
-    tax
-    ldy town_coll, x    ; coll map entry
-    bne collision       ; if not zero, collision
-    rts
+    bra collision_end   ; otherwise we can return, doing nothing
 collision:
     ;; in this naive implementation, any collision means that
     ;; we want to revert back to the original state
@@ -576,6 +629,10 @@ collision:
     sta player::x_new
     lda player::y_pos
     sta player::y_new
+    ;; dissolve stack frame
+collision_end:
+    lda $d, s
+    tcs
     rts
 
 .a8

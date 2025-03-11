@@ -28,18 +28,25 @@ V_VELO_DOWN_MAX = $42
     right
 .endenum
 
+.struct point
+    x_off .byte
+    y_off .byte
+.endstruct
+
 ; bounding box
+;; points are offset from top-left corner:
+;;   one byte for x, and one for y
 .struct bbox
-    top_left .byte
-    middle_left .byte
-    bottom_left .byte
-    top_right .byte
-    middle_right .byte
-    bottom_right .byte
+    top_left .tag point
+    middle_left .tag point
+    bottom_left .tag point
+    top_right .tag point
+    middle_right .tag point
+    bottom_right .tag point
 .endstruct
 
 ; x/y nrs are in sub-pixels,
-; aka .2 precision fixed point behind the pixel-comma
+; aka .1 precision fixed point behind the pixel-comma
 .struct player
     joy         .word ; last frame buttons
     joy_trigger .word ; only buttons that weren't pressed last frame
@@ -53,6 +60,9 @@ V_VELO_DOWN_MAX = $42
     y_pos       .word
     x_new       .word
     y_new       .word
+    ;; v velo and h velo will also automatically give us moving
+    ;; direction, and so will tell us what way to correct to
+    ;; when moving through barrier tiles
     h_velo      .word
     v_velo      .word
     v_velo_dec  .word
