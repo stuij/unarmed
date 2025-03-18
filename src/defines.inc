@@ -29,20 +29,22 @@ V_VELO_DOWN_MAX = $42
 .endenum
 
 .struct point
-    x_off .byte
-    y_off .byte
+    y_off .word
+    x_off .word
 .endstruct
 
 ; bounding box
 ;; points are offset from top-left corner:
 ;;   one byte for x, and one for y
-.struct bbox
-    top_left .tag point
-    middle_left .tag point
-    bottom_left .tag point
-    top_right .tag point
-    middle_right .tag point
-    bottom_right .tag point
+.struct player_bbox
+    top_left      .tag point
+    middle_left   .tag point
+    bottom_left   .tag point
+    top_middle    .tag point
+    bottom_middle .tag point
+    top_right     .tag point
+    middle_right  .tag point
+    bottom_right  .tag point
 .endstruct
 
 ; x/y nrs are in sub-pixels,
@@ -66,7 +68,7 @@ V_VELO_DOWN_MAX = $42
     h_velo      .word
     v_velo      .word
     v_velo_dec  .word
-    bbox .tag bbox
+    bbox        .addr ;; pointer to actual bbox
 .endstruct
 
 .endif ; DEFINES_INC
