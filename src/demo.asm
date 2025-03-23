@@ -306,7 +306,7 @@ player_init_loop:
 
     ; p1 start position
     ; $80 pixel offset and $0 subpixels
-    ldy #$800
+    ldy #$7b0
     sty player::x_pos
     sty player::y_pos
 
@@ -402,10 +402,19 @@ joy_loop:
 jump:
     ;; decrease velocity
     lda player::v_velo
+    ;; 65816 doesn't suppport signed compare without extra steps, so..
+    ;; if velo is negative, we for sure need to increase velo
+    bmi jump_add_velo
+    ;; now we can do unsigned compare
+    cmp #V_VELO_DOWN_MAX
+    bcs jump_after_velo_add ;; we're at max down velocity, so skip velo increase
+
+jump_add_velo:
     clc ; carry set means we're not borrowing
     adc player::v_velo_dec
     sta player::v_velo
 
+jump_after_velo_add:
     ;; change player pos based on velocity
     lda player::y_pos
     clc
@@ -518,7 +527,11 @@ player_movement_loop:
     tcd
     rts
 
-COLL_STACK_ROOM = $e
+COLL_STACK_ROOM = $17
+COLL_STACK_POINT_Y_COORD = 13
+COLL_STACK_POINT_X_COORD = $11
+COLL_STACK_POINT_Y_OFF_NEW_SUB = $f
+COLL_STACK_POINT_X_OFF_NEW_SUB = $d
 COLL_STACK_Y_OFF_NEW = $b
 COLL_STACK_X_OFF_NEW = $9
 COLL_STACK_TILE_OFF = $7
@@ -627,23 +640,204 @@ point_x_calc:
     lda town_coll, x    ; check collision map for point
     A16
     bne collision       ; if not zero, collision
-    bra collision_end   ; otherwise we can return, doing nothing
+    jmp collision_end   ; otherwise we can return, doing nothing
 collision:
-    ;; in this naive implementation, any collision means that
-    ;; we want to revert back to the original state
-    lda player::x_pos
-    sta player::x_new
-    lda player::y_pos
+    ;; Once we know x and y direction,
+    ;; we can make sensible decision on snapping.
+    ;; We will first test which axis is the shallowest, as it's hopefully
+    ;; a sensible and inexpensive proxy for what makes the most sense to snap
+    ;; to:
+    ;;
+    ;; Most often the shallower side will be the side that was actually
+    ;; penetrated (should mostly just be a pixel or two in depth), and if not,
+    ;; snapping to the shallow side will be less invasive, as it will be less
+    ;; noticed.
+    ;;
+    ;; The whole setup becomes a bit convoluted unfortunately.
+    ;; To make things a bit more manageable, we will have greater than tests
+    ;; for all 4 diagonal directions, which will go to either x or y snap.
+    ;; If x or y is not moving we go straight to the opposite direction snap
+    ;; in the snap sections. We again test for direction to not go crazy with
+    ;; the logic (it's pretty cheap), and decide there on snap to the right
+    ;; side. Then we do another (simpler) collision test, and if we do have
+    ;; a collision, we go straight to snapping the other axis.
+    ;; after this, no extra snapping should be necessary.
+    ;;
+    ;; If we do end up in an endless loop, we know our logic is wrong,
+    ;; and it will be easy to spot it was the collision handling :)
+    ;;
+    ;; first we check if we straddled a block boundry in x or y direction
+    ;; x direction
+    ;;
+    ;; reconstruct exact y position of point
+    ;; Ideally I'd like to keep all calculations in subpixel format
+    ;; but that makes the multiplication calculations above expensive.
+    ;; As these calculations when we know collision happens will happen
+    ;; much less frequent, this seems the better way.
+    dey ;; move back to y within current bbox
+    dey
+    lda (player::bbox), y
+    asl
+    asl
+    asl
+    asl
+    adc player::y_new
+    sta COLL_STACK_POINT_Y_COORD
+    and #$7f
+    sta COLL_STACK_POINT_Y_OFF_NEW_SUB, s
+
+    iny ;; and increment again to get to x
+    iny
+    lda (player::bbox), y
+    asl
+    asl
+    asl
+    asl
+    adc player::x_new
+    sta COLL_STACK_POINT_X_COORD
+    and #$7f
+    sta COLL_STACK_POINT_X_OFF_NEW_SUB, s
+
+
+    lda player::h_velo
+    eor #$FFFF
+    adc #1
+    clc
+    adc COLL_STACK_POINT_X_OFF_NEW_SUB, s ; (~velocity) + point offset
+    and #$FF80 ; not z flag set, so bigger than 8 + subpixels
+               ; tells us we moved out of the block
+    beq coll_snap_y ; not moved out of x, so after snapping y, we're done
+    ;; if n flag set, we moved from left block, so towards right
+    bmi coll_x_right
+
+
+    ;; x = moving left
+    lda player::v_velo
+    eor #$FFFF
+    adc #1
+    clc
+    adc COLL_STACK_POINT_Y_OFF_NEW_SUB, s ; (~velocity) + point offset
+    and #$FF80 ; not z flag set, so bigger than 8 + subpixels
+               ; tells us we moved out of the block
+    bne :+ 
+    jmp coll_snap_to_right
+    ;; if n flag set, we moved from upper block, so downwards
+  : bmi coll_left_down
+    bra coll_left_up
+
+coll_x_right:
+    lda player::v_velo
+    eor #$FFFF
+    adc #1
+    clc
+    adc COLL_STACK_POINT_Y_OFF_NEW_SUB, s ; add velocity and block offset
+    and #$FF80 ; not z flag set, so bigger than 8 + subpixels
+               ; tells us we moved out of the block
+    ;; if n flag set, we moved from upper block, so downwards
+    beq coll_snap_to_left
+    bmi coll_right_down
+    bra coll_right_up
+
+coll_snap_y:
+    lda player::v_velo
+    tax
+    eor #$FFFF
+    adc #1
+    sta player::tmp
+    lda COLL_STACK_POINT_Y_OFF_NEW_SUB, s ; point offset + (~velocity)
+    adc player::tmp
+    and #$FF80 ; not z flag set, so bigger than 8 + subpixels
+               ; tells us we moved out of the block
+    beq collision_end ;; assuming we got here from x also not out of bounds
+    ;; if n flag set, we moved from upper block, so downwards
+    bmi coll_snap_to_top
+    bra coll_snap_to_bottom
+
+;; now we resolved straight up/down, left/right
+;; but if we moved diagonal into a new block, which way should we snap?
+coll_left_up:
+    lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
+    cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
+    ;; for both, higher nr means shallower
+    ;; carry clear means x is higher
+    bcc coll_snap_to_right
+    bra coll_snap_to_bottom
+
+
+coll_left_down:
+    lda #7 ;; reverse x to be able to compare sensibly
+    sec
+    sbc COLL_STACK_POINT_X_OFF_NEW_SUB, s
+    cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
+    ;; carry clear means x is higher (while inversed direction)
+    bcc coll_snap_to_top
+    bra coll_snap_to_right
+    
+coll_right_up:
+    lda #7 ;; reverse x to be able to compare sensibly
+    sec
+    sbc COLL_STACK_POINT_X_OFF_NEW_SUB, s
+    cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
+    ;; carry clear means x is higher (while inversed direction)
+    bcc coll_snap_to_left
+    bra coll_snap_to_bottom    
+
+coll_right_down:
+    lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
+    cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
+    ;; carry clear means x is higher
+    bcc coll_snap_to_top
+    bra coll_snap_to_left
+
+
+;; snapping to what?
+coll_snap_to_top:
+    lda COLL_STACK_POINT_Y_OFF_NEW_SUB, s
+    ;; so the bit that sticks out upwards is now in A
+    ;; we AND with 7f, so we know how much of it sticks up,
+    and #$7f
+    sta player::tmp
+    lda player::y_new ; so we're effectively
+    sec
+    sbc player::tmp
+    sbc #$20
+    sta player::y_new ; doing y_new - nr
+
+    ;; this means we just hit the bottom
+    ;; let's start by just putting us in idle mode
+    lda #move_state::idle
+    sta player::move_state
+
+    bra collision_end
+
+coll_snap_to_bottom:
+    lda COLL_STACK_POINT_Y_OFF_NEW_SUB, s
+    ;; so the bit that sticks out upwards is now in A
+    and #$7f
+    eor #$FFFF
+    adc #$1
+    clc
+    adc #$80 ; effectively y_new + (8 - nr)
+    adc player::y_new ; and we want to add that to the new y
     sta player::y_new
-    ;; dissolve stack frame
+    bra collision_end
+
+
+coll_snap_to_left:
+
+coll_snap_to_right:
+
+
 collision_end:
     iny
     iny
     cpy player_bbox_end_offs
-    bne coll_point_loop ; not equal so we do another round
+    beq collision_cleanup
+    jmp coll_point_loop ; not equal so we do another round
+collision_cleanup:
     ; end of point loop so we're done
-    lda COLL_STACK_ROOM - 1, s
-    tcs
+    lda COLL_STACK_ROOM - 1, s ; restore stack
+    tcs                        ; pointer
     rts
 
 
@@ -659,13 +853,13 @@ player_bbox_default:
 .word 8  ;; y
 .word 3  ;; x
 ;; bottom left
-.word $d ;; y
+.word $f ;; y
 .word 3  ;; x
 ;; top middle
 .word 1  ;; y
 .word 8  ;; x
 ;; bottom middle
-.word $d ;; y
+.word $f ;; y
 .word 8  ;; x
 ;; top right
 .word 1  ;; y
@@ -674,7 +868,7 @@ player_bbox_default:
 .word 8  ;; y
 .word $d ;; x
 ;; bottom right
-.word $d ;; y
+.word $f ;; y
 .word $d ;; x
 
 

@@ -37,38 +37,39 @@ V_VELO_DOWN_MAX = $42
 ;; points are offset from top-left corner:
 ;;   one byte for x, and one for y
 .struct player_bbox
-    top_left      .tag point
-    middle_left   .tag point
-    bottom_left   .tag point
-    top_middle    .tag point
-    bottom_middle .tag point
-    top_right     .tag point
-    middle_right  .tag point
-    bottom_right  .tag point
+    top_left      .tag point ; 0
+    middle_left   .tag point ; 4
+    bottom_left   .tag point ; 8
+    top_middle    .tag point ; c
+    bottom_middle .tag point ; 10
+    top_right     .tag point ; 14
+    middle_right  .tag point ; 18
+    bottom_right  .tag point ; 1c
 .endstruct
 
 ; x/y nrs are in sub-pixels,
 ; aka .1 precision fixed point behind the pixel-comma
 .struct player
-    joy         .word ; last frame buttons
-    joy_trigger .word ; only buttons that weren't pressed last frame
-    joy_held    .word ; buttons pressed this frame and last frame
-    joy_trigger_held .word ; both new and held buttons
-    move_state  .word
-    face_dir    .word
-    h_tribool   .word
-    v_tribool   .word
-    x_pos       .word
-    y_pos       .word
-    x_new       .word
-    y_new       .word
+    joy         .word ; 0 - last frame buttons
+    joy_trigger .word ; 2 - only buttons that weren't pressed last frame
+    joy_held    .word ; 4 - buttons pressed this frame and last frame
+    joy_trigger_held .word ; 6 - both new and held buttons
+    move_state  .word ; 8
+    face_dir    .word ; a
+    h_tribool   .word ; c
+    v_tribool   .word ; e
     ;; v velo and h velo will also automatically give us moving
     ;; direction, and so will tell us what way to correct to
     ;; when moving through barrier tiles
-    h_velo      .word
-    v_velo      .word
-    v_velo_dec  .word
-    bbox        .addr ;; pointer to actual bbox
+    h_velo      .word ; 10
+    x_pos       .word ; 12
+    x_new       .word ; 14
+    v_velo      .word ; 16
+    y_pos       .word ; 18
+    y_new       .word ; 1a
+    v_velo_dec  .word ; 1c
+    bbox        .addr ; 1e - pointer to actual bbox
+    tmp         .word ; 20 - scratch pad
 .endstruct
 
 .endif ; DEFINES_INC
