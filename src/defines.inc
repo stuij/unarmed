@@ -9,10 +9,15 @@ VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
 
 ;; move state of player, potential other things
 H_VELO_INC = $1 ; 1 subpixel
-H_VELO_MAX = $60
-V_VELO_INIT = $FFD0 ;; -30
+H_VELO_INC_OPPOSITE = $5
+H_VELO_INC_RELAX = $2
+H_VELO_MAX = $40
+V_VELO_INIT = $ffd0 ;; -30
 V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
 V_VELO_DOWN_MAX = $42
+
+P1_START_X = $7b0
+P1_START_Y = $900
 
 .enum move_state
     idle
@@ -64,12 +69,14 @@ V_VELO_DOWN_MAX = $42
     h_velo      .word ; 10
     x_pos       .word ; 12
     x_new       .word ; 14
-    v_velo      .word ; 16
-    y_pos       .word ; 18
-    y_new       .word ; 1a
-    v_velo_dec  .word ; 1c
-    bbox        .addr ; 1e - pointer to actual bbox
-    tmp         .word ; 20 - scratch pad
+    h_velo_inc  .word ; 16
+    h_velo_dec  .word ; 18
+    v_velo      .word ; 1a
+    y_pos       .word ; 1c
+    y_new       .word ; 1e
+    v_velo_dec  .word ; 20
+    bbox        .addr ; 22 - pointer to actual bbox
+    tmp         .word ; 24 - scratch pad
 .endstruct
 
 .endif ; DEFINES_INC

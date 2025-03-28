@@ -306,8 +306,9 @@ player_init_loop:
 
     ; p1 start position
     ; $80 pixel offset and $0 subpixels
-    ldy #$7b0
+    ldy #P1_START_X
     sty player::x_pos
+    ldy #P1_START_Y
     sty player::y_pos
 
     ldy #move_state::idle
@@ -408,12 +409,10 @@ jump:
     ;; now we can do unsigned compare
     cmp #V_VELO_DOWN_MAX
     bcs jump_after_velo_add ;; we're at max down velocity, so skip velo increase
-
 jump_add_velo:
     clc ; carry set means we're not borrowing
     adc player::v_velo_dec
     sta player::v_velo
-
 jump_after_velo_add:
     ;; change player pos based on velocity
     lda player::y_pos
@@ -421,9 +420,7 @@ jump_after_velo_add:
     adc player::v_velo ; at some point this will go negative,
                        ; which is excellent as that means we're going down now
     sta player::y_new
-
     rts
-
 
 
 init_jump:
@@ -437,14 +434,111 @@ init_jump:
     tax
     jmp (.loword(move_table), x)
 
+run:
+    lda player::h_tribool
+    beq run_no_push ;; we've got momentum, but we are not actually pushing a button
+    bmi run_push_left ; we're pushing left on direction pad
+    
+    ;; we're pushing right
+    lda player::h_velo
+    bmi run_push_right_move_left
+    ;; we push right and we move right
+    cmp #H_VELO_MAX
+    bcs run_handle_velo ;; no velo change. velo is bigger, so we hit our max
+    adc #H_VELO_INC
+    sta player::h_velo
+    bra run_handle_velo
+
+run_push_right_move_left:
+    adc #H_VELO_INC_OPPOSITE
+    sta player::h_velo
+    bra run_handle_velo
+
+    ;; cpu doesn't do signed compare, so we need to do some work
+    ;; - if velo is positive, we can just decrease. we're not hitting
+    ;;   we can't be hitting max velo
+    ;; - if velo is negative, we invert, and compare to H_MAX_VELO
+run_push_left:
+    lda player::h_velo
+    beq run_push_left_move_left
+    bpl run_push_left_move_right
+run_push_left_move_left:
+    eor #$FFFF
+    adc #1
+    cmp #H_VELO_MAX
+    bcs run_handle_velo ;; no velo change. velo is bigger, so we hit our max
+    ;; otherwise increase velo
+    lda player::h_velo
+    sec
+    sbc #H_VELO_INC
+    sta player::h_velo
+    bra run_handle_velo
+run_push_left_move_right:
+    ;; when pushing opposite dir of run, we want to decrease velo extra
+    sec
+    sbc #H_VELO_INC_OPPOSITE
+    sta player::h_velo
+    bra run_handle_velo
+run_no_push:
+    lda player::h_velo
+    bmi run_left_no_push
+    ;; so we're running right
+    sec
+    sbc #H_VELO_INC_RELAX
+    ;; but if we overshoot, we should snap to 0
+    bmi run_snap_to_zero
+    sta player::h_velo
+    bra run_handle_velo
+
+run_left_no_push:
+    adc #H_VELO_INC_RELAX
+    ;; but if we overshoot, we should snap to 0
+    bpl run_snap_to_zero
+    sta player::h_velo
+    bra run_handle_velo
+
+run_snap_to_zero:
+    lda #0
+    sta player::h_velo
+
+run_handle_velo:
+    ;; if velo is 0, we should state-change to idle, otherwise add velo to x_pos
+    ldx player::h_velo
+    beq run_set_to_idle
+    lda player::x_pos
+    adc player::h_velo
+    sta player::x_new
+    bra run_end
+run_set_to_idle:
+    lda #move_state::idle
+    sta player::move_state
+run_end:
+    rts
+
+
+init_run:
+    lda #0
+    sta player::h_velo
+    lda #move_state::run
+    sta player::move_state
+    asl ;; times 2 to get proper fn offset
+    tax
+    jmp (.loword(move_table), x)
+
 
 idle:
     ;; are we instructed to jump?
     lda player::joy_trigger_held
     and #JOY_B
-    beq still_idle ;; zero set, no match
-    ;; state change to jump
+    beq idle_test_run
     jmp init_jump
+idle_test_run:
+    ;; are we moving left or right
+    lda player::h_tribool
+    bne init_run ; we pressed left or right, so we want to run
+    jmp still_idle ;; zero set, no match
+    ;; state change to jump
+
 
 still_idle:
     ;; new x/y is old x/y
@@ -454,9 +548,6 @@ still_idle:
     sta player::y_new
     rts
 
-
-run:
-    rts
 
 cling:
     rts
