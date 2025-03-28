@@ -16,7 +16,7 @@ V_VELO_INIT = $ffd0 ;; -30
 V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
 V_VELO_DOWN_MAX = $42
 
-P1_START_X = $7b0
+P1_START_X = $790
 P1_START_Y = $900
 
 .enum move_state

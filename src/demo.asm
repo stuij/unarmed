@@ -790,7 +790,7 @@ collision:
     asl
     asl
     adc player::y_new
-    sta COLL_STACK_POINT_Y_COORD
+    sta COLL_STACK_POINT_Y_COORD, s
     and #$7f
     sta COLL_STACK_POINT_Y_OFF_NEW_SUB, s
 
@@ -802,7 +802,7 @@ collision:
     asl
     asl
     adc player::x_new
-    sta COLL_STACK_POINT_X_COORD
+    sta COLL_STACK_POINT_X_COORD, s
     and #$7f
     sta COLL_STACK_POINT_X_OFF_NEW_SUB, s
 
@@ -955,29 +955,29 @@ player_bbox_end_offs:
 
 player_bbox_default:
 ;; top left
-.word 1  ;; y
-.word 3  ;; x
+.word 1  ;; y   $0
+.word 3  ;; x   $2
 ;; middle left
-.word 8  ;; y
-.word 3  ;; x
+.word 8  ;; y   $4
+.word 3  ;; x   $6
 ;; bottom left
-.word $f ;; y
-.word 3  ;; x
+.word $f ;; y   $8
+.word 3  ;; x   $a
 ;; top middle
-.word 1  ;; y
-.word 8  ;; x
+.word 1  ;; y   $c
+.word 8  ;; x   $e
 ;; bottom middle
-.word $f ;; y
-.word 8  ;; x
+.word $f ;; y   $10
+.word 8  ;; x   $12
 ;; top right
-.word 1  ;; y
-.word $d ;; x
+.word 1  ;; y   $14
+.word $d ;; x   $16
 ;; middle right
-.word 8  ;; y
-.word $d ;; x
+.word 8  ;; y   $18
+.word $d ;; x   $1a
 ;; bottom right
-.word $f ;; y
-.word $d ;; x
+.word $f ;; y   $1c
+.word $d ;; x   $1e
 
 
 .a8
