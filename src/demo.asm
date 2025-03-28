@@ -401,6 +401,8 @@ joy_loop:
 
 
 jump:
+    ;; first do horizontal movement logic shared with running
+    jsr h_move
     ;; decrease velocity
     lda player::v_velo
     ;; 65816 doesn't suppport signed compare without extra steps, so..
@@ -434,85 +436,90 @@ init_jump:
     tax
     jmp (.loword(move_table), x)
 
-run:
+h_move:
     lda player::h_tribool
-    beq run_no_push ;; we've got momentum, but we are not actually pushing a button
-    bmi run_push_left ; we're pushing left on direction pad
+    beq h_move_no_push ;; we've got momentum, but we are not actually pushing a button
+    bmi h_move_push_left ; we're pushing left on direction pad
     
     ;; we're pushing right
     lda player::h_velo
-    bmi run_push_right_move_left
+    bmi h_move_push_right_move_left
     ;; we push right and we move right
     cmp #H_VELO_MAX
-    bcs run_handle_velo ;; no velo change. velo is bigger, so we hit our max
+    bcs h_move_handle_velo ;; no velo change. velo is bigger, so we hit our max
     adc #H_VELO_INC
     sta player::h_velo
-    bra run_handle_velo
+    bra h_move_handle_velo
 
-run_push_right_move_left:
+h_move_push_right_move_left:
     adc #H_VELO_INC_OPPOSITE
     sta player::h_velo
-    bra run_handle_velo
+    bra h_move_handle_velo
 
     ;; cpu doesn't do signed compare, so we need to do some work
     ;; - if velo is positive, we can just decrease. we're not hitting
     ;;   we can't be hitting max velo
     ;; - if velo is negative, we invert, and compare to H_MAX_VELO
-run_push_left:
+h_move_push_left:
     lda player::h_velo
-    beq run_push_left_move_left
-    bpl run_push_left_move_right
-run_push_left_move_left:
+    beq h_move_push_left_move_left
+    bpl h_move_push_left_move_right
+h_move_push_left_move_left:
     eor #$FFFF
     adc #1
     cmp #H_VELO_MAX
-    bcs run_handle_velo ;; no velo change. velo is bigger, so we hit our max
+    bcs h_move_handle_velo ;; no velo change. velo is bigger, so we hit our max
     ;; otherwise increase velo
     lda player::h_velo
     sec
     sbc #H_VELO_INC
     sta player::h_velo
-    bra run_handle_velo
-run_push_left_move_right:
-    ;; when pushing opposite dir of run, we want to decrease velo extra
+    bra h_move_handle_velo
+h_move_push_left_move_right:
+    ;; when pushing opposite dir of h_move, we want to decrease velo extra
     sec
     sbc #H_VELO_INC_OPPOSITE
     sta player::h_velo
-    bra run_handle_velo
-run_no_push:
+    bra h_move_handle_velo
+h_move_no_push:
     lda player::h_velo
-    bmi run_left_no_push
-    ;; so we're running right
+    bmi h_move_left_no_push
+    ;; so we're h_movening right
     sec
     sbc #H_VELO_INC_RELAX
     ;; but if we overshoot, we should snap to 0
-    bmi run_snap_to_zero
+    bmi h_move_snap_to_zero
     sta player::h_velo
-    bra run_handle_velo
+    bra h_move_handle_velo
 
-run_left_no_push:
+h_move_left_no_push:
     adc #H_VELO_INC_RELAX
     ;; but if we overshoot, we should snap to 0
-    bpl run_snap_to_zero
+    bpl h_move_snap_to_zero
     sta player::h_velo
-    bra run_handle_velo
+    bra h_move_handle_velo
 
-run_snap_to_zero:
+h_move_snap_to_zero:
     lda #0
     sta player::h_velo
 
-run_handle_velo:
+h_move_handle_velo:
     ;; if velo is 0, we should state-change to idle, otherwise add velo to x_pos
     ldx player::h_velo
-    beq run_set_to_idle
+    beq h_move_set_to_idle
     lda player::x_pos
     adc player::h_velo
     sta player::x_new
-    bra run_end
-run_set_to_idle:
+    bra h_move_end
+h_move_set_to_idle:
+    ;; when we reach zero we want to set ourself to idle
+    ;; state, but only when we are running. not when we're in the air
+    lda player::move_state
+    cmp #move_state::run
+    bne h_move_end
     lda #move_state::idle
     sta player::move_state
-run_end:
+h_move_end:
     rts
 
 
@@ -526,12 +533,22 @@ init_run:
     jmp (.loword(move_table), x)
 
 
+run:
+    ;; are we instructed to jump?
+    lda player::joy_trigger_held
+    and #JOY_B
+    beq run_eval_h_move
+    jmp init_jump
+run_eval_h_move:
+    jmp h_move
+
 idle:
     ;; are we instructed to jump?
     lda player::joy_trigger_held
     and #JOY_B
     beq idle_test_run
     jmp init_jump
+
 idle_test_run:
     ;; are we moving left or right
     lda player::h_tribool
