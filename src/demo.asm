@@ -289,9 +289,10 @@ init_game_data:
 
 
     ; set init program variables
+    ldx #$FF   ;; first vertical line is blank, and there's an extra line at the
+    stx map_y  ;; bottom, so we shift vertical offset by 1
     ldx #0
     stx map_x
-    stx map_y
 
     A16
     ;; ldx is still 0
@@ -447,11 +448,13 @@ h_move:
     ;; we push right and we move right
     cmp #H_VELO_MAX
     bcs h_move_handle_velo ;; no velo change. velo is bigger, so we hit our max
+    clc
     adc #H_VELO_INC
     sta player::h_velo
     bra h_move_handle_velo
 
 h_move_push_right_move_left:
+    clc
     adc #H_VELO_INC_OPPOSITE
     sta player::h_velo
     bra h_move_handle_velo
@@ -466,6 +469,7 @@ h_move_push_left:
     bpl h_move_push_left_move_right
 h_move_push_left_move_left:
     eor #$FFFF
+    clc
     adc #1
     cmp #H_VELO_MAX
     bcs h_move_handle_velo ;; no velo change. velo is bigger, so we hit our max
@@ -493,6 +497,7 @@ h_move_no_push:
     bra h_move_handle_velo
 
 h_move_left_no_push:
+    clc
     adc #H_VELO_INC_RELAX
     ;; but if we overshoot, we should snap to 0
     bpl h_move_snap_to_zero
@@ -508,6 +513,7 @@ h_move_handle_velo:
     ldx player::h_velo
     beq h_move_set_to_idle
     lda player::x_pos
+    clc
     adc player::h_velo
     sta player::x_new
     bra h_move_end
@@ -635,8 +641,10 @@ player_movement_loop:
     tcd
     rts
 
-COLL_STACK_ROOM = $17
-COLL_STACK_POINT_Y_COORD = 13
+COLL_STACK_ROOM = $1b
+COLL_STACK_Y_NEW_TMP = $17
+COLL_STACK_X_NEW_TMP = $15
+COLL_STACK_POINT_Y_COORD = $13
 COLL_STACK_POINT_X_COORD = $11
 COLL_STACK_POINT_Y_OFF_NEW_SUB = $f
 COLL_STACK_POINT_X_OFF_NEW_SUB = $d
@@ -658,6 +666,11 @@ check_collisions:
     sbc #COLL_STACK_ROOM ;; make room for bunch of stack arguments
                          ;; (we just pushed the sp so we got one 16bit arg less)
     tcs
+
+    ;; we set default impossible minus value, so we know if it has been set before
+    lda #$FFFF
+    sta COLL_STACK_Y_NEW_TMP, s
+    sta COLL_STACK_X_NEW_TMP, s
 
     lda player::y_new  ; load y of first sprite
     rshift 4           ; remove sub-pixels
@@ -711,6 +724,7 @@ check_collisions:
     ldy #0 ;; bbox point offset
 coll_point_loop:
     lda COLL_STACK_Y_OFF_NEW, s
+    clc
     adc (player::bbox), y
     sta COLL_STACK_POINT_Y_OFF_NEW, s ;; save offset for if we need to do micro pushback
     rshift 3 ;; truncate to see if we're spilling over into another tile
@@ -736,8 +750,8 @@ point_x_calc:
     lda COLL_STACK_X_OFF_NEW, s
     iny ;; move y to x offset in point
     iny
+    clc
     adc (player::bbox), y ; again, do x in the meantime
-    A16
     sta COLL_STACK_POINT_X_OFF_NEW, s
     rshift 3
     clc
@@ -789,6 +803,7 @@ collision:
     asl
     asl
     asl
+    clc
     adc player::y_new
     sta COLL_STACK_POINT_Y_COORD, s
     and #$7f
@@ -801,6 +816,7 @@ collision:
     asl
     asl
     asl
+    clc
     adc player::x_new
     sta COLL_STACK_POINT_X_COORD, s
     and #$7f
@@ -809,6 +825,7 @@ collision:
 
     lda player::h_velo
     eor #$FFFF
+    clc
     adc #1
     clc
     adc COLL_STACK_POINT_X_OFF_NEW_SUB, s ; (~velocity) + point offset
@@ -822,6 +839,7 @@ collision:
     ;; x = moving left
     lda player::v_velo
     eor #$FFFF
+    clc
     adc #1
     clc
     adc COLL_STACK_POINT_Y_OFF_NEW_SUB, s ; (~velocity) + point offset
@@ -836,13 +854,16 @@ collision:
 coll_x_right:
     lda player::v_velo
     eor #$FFFF
+    clc
     adc #1
     clc
     adc COLL_STACK_POINT_Y_OFF_NEW_SUB, s ; add velocity and block offset
     and #$FF80 ; not z flag set, so bigger than 8 + subpixels
                ; tells us we moved out of the block
     ;; if n flag set, we moved from upper block, so downwards
-    beq coll_snap_to_left
+    bne coll_x_right_cont
+    jmp coll_snap_to_left
+coll_x_right_cont:
     bmi coll_right_down
     bra coll_right_up
 
@@ -850,13 +871,17 @@ coll_snap_y:
     lda player::v_velo
     tax
     eor #$FFFF
+    clc
     adc #1
     sta player::tmp
     lda COLL_STACK_POINT_Y_OFF_NEW_SUB, s ; point offset + (~velocity)
+    clc
     adc player::tmp
     and #$FF80 ; not z flag set, so bigger than 8 + subpixels
                ; tells us we moved out of the block
-    beq collision_end ;; assuming we got here from x also not out of bounds
+    bne coll_snap_y_cont
+    jmp collision_end ;; assuming we got here from x also not out of bounds
+coll_snap_y_cont:
     ;; if n flag set, we moved from upper block, so downwards
     bmi coll_snap_to_top
     bra coll_snap_to_bottom
@@ -868,8 +893,8 @@ coll_left_up:
     cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
     ;; for both, higher nr means shallower
     ;; carry clear means x is higher
-    bcc coll_snap_to_right
-    bra coll_snap_to_bottom
+    bra coll_snap_to_right ;; bcc
+    ;; bra coll_snap_to_bottom
 
 
 coll_left_down:
@@ -878,7 +903,7 @@ coll_left_down:
     sbc COLL_STACK_POINT_X_OFF_NEW_SUB, s
     cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
     ;; carry clear means x is higher (while inversed direction)
-    bcc coll_snap_to_top
+    ;; bcc coll_snap_to_top
     bra coll_snap_to_right
     
 coll_right_up:
@@ -887,14 +912,14 @@ coll_right_up:
     sbc COLL_STACK_POINT_X_OFF_NEW_SUB, s
     cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
     ;; carry clear means x is higher (while inversed direction)
-    bcc coll_snap_to_left
-    bra coll_snap_to_bottom    
+    bra coll_snap_to_left ;; bcc
+    ;; bra coll_snap_to_bottom    
 
 coll_right_down:
     lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
     cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
     ;; carry clear means x is higher
-    bcc coll_snap_to_top
+    ;; bcc coll_snap_to_top
     bra coll_snap_to_left
 
 
@@ -908,9 +933,17 @@ coll_snap_to_top:
     lda player::y_new ; so we're effectively
     sec
     sbc player::tmp
-    sbc #$20
-    sta player::y_new ; doing y_new - nr
-
+    sbc #$1
+    tax
+    lda COLL_STACK_Y_NEW_TMP, s      ; did we already save a new temp y?
+    bmi coll_snap_to_top_save_new_y  ; if not we can directly save this one
+    txa
+    cmp COLL_STACK_Y_NEW_TMP, s      ; otherwise we need to see which one is lower
+    bcs coll_snap_to_top_cont; if current y is higher, we don't save
+coll_snap_to_top_save_new_y:
+    txa
+    sta COLL_STACK_Y_NEW_TMP, s
+coll_snap_to_top_cont:
     ;; this means we just hit the bottom
     ;; let's start by just putting us in idle mode
     lda #move_state::idle
@@ -920,21 +953,68 @@ coll_snap_to_top:
 
 coll_snap_to_bottom:
     lda COLL_STACK_POINT_Y_OFF_NEW_SUB, s
-    ;; so the bit that sticks out upwards is now in A
+    ;; so the bit that sticks out downwards is now in A
     and #$7f
     eor #$FFFF
+    clc
     adc #$1
     clc
     adc #$80 ; effectively y_new + (8 - nr)
     adc player::y_new ; and we want to add that to the new y
-    sta player::y_new
+    tax
+    lda COLL_STACK_Y_NEW_TMP, s      ; did we already save a new temp y?
+    bmi coll_snap_to_bottom_save_new_y  ; if not we can directly save this one
+    txa
+    cmp COLL_STACK_Y_NEW_TMP, s      ; otherwise we need to see which one is lower
+    bcc collision_end ; if current y is lower, we don't save
+coll_snap_to_bottom_save_new_y:
+    txa
+    sta COLL_STACK_Y_NEW_TMP, s
     bra collision_end
 
 
 coll_snap_to_left:
+    lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
+    ;; so the bit that sticks out right-wards is now in A
+    ;; we AND with 7f, so we know how much of it sticks up,
+    and #$7f
+    sta player::tmp
+    lda player::x_new ; so we're effectively
+    sec
+    sbc player::tmp
+    sbc #$1
+    tax
+    lda COLL_STACK_X_NEW_TMP, s      ; did we already save a new temp y?
+    bmi coll_snap_to_left_save_new_x  ; if not we can directly save this one
+    txa
+    cmp COLL_STACK_X_NEW_TMP, s      ; otherwise we need to see which one is lower
+    bcs coll_snap_to_left_cont; if current y is higher, we don't save
+coll_snap_to_left_save_new_x:
+    txa
+    sta COLL_STACK_X_NEW_TMP, s
+coll_snap_to_left_cont:
+    bra collision_end
 
 coll_snap_to_right:
-
+    lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
+    ;; so the bit that sticks out left-wards is now in A
+    and #$7f
+    eor #$FFFF
+    clc
+    adc #$1
+    clc
+    adc #$80 ; effectively x_new + (8 - nr)
+    adc player::x_new ; and we want to add that to the new x
+    tax
+    lda COLL_STACK_X_NEW_TMP, s      ; did we already save a new temp y?
+    bmi coll_snap_to_right_save_new_x  ; if not we can directly save this one
+    txa
+    cmp COLL_STACK_X_NEW_TMP, s      ; otherwise we need to see which one is lower
+    bcc collision_end ; if current y is lower, we don't save
+coll_snap_to_right_save_new_x:
+    txa
+    sta COLL_STACK_X_NEW_TMP, s
+    bra collision_end
 
 collision_end:
     iny
@@ -943,6 +1023,23 @@ collision_end:
     beq collision_cleanup
     jmp coll_point_loop ; not equal so we do another round
 collision_cleanup:
+    lda COLL_STACK_Y_NEW_TMP, s
+    bmi collision_store_x_new
+    ;; y collision occured.
+    ;; we record new y, and set y velo to 0
+    sta player::y_new
+    lda #0
+    sta player::v_velo
+
+collision_store_x_new:
+    lda COLL_STACK_X_NEW_TMP, s
+    bmi collision_unwind_stack
+    ;; x collision occured.
+    ;; we record new x, and set x velo to 0
+    sta player::x_new
+    lda #0
+    sta player::h_velo
+collision_unwind_stack:
     ; end of point loop so we're done
     lda COLL_STACK_ROOM - 1, s ; restore stack
     tcs                        ; pointer
@@ -962,7 +1059,7 @@ player_bbox_default:
 .word 3  ;; x   $6
 ;; bottom left
 .word $f ;; y   $8
-.word 3  ;; x   $a
+.word 3  ;; x   $e
 ;; top middle
 .word 1  ;; y   $c
 .word 8  ;; x   $e
