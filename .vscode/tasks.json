@@ -2,14 +2,31 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Run",
+			"label": "run mesen",
 			"type": "shell",
-			"command": "/Applications/Mesen-2.app/Contents/MacOS/Mesen build/demo.smc",
+			"command": "/Applications/Mesen-2.app/Contents/MacOS/Mesen build/demo.sfc",
 			"group": {
 				"kind": "test",
 				"isDefault": true
 			},
 			"problemMatcher": []
 		},
+		{
+			"label": "kill mesen",
+			"type": "shell",
+			"command": "killall Mesen",
+			"problemMatcher": []
+		},
+		{
+			"type": "cmake",
+			"label": "CMake: build",
+			"command": "build",
+			"targets": [
+				"all"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "CMake template build task"
+		}
 	]
 }
