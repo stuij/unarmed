@@ -22,8 +22,7 @@ P1_START_Y = $970
 .enum move_state
     idle
     run
-    jump_up
-    jump_down
+    jump
     cling
     climb
 .endenum
@@ -55,28 +54,29 @@ P1_START_Y = $970
 ; x/y nrs are in sub-pixels,
 ; aka .1 precision fixed point behind the pixel-comma
 .struct player
-    joy         .word ; 0 - last frame buttons
-    joy_trigger .word ; 2 - only buttons that weren't pressed last frame
-    joy_held    .word ; 4 - buttons pressed this frame and last frame
-    joy_trigger_held .word ; 6 - both new and held buttons
-    move_state  .word ; 8
-    face_dir    .word ; a
-    h_tribool   .word ; c
-    v_tribool   .word ; e
     ;; v velo and h velo will also automatically give us moving
     ;; direction, and so will tell us what way to correct to
     ;; when moving through barrier tiles
-    h_velo      .word ; 10
-    x_pos       .word ; 12
-    x_new       .word ; 14
-    h_velo_inc  .word ; 16
-    h_velo_dec  .word ; 18
-    v_velo      .word ; 1a
-    y_pos       .word ; 1c
-    y_new       .word ; 1e
-    v_velo_dec  .word ; 20
-    bbox        .addr ; 22 - pointer to actual bbox
-    tmp         .word ; 24 - scratch pad
+    h_velo              .word ;  0
+    x_pos               .word ;  2
+    x_new               .word ;  4
+    h_velo_inc          .word ;  6
+    v_velo              .word ;  8
+    y_pos               .word ;  a
+    y_new               .word ;  c
+    v_velo_dec          .word ;  e
+    bbox                .addr ; 10 - pointer to actual bbox
+    move_state          .word ; 12
+    tmp                 .word ; 14 - scratch pad
+    face_dir            .word ; 16
+    ledge_p             .word ; 18
+    bbox_ledge_lookup   .word ; 1a
+    joy                 .word ; 1c - last frame buttons
+    joy_trigger         .word ; 1e - only buttons that weren't pressed last frame
+    joy_held            .word ; 20 - buttons pressed this frame and last frame
+    joy_trigger_held    .word ; 22 - both new and held buttons
+    h_tribool           .word ; 24
+    v_tribool           .word ; 26
 .endstruct
 
 .endif ; DEFINES_INC

@@ -321,6 +321,9 @@ player_init_loop:
     ldy #.loword(player_bbox_default)
     sty player::bbox
 
+    ldy #.loword(player_bbox_default_ledge_lookup)
+    sty player::bbox_ledge_lookup
+
     txa
     inc
     inc
@@ -431,7 +434,7 @@ init_jump:
     sta player::v_velo
     lda #V_VELO_DEC
     sta player::v_velo_dec
-    lda #move_state::jump_up
+    lda #move_state::jump
     sta player::move_state
     asl ;; times 2 to get proper fn offset
     tax
@@ -582,8 +585,7 @@ climb:
 move_table:
 .addr idle
 .addr run
-.addr jump ;; both jump_up and jump_down states
-.addr jump ;; lead us to the jump callback for now.
+.addr jump
 .addr cling
 .addr climb
 
@@ -641,7 +643,9 @@ player_movement_loop:
     tcd
     rts
 
-COLL_STACK_ROOM = $1b
+COLL_STACK_ROOM = $1f
+COLL_STACK_POINT_HIT_GROUND = $1b
+COLL_STACK_POINT_ON_LEDGE = $19
 COLL_STACK_Y_NEW_TMP = $17
 COLL_STACK_X_NEW_TMP = $15
 COLL_STACK_POINT_Y_COORD = $13
@@ -697,6 +701,10 @@ check_collisions:
     clc
     adc RDMPYL          ; add y to x, tile offset is in A
     sta COLL_STACK_TILE_OFF, s  ; save tile offset to stack for later
+
+    lda #0
+    sta COLL_STACK_POINT_ON_LEDGE, s ; set to 0
+    sta COLL_STACK_POINT_HIT_GROUND, s
     ;; So now we have our base
     ;; Our stack, growing down looks like:
     ;; - top-left corner y offset into 8x8 tile
@@ -762,7 +770,7 @@ point_x_calc:
     lda town_coll, x    ; check collision map for point
     A16
     bne collision       ; if not zero, collision
-    jmp collision_end   ; otherwise we can return, doing nothing
+    jmp collision_ledge_check   ; otherwise we can move on with ledge check
 collision:
     ;; Once we know x and y direction,
     ;; we can make sensible decision on snapping.
@@ -880,7 +888,7 @@ coll_snap_y:
     and #$FF80 ; not z flag set, so bigger than 8 + subpixels
                ; tells us we moved out of the block
     bne coll_snap_y_cont
-    jmp collision_end ;; assuming we got here from x also not out of bounds
+    jmp collision_player_end ;; assuming we got here from x also not out of bounds
 coll_snap_y_cont:
     ;; if n flag set, we moved from upper block, so downwards
     bmi coll_snap_to_top
@@ -893,7 +901,7 @@ coll_left_up:
     cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
     ;; for both, higher nr means shallower
     ;; carry clear means x is higher
-    bra coll_snap_to_right ;; bcc
+    jmp coll_snap_to_right ;; bcc
     ;; bra coll_snap_to_bottom
 
 
@@ -904,7 +912,7 @@ coll_left_down:
     cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
     ;; carry clear means x is higher (while inversed direction)
     ;; bcc coll_snap_to_top
-    bra coll_snap_to_right
+    jmp coll_snap_to_right
     
 coll_right_up:
     lda #7 ;; reverse x to be able to compare sensibly
@@ -946,10 +954,9 @@ coll_snap_to_top_save_new_y:
 coll_snap_to_top_cont:
     ;; this means we just hit the bottom
     ;; let's start by just putting us in idle mode
-    lda #move_state::idle
-    sta player::move_state
-
-    bra collision_end
+    lda #1
+    sta COLL_STACK_POINT_HIT_GROUND, s
+    jmp collision_player_end
 
 coll_snap_to_bottom:
     lda COLL_STACK_POINT_Y_OFF_NEW_SUB, s
@@ -966,11 +973,11 @@ coll_snap_to_bottom:
     bmi coll_snap_to_bottom_save_new_y  ; if not we can directly save this one
     txa
     cmp COLL_STACK_Y_NEW_TMP, s      ; otherwise we need to see which one is lower
-    bcc collision_end ; if current y is lower, we don't save
+    bcc collision_player_end ; if current y is lower, we don't save
 coll_snap_to_bottom_save_new_y:
     txa
     sta COLL_STACK_Y_NEW_TMP, s
-    bra collision_end
+    bra collision_player_end
 
 
 coll_snap_to_left:
@@ -993,7 +1000,7 @@ coll_snap_to_left_save_new_x:
     txa
     sta COLL_STACK_X_NEW_TMP, s
 coll_snap_to_left_cont:
-    bra collision_end
+    bra collision_player_end
 
 coll_snap_to_right:
     lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
@@ -1010,19 +1017,71 @@ coll_snap_to_right:
     bmi coll_snap_to_right_save_new_x  ; if not we can directly save this one
     txa
     cmp COLL_STACK_X_NEW_TMP, s      ; otherwise we need to see which one is lower
-    bcc collision_end ; if current y is lower, we don't save
+    bcc collision_player_end ; if current y is lower, we don't save
 coll_snap_to_right_save_new_x:
     txa
     sta COLL_STACK_X_NEW_TMP, s
-    bra collision_end
+    bra collision_player_end
 
-collision_end:
+
+collision_ledge_check:
+    lda player::move_state ;; only check when we're idle or running
+    cmp #move_state::idle
+    beq collision_ledge_check_main
+    cmp #move_state::run
+    bne collision_player_end
+collision_ledge_check_main:
+    tyx
+    tya
+    lsr ; shift point offset to find offset into ledge table
+    lsr
+    asl
+    tay
+    lda (player::bbox_ledge_lookup), y
+    txy ; restore Y
+    cmp #1
+    bne collision_player_end
+    ; ok, we are interested in a ledge check
+    lda COLL_STACK_POINT_TILE_OFF, s
+    clc
+    adc #$20 ;; set to tile under point
+    tax
+    A8
+    lda town_coll, x
+    A16
+    beq collision_player_end ; not a collision, so we move on
+    ;; it's a collision, so we register it
+    ;; we only need one collision to know that we're standing with at least
+    ;; one point on the ledge, so we can just write 1 whenever we find
+    ;; something
+    lda #1
+    sta COLL_STACK_POINT_ON_LEDGE, s
+
+    
+collision_player_end:
     iny
     iny
     cpy player_bbox_end_offs
     beq collision_cleanup
     jmp coll_point_loop ; not equal so we do another round
 collision_cleanup:
+;collision_ledge_fall:
+    lda player::move_state ;; only execute
+    cmp #move_state::idle
+    beq collision_ledge_fall_main
+    cmp #move_state::run
+    bne collision_store_y_new
+collision_ledge_fall_main:
+    lda COLL_STACK_POINT_ON_LEDGE, s
+    bne collision_store_y_new ; we didn't fall off the ledge
+    ; we  did fall off the ledge. we're now fallling
+    lda #0
+    sta player::v_velo
+    lda #move_state::jump
+    sta player::move_state
+    lda #V_VELO_DEC
+    sta player::v_velo_dec
+collision_store_y_new:
     lda COLL_STACK_Y_NEW_TMP, s
     bmi collision_store_x_new
     ;; y collision occured.
@@ -1030,6 +1089,10 @@ collision_cleanup:
     sta player::y_new
     lda #0
     sta player::v_velo
+    lda COLL_STACK_POINT_HIT_GROUND, s
+    beq collision_store_x_new
+    lda #move_state::idle
+    sta player::move_state
 
 collision_store_x_new:
     lda COLL_STACK_X_NEW_TMP, s
@@ -1039,6 +1102,7 @@ collision_store_x_new:
     sta player::x_new
     lda #0
     sta player::h_velo
+
 collision_unwind_stack:
     ; end of point loop so we're done
     lda COLL_STACK_ROOM - 1, s ; restore stack
@@ -1059,7 +1123,7 @@ player_bbox_default:
 .word 3  ;; x   $6
 ;; bottom left
 .word $f ;; y   $8
-.word 3  ;; x   $e
+.word 3  ;; x   $a
 ;; top middle
 .word 1  ;; y   $c
 .word 8  ;; x   $e
@@ -1075,6 +1139,19 @@ player_bbox_default:
 ;; bottom right
 .word $f ;; y   $1c
 .word $d ;; x   $1e
+
+
+;; for this point, do we need to test if it's on
+;; a ledge, yes or no?
+player_bbox_default_ledge_lookup:
+.word 0 ; top left
+.word 0 ; middle left
+.word 1 ; bottom left
+.word 0 ; top middle
+.word 1 ; bottom middle
+.word 0 ; top right
+.word 0 ; middle right
+.word 1 ; bottom right
 
 
 .a8
