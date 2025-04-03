@@ -307,10 +307,18 @@ player_init_loop:
 
     ; p1 start position
     ; $80 pixel offset and $0 subpixels
-    ldy #P1_START_X
+
+    txa
+    asl
+    tax
+    ldy player_start_coords, x
     sty player::x_pos
-    ldy #P1_START_Y
+    inx
+    inx
+    ldy player_start_coords, x
     sty player::y_pos
+    lsr
+    tax
 
     ldy #move_state::idle
     sty player::move_state
@@ -338,20 +346,39 @@ player_init_loop:
     ;; set oam for sprite 1 directly.
     ;; this and the above sprite init data should all be done with some
     ;; kind of generalized player sprite init routine
-    lda #$00                ; name (place) of first sprite
+    lda #$00                ; tile offset of first sprite
     sta OAM_MIRROR + 2
     lda #$20                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + 3
 
-    lda #$fe                ; set top bit of x to 0, set 16x16 tile.
-                            ; keep rest of tiles at 1
-    sta OAMDATA + 200
+    lda #$00                ; tile offset of second sprite
+    sta OAM_MIRROR + 6
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + 7
+
+    lda #$00                ; tile offset of third sprite
+    sta OAM_MIRROR + $a
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + $b
+
+    lda #$00                ; tile offset of fourth sprite
+    sta OAM_MIRROR + $e
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + $f
+
+
+    ; set top bit of x pos for all 4 sprites to 0 so we show them on
+    ; screen, and set 16x16 tile
+    ; so a nibble, representing two sprites becomes 1010, aka a.
+    lda #$aa
+    sta OAM_MIRROR + $200
 
     rts
 
 
 .a8
 .i16
+
 read_input:
 wait_for_joypad:
     lda HVBJOY            ; get joypad status
@@ -399,7 +426,7 @@ joy_loop:
     tax
     cpx #8
     bne joy_loop
-    lda $0
+    lda #$0
     tcd
     rts
 
@@ -596,6 +623,18 @@ player_table:
 .addr .loword(p3)
 .addr .loword(p4)
 
+
+player_start_coords:
+.word $200 ; p1 x
+.word $200 ; p1 y
+.word $500 ; p2 x
+.word $200 ; p2 y
+.word $900 ; p3 x
+.word $700 ; p3 y
+.word $d00 ; p4 x
+.word $200 ; p4 y
+
+
 ;; my current thinking is:
 ;; - first handle all movement to see what new coordinate
 ;;   our sprite would end up
@@ -639,7 +678,7 @@ player_movement_loop:
     cpx #8
     bne player_movement_loop
     plx ; clear the stack
-    lda $0
+    lda #$0
     tcd
     rts
 
@@ -1231,6 +1270,46 @@ finalise:
     rshift 4
     A8
     sta OAM_MIRROR + 1
+
+    A16
+    lda p2 + player::x_new
+    sta p2 + player::x_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + 4
+    A16
+    lda p2 + player::y_new
+    sta p2 + player::y_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + 5
+
+    A16
+    lda p3 + player::x_new
+    sta p3 + player::x_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + 8
+    A16
+    lda p3 + player::y_new
+    sta p3 + player::y_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + 9
+
+    A16
+    lda p4 + player::x_new
+    sta p4 + player::x_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + $c
+    A16
+    lda p4 + player::y_new
+    sta p4 + player::y_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + $d
+
     rts
 
 .a8

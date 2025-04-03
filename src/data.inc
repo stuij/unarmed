@@ -39,6 +39,6 @@ p2: .tag player
 p3: .tag player
 p4: .tag player
 
-OAM_MIRROR: .res 512
+OAM_MIRROR: .res $220
 
 .endif ; DATA_INC

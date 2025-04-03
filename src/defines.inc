@@ -77,6 +77,13 @@ P1_START_Y = $970
     joy_trigger_held    .word ; 22 - both new and held buttons
     h_tribool           .word ; 24
     v_tribool           .word ; 26
+    ;; these are just padding to more easily see the
+    ;; values of the individual players in the debugger
+    p1                  .word ; 28
+    p2                  .word ; 2a
+    p3                  .word ; 2c
+    p4                  .word ; 2e
+
 .endstruct
 
 .endif ; DEFINES_INC
