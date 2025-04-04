@@ -335,6 +335,9 @@ player_init_loop:
     ldy #.loword(player_bbox_default_ledge_lookup)
     sty player::bbox_ledge_lookup
 
+    ldy #.loword(player_sprite_vtable)
+    sty sprite::vptr
+
     txa
     inc
     inc
@@ -996,7 +999,6 @@ coll_snap_to_top_save_new_y:
     sta COLL_STACK_Y_NEW_TMP, s
 coll_snap_to_top_cont:
     ;; this means we just hit the bottom
-    ;; let's start by just putting us in idle mode
     lda #1
     sta COLL_STACK_POINT_HIT_GROUND, s
     jmp collision_player_end
@@ -1108,43 +1110,11 @@ collision_player_end:
     beq collision_cleanup
     jmp coll_point_loop ; not equal so we do another round
 collision_cleanup:
-;collision_ledge_fall:
-    lda sprite::move_state ;; only execute
-    cmp #move_state::idle
-    beq collision_ledge_fall_main
-    cmp #move_state::run
-    bne collision_store_y_new
-collision_ledge_fall_main:
-    lda COLL_STACK_POINT_ON_LEDGE, s
-    bne collision_store_y_new ; we didn't fall off the ledge
-    ; we  did fall off the ledge. we're now fallling
-    lda #0
-    sta sprite::v_velo
-    lda #move_state::jump
-    sta sprite::move_state
-    lda #V_VELO_DEC
-    sta sprite::v_velo_dec
-collision_store_y_new:
-    lda COLL_STACK_Y_NEW_TMP, s
-    bmi collision_store_x_new
-    ;; y collision occured.
-    ;; we record new y, and set y velo to 0
-    sta sprite::y_new
-    lda #0
-    sta sprite::v_velo
-    lda COLL_STACK_POINT_HIT_GROUND, s
-    beq collision_store_x_new
-    lda #move_state::idle
-    sta sprite::move_state
-
-collision_store_x_new:
-    lda COLL_STACK_X_NEW_TMP, s
-    bmi collision_unwind_stack
-    ;; x collision occured.
-    ;; we record new x, and set x velo to 0
-    sta sprite::x_new
-    lda #0
-    sta sprite::h_velo
+    ldy #sprite_vtable::collision_end_callback
+    lda (sprite::vptr), y
+    sta .loword(W0)
+    ldx #0
+    jsr (W0, x)
 
 collision_unwind_stack:
     ; end of point loop so we're done
@@ -1152,6 +1122,50 @@ collision_unwind_stack:
     tcs                        ; pointer
     rts
 
+
+
+player_coll_end_callback:
+    lda sprite::move_state ;; only execute
+    cmp #move_state::idle
+    beq player_coll_ledge_fall
+    cmp #move_state::run
+    bne player_coll_store_y_new
+player_coll_ledge_fall:
+    lda COLL_STACK_POINT_ON_LEDGE + 2, s
+    bne player_coll_store_y_new ; we didn't fall off the ledge
+    ; we  did fall off the ledge. we're now fallling
+    lda #0
+    sta sprite::v_velo
+    lda #move_state::jump
+    sta sprite::move_state
+    lda #V_VELO_DEC
+    sta sprite::v_velo_dec
+player_coll_store_y_new:
+    lda COLL_STACK_Y_NEW_TMP + 2, s
+    bmi player_coll_store_x_new
+    ;; y collision occured.
+    ;; we record new y, and set y velo to 0
+    sta sprite::y_new
+    lda #0
+    sta sprite::v_velo
+    lda COLL_STACK_POINT_HIT_GROUND + 2, s
+    beq player_coll_store_x_new
+    lda #move_state::idle
+    sta sprite::move_state
+
+player_coll_store_x_new:
+    lda COLL_STACK_X_NEW_TMP + 2, s
+    bmi player_coll_end_callback_end
+    ;; x collision occured.
+    ;; we record new x, and set x velo to 0
+    sta sprite::x_new
+    lda #0
+    sta sprite::h_velo
+player_coll_end_callback_end:
+    rts
+
+player_sprite_vtable:
+.addr .loword(player_coll_end_callback)
 
 player_bbox_default:
 ;; top left

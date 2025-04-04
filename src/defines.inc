@@ -74,13 +74,13 @@ PLAYER_TABLE_I = $8
     v_velo_dec          .word ;  e
     bbox                .addr ; 10 - pointer to actual bbox
     bbox_size           .word ; 12 - how many points in the bbox
-    move_state          .word ; 12
-    face_dir            .word ; 14
-    vptr                .word ; 16 - pointer to the sprite vtable
+    move_state          .word ; 14
+    face_dir            .word ; 16
+    vptr                .word ; 18 - pointer to the sprite vtable
 .endstruct
 
 .struct sprite_vtable
-
+    collision_end_callback   .word
 .endstruct
 
 .struct player
