@@ -301,8 +301,8 @@ player_init_loop:
     tcd ; set dp to it
 
     ldy #0
-    sty player::h_velo
-    sty player::v_velo
+    sty sprite::h_velo
+    sty sprite::v_velo
     sty player::joy
 
     ; p1 start position
@@ -312,22 +312,25 @@ player_init_loop:
     asl
     tax
     ldy player_start_coords, x
-    sty player::x_pos
+    sty sprite::x_pos
     inx
     inx
     ldy player_start_coords, x
-    sty player::y_pos
+    sty sprite::y_pos
     lsr
     tax
 
     ldy #move_state::idle
-    sty player::move_state
+    sty sprite::move_state
 
     ldy #face_dir::right
-    sty player::face_dir
+    sty sprite::face_dir
 
     ldy #.loword(player_bbox_default)
-    sty player::bbox
+    sty sprite::bbox
+
+    ldy #.sizeof(player_bbox)
+    sty sprite::bbox_size
 
     ldy #.loword(player_bbox_default_ledge_lookup)
     sty player::bbox_ledge_lookup
@@ -336,7 +339,7 @@ player_init_loop:
     inc
     inc
     tax
-    cpx #8
+    cpx #PLAYER_TABLE_I
     bne player_init_loop
 
     lda #0
@@ -424,7 +427,7 @@ joy_loop:
     inc
     inc
     tax
-    cpx #8
+    cpx #PLAYER_TABLE_I
     bne joy_loop
     lda #$0
     tcd
@@ -435,7 +438,7 @@ jump:
     ;; first do horizontal movement logic shared with running
     jsr h_move
     ;; decrease velocity
-    lda player::v_velo
+    lda sprite::v_velo
     ;; 65816 doesn't suppport signed compare without extra steps, so..
     ;; if velo is negative, we for sure need to increase velo
     bmi jump_add_velo
@@ -444,25 +447,25 @@ jump:
     bcs jump_after_velo_add ;; we're at max down velocity, so skip velo increase
 jump_add_velo:
     clc ; carry set means we're not borrowing
-    adc player::v_velo_dec
-    sta player::v_velo
+    adc sprite::v_velo_dec
+    sta sprite::v_velo
 jump_after_velo_add:
     ;; change player pos based on velocity
-    lda player::y_pos
+    lda sprite::y_pos
     clc
-    adc player::v_velo ; at some point this will go negative,
+    adc sprite::v_velo ; at some point this will go negative,
                        ; which is excellent as that means we're going down now
-    sta player::y_new
+    sta sprite::y_new
     rts
 
 
 init_jump:
     lda #V_VELO_INIT
-    sta player::v_velo
+    sta sprite::v_velo
     lda #V_VELO_DEC
-    sta player::v_velo_dec
+    sta sprite::v_velo_dec
     lda #move_state::jump
-    sta player::move_state
+    sta sprite::move_state
     asl ;; times 2 to get proper fn offset
     tax
     jmp (.loword(move_table), x)
@@ -473,20 +476,20 @@ h_move:
     bmi h_move_push_left ; we're pushing left on direction pad
     
     ;; we're pushing right
-    lda player::h_velo
+    lda sprite::h_velo
     bmi h_move_push_right_move_left
     ;; we push right and we move right
     cmp #H_VELO_MAX
     bcs h_move_handle_velo ;; no velo change. velo is bigger, so we hit our max
     clc
     adc #H_VELO_INC
-    sta player::h_velo
+    sta sprite::h_velo
     bra h_move_handle_velo
 
 h_move_push_right_move_left:
     clc
     adc #H_VELO_INC_OPPOSITE
-    sta player::h_velo
+    sta sprite::h_velo
     bra h_move_handle_velo
 
     ;; cpu doesn't do signed compare, so we need to do some work
@@ -494,7 +497,7 @@ h_move_push_right_move_left:
     ;;   we can't be hitting max velo
     ;; - if velo is negative, we invert, and compare to H_MAX_VELO
 h_move_push_left:
-    lda player::h_velo
+    lda sprite::h_velo
     beq h_move_push_left_move_left
     bpl h_move_push_left_move_right
 h_move_push_left_move_left:
@@ -504,26 +507,26 @@ h_move_push_left_move_left:
     cmp #H_VELO_MAX
     bcs h_move_handle_velo ;; no velo change. velo is bigger, so we hit our max
     ;; otherwise increase velo
-    lda player::h_velo
+    lda sprite::h_velo
     sec
     sbc #H_VELO_INC
-    sta player::h_velo
+    sta sprite::h_velo
     bra h_move_handle_velo
 h_move_push_left_move_right:
     ;; when pushing opposite dir of h_move, we want to decrease velo extra
     sec
     sbc #H_VELO_INC_OPPOSITE
-    sta player::h_velo
+    sta sprite::h_velo
     bra h_move_handle_velo
 h_move_no_push:
-    lda player::h_velo
+    lda sprite::h_velo
     bmi h_move_left_no_push
     ;; so we're h_movening right
     sec
     sbc #H_VELO_INC_RELAX
     ;; but if we overshoot, we should snap to 0
     bmi h_move_snap_to_zero
-    sta player::h_velo
+    sta sprite::h_velo
     bra h_move_handle_velo
 
 h_move_left_no_push:
@@ -531,39 +534,39 @@ h_move_left_no_push:
     adc #H_VELO_INC_RELAX
     ;; but if we overshoot, we should snap to 0
     bpl h_move_snap_to_zero
-    sta player::h_velo
+    sta sprite::h_velo
     bra h_move_handle_velo
 
 h_move_snap_to_zero:
     lda #0
-    sta player::h_velo
+    sta sprite::h_velo
 
 h_move_handle_velo:
     ;; if velo is 0, we should state-change to idle, otherwise add velo to x_pos
-    ldx player::h_velo
+    ldx sprite::h_velo
     beq h_move_set_to_idle
-    lda player::x_pos
+    lda sprite::x_pos
     clc
-    adc player::h_velo
-    sta player::x_new
+    adc sprite::h_velo
+    sta sprite::x_new
     bra h_move_end
 h_move_set_to_idle:
     ;; when we reach zero we want to set ourself to idle
     ;; state, but only when we are running. not when we're in the air
-    lda player::move_state
+    lda sprite::move_state
     cmp #move_state::run
     bne h_move_end
     lda #move_state::idle
-    sta player::move_state
+    sta sprite::move_state
 h_move_end:
     rts
 
 
 init_run:
     lda #0
-    sta player::h_velo
+    sta sprite::h_velo
     lda #move_state::run
-    sta player::move_state
+    sta sprite::move_state
     asl ;; times 2 to get proper fn offset
     tax
     jmp (.loword(move_table), x)
@@ -595,10 +598,10 @@ idle_test_run:
 
 still_idle:
     ;; new x/y is old x/y
-    lda player::x_pos
-    sta player::x_new
-    lda player::y_pos
-    sta player::y_new
+    lda sprite::x_pos
+    sta sprite::x_new
+    lda sprite::y_pos
+    sta sprite::y_new
     rts
 
 
@@ -651,7 +654,7 @@ player_start_coords:
 .a16
 .i16
 handle_player_movement:
-    lda player::move_state
+    lda sprite::move_state
     asl
     tax
     jsr (.loword(move_table), x)
@@ -675,14 +678,15 @@ player_movement_loop:
     inc
     tax
     phx
-    cpx #8
+    cpx #PLAYER_TABLE_I
     bne player_movement_loop
     plx ; clear the stack
     lda #$0
     tcd
     rts
 
-COLL_STACK_ROOM = $1f
+COLL_STACK_ROOM = $21
+COLL_STACK_TMP = $1d
 COLL_STACK_POINT_HIT_GROUND = $1b
 COLL_STACK_POINT_ON_LEDGE = $19
 COLL_STACK_Y_NEW_TMP = $17
@@ -715,7 +719,7 @@ check_collisions:
     sta COLL_STACK_Y_NEW_TMP, s
     sta COLL_STACK_X_NEW_TMP, s
 
-    lda player::y_new  ; load y of first sprite
+    lda sprite::y_new  ; load y of first sprite
     rshift 4           ; remove sub-pixels
     tay
     and #7
@@ -730,7 +734,7 @@ check_collisions:
     ;; now calculate X tile offset while we wait (more than) 8 cycles for
     ;; multiplication to complete
     A16
-    lda player::x_new   ; load x of first sprite
+    lda sprite::x_new   ; load x of first sprite
     rshift 4            ; remove sub-pixels
     tax
     and #7
@@ -772,7 +776,7 @@ check_collisions:
 coll_point_loop:
     lda COLL_STACK_Y_OFF_NEW, s
     clc
-    adc (player::bbox), y
+    adc (sprite::bbox), y
     sta COLL_STACK_POINT_Y_OFF_NEW, s ;; save offset for if we need to do micro pushback
     rshift 3 ;; truncate to see if we're spilling over into another tile
     beq y_no_spill  ; we're not spilling over
@@ -798,7 +802,7 @@ point_x_calc:
     iny ;; move y to x offset in point
     iny
     clc
-    adc (player::bbox), y ; again, do x in the meantime
+    adc (sprite::bbox), y ; again, do x in the meantime
     sta COLL_STACK_POINT_X_OFF_NEW, s
     rshift 3
     clc
@@ -845,32 +849,32 @@ collision:
     ;; much less frequent, this seems the better way.
     dey ;; move back to y within current bbox
     dey
-    lda (player::bbox), y
+    lda (sprite::bbox), y
     asl
     asl
     asl
     asl
     clc
-    adc player::y_new
+    adc sprite::y_new
     sta COLL_STACK_POINT_Y_COORD, s
     and #$7f
     sta COLL_STACK_POINT_Y_OFF_NEW_SUB, s
 
     iny ;; and increment again to get to x
     iny
-    lda (player::bbox), y
+    lda (sprite::bbox), y
     asl
     asl
     asl
     asl
     clc
-    adc player::x_new
+    adc sprite::x_new
     sta COLL_STACK_POINT_X_COORD, s
     and #$7f
     sta COLL_STACK_POINT_X_OFF_NEW_SUB, s
 
 
-    lda player::h_velo
+    lda sprite::h_velo
     eor #$FFFF
     clc
     adc #1
@@ -884,7 +888,7 @@ collision:
 
 
     ;; x = moving left
-    lda player::v_velo
+    lda sprite::v_velo
     eor #$FFFF
     clc
     adc #1
@@ -899,7 +903,7 @@ collision:
     bra coll_left_up
 
 coll_x_right:
-    lda player::v_velo
+    lda sprite::v_velo
     eor #$FFFF
     clc
     adc #1
@@ -915,15 +919,15 @@ coll_x_right_cont:
     bra coll_right_up
 
 coll_snap_y:
-    lda player::v_velo
+    lda sprite::v_velo
     tax
     eor #$FFFF
     clc
     adc #1
-    sta player::tmp
+    sta COLL_STACK_TMP, s
     lda COLL_STACK_POINT_Y_OFF_NEW_SUB, s ; point offset + (~velocity)
     clc
-    adc player::tmp
+    adc COLL_STACK_TMP, s
     and #$FF80 ; not z flag set, so bigger than 8 + subpixels
                ; tells us we moved out of the block
     bne coll_snap_y_cont
@@ -976,10 +980,10 @@ coll_snap_to_top:
     ;; so the bit that sticks out upwards is now in A
     ;; we AND with 7f, so we know how much of it sticks up,
     and #$7f
-    sta player::tmp
-    lda player::y_new ; so we're effectively
+    sta COLL_STACK_TMP, s
+    lda sprite::y_new ; so we're effectively
     sec
-    sbc player::tmp
+    sbc COLL_STACK_TMP, s
     sbc #$1
     tax
     lda COLL_STACK_Y_NEW_TMP, s      ; did we already save a new temp y?
@@ -1006,7 +1010,7 @@ coll_snap_to_bottom:
     adc #$1
     clc
     adc #$80 ; effectively y_new + (8 - nr)
-    adc player::y_new ; and we want to add that to the new y
+    adc sprite::y_new ; and we want to add that to the new y
     tax
     lda COLL_STACK_Y_NEW_TMP, s      ; did we already save a new temp y?
     bmi coll_snap_to_bottom_save_new_y  ; if not we can directly save this one
@@ -1024,10 +1028,10 @@ coll_snap_to_left:
     ;; so the bit that sticks out right-wards is now in A
     ;; we AND with 7f, so we know how much of it sticks up,
     and #$7f
-    sta player::tmp
-    lda player::x_new ; so we're effectively
+    sta COLL_STACK_TMP, s
+    lda sprite::x_new ; so we're effectively
     sec
-    sbc player::tmp
+    sbc COLL_STACK_TMP, s
     sbc #$1
     tax
     lda COLL_STACK_X_NEW_TMP, s      ; did we already save a new temp y?
@@ -1050,7 +1054,7 @@ coll_snap_to_right:
     adc #$1
     clc
     adc #$80 ; effectively x_new + (8 - nr)
-    adc player::x_new ; and we want to add that to the new x
+    adc sprite::x_new ; and we want to add that to the new x
     tax
     lda COLL_STACK_X_NEW_TMP, s      ; did we already save a new temp y?
     bmi coll_snap_to_right_save_new_x  ; if not we can directly save this one
@@ -1064,7 +1068,7 @@ coll_snap_to_right_save_new_x:
 
 
 collision_ledge_check:
-    lda player::move_state ;; only check when we're idle or running
+    lda sprite::move_state ;; only check when we're idle or running
     cmp #move_state::idle
     beq collision_ledge_check_main
     cmp #move_state::run
@@ -1100,12 +1104,12 @@ collision_ledge_check_main:
 collision_player_end:
     iny
     iny
-    cpy player_bbox_end_offs
+    cpy sprite::bbox_size
     beq collision_cleanup
     jmp coll_point_loop ; not equal so we do another round
 collision_cleanup:
 ;collision_ledge_fall:
-    lda player::move_state ;; only execute
+    lda sprite::move_state ;; only execute
     cmp #move_state::idle
     beq collision_ledge_fall_main
     cmp #move_state::run
@@ -1115,42 +1119,38 @@ collision_ledge_fall_main:
     bne collision_store_y_new ; we didn't fall off the ledge
     ; we  did fall off the ledge. we're now fallling
     lda #0
-    sta player::v_velo
+    sta sprite::v_velo
     lda #move_state::jump
-    sta player::move_state
+    sta sprite::move_state
     lda #V_VELO_DEC
-    sta player::v_velo_dec
+    sta sprite::v_velo_dec
 collision_store_y_new:
     lda COLL_STACK_Y_NEW_TMP, s
     bmi collision_store_x_new
     ;; y collision occured.
     ;; we record new y, and set y velo to 0
-    sta player::y_new
+    sta sprite::y_new
     lda #0
-    sta player::v_velo
+    sta sprite::v_velo
     lda COLL_STACK_POINT_HIT_GROUND, s
     beq collision_store_x_new
     lda #move_state::idle
-    sta player::move_state
+    sta sprite::move_state
 
 collision_store_x_new:
     lda COLL_STACK_X_NEW_TMP, s
     bmi collision_unwind_stack
     ;; x collision occured.
     ;; we record new x, and set x velo to 0
-    sta player::x_new
+    sta sprite::x_new
     lda #0
-    sta player::h_velo
+    sta sprite::h_velo
 
 collision_unwind_stack:
     ; end of point loop so we're done
     lda COLL_STACK_ROOM - 1, s ; restore stack
     tcs                        ; pointer
     rts
-
-
-player_bbox_end_offs:
-.word .sizeof(player_bbox)
 
 
 player_bbox_default:
@@ -1259,53 +1259,53 @@ finalise:
 
     ;; we now know x and y won't change anymore, so lock them into x/y_pos
     ;; also write them to the OAM mirror
-    lda p1 + player::x_new
-    sta p1 + player::x_pos
+    lda p1 + sprite::x_new
+    sta p1 + sprite::x_pos
     rshift 4
     A8
     sta OAM_MIRROR
     A16
-    lda p1 + player::y_new
-    sta p1 + player::y_pos
+    lda p1 + sprite::y_new
+    sta p1 + sprite::y_pos
     rshift 4
     A8
     sta OAM_MIRROR + 1
 
     A16
-    lda p2 + player::x_new
-    sta p2 + player::x_pos
+    lda p2 + sprite::x_new
+    sta p2 + sprite::x_pos
     rshift 4
     A8
     sta OAM_MIRROR + 4
     A16
-    lda p2 + player::y_new
-    sta p2 + player::y_pos
+    lda p2 + sprite::y_new
+    sta p2 + sprite::y_pos
     rshift 4
     A8
     sta OAM_MIRROR + 5
 
     A16
-    lda p3 + player::x_new
-    sta p3 + player::x_pos
+    lda p3 + sprite::x_new
+    sta p3 + sprite::x_pos
     rshift 4
     A8
     sta OAM_MIRROR + 8
     A16
-    lda p3 + player::y_new
-    sta p3 + player::y_pos
+    lda p3 + sprite::y_new
+    sta p3 + sprite::y_pos
     rshift 4
     A8
     sta OAM_MIRROR + 9
 
     A16
-    lda p4 + player::x_new
-    sta p4 + player::x_pos
+    lda p4 + sprite::x_new
+    sta p4 + sprite::x_pos
     rshift 4
     A8
     sta OAM_MIRROR + $c
     A16
-    lda p4 + player::y_new
-    sta p4 + player::y_pos
+    lda p4 + sprite::y_new
+    sta p4 + sprite::y_pos
     rshift 4
     A8
     sta OAM_MIRROR + $d

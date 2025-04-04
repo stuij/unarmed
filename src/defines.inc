@@ -19,6 +19,13 @@ V_VELO_DOWN_MAX = $42
 P1_START_X = $7a0
 P1_START_Y = $970
 
+
+;; for iterating over the player table
+;; double the amount of actual players, as we're iterating over words
+;; pointing to the player structs
+PLAYER_TABLE_I = $8
+
+
 .enum move_state
     idle
     run
@@ -53,7 +60,7 @@ P1_START_Y = $970
 
 ; x/y nrs are in sub-pixels,
 ; aka .1 precision fixed point behind the pixel-comma
-.struct player
+.struct sprite
     ;; v velo and h velo will also automatically give us moving
     ;; direction, and so will tell us what way to correct to
     ;; when moving through barrier tiles
@@ -66,9 +73,18 @@ P1_START_Y = $970
     y_new               .word ;  c
     v_velo_dec          .word ;  e
     bbox                .addr ; 10 - pointer to actual bbox
+    bbox_size           .word ; 12 - how many points in the bbox
     move_state          .word ; 12
-    tmp                 .word ; 14 - scratch pad
-    face_dir            .word ; 16
+    face_dir            .word ; 14
+    vptr                .word ; 16 - pointer to the sprite vtable
+.endstruct
+
+.struct sprite_vtable
+
+.endstruct
+
+.struct player
+    sprite .tag sprite
     ledge_p             .word ; 18
     bbox_ledge_lookup   .word ; 1a
     joy                 .word ; 1c - last frame buttons
@@ -83,7 +99,6 @@ P1_START_Y = $970
     p2                  .word ; 2a
     p3                  .word ; 2c
     p4                  .word ; 2e
-
 .endstruct
 
 .endif ; DEFINES_INC
