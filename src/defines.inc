@@ -80,7 +80,8 @@ PLAYER_TABLE_I = $8
 .endstruct
 
 .struct sprite_vtable
-    collision_end_callback   .word
+    collision_end_callback       .addr
+    coll_point_no_coll_callback  .addr
 .endstruct
 
 .struct player

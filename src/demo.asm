@@ -691,7 +691,7 @@ player_movement_loop:
 COLL_STACK_ROOM = $21
 COLL_STACK_TMP = $1d
 COLL_STACK_POINT_HIT_GROUND = $1b
-COLL_STACK_POINT_ON_LEDGE = $19
+COLL_STACK_POINT_SPRITE_CALLBACK_TMP = $19
 COLL_STACK_Y_NEW_TMP = $17
 COLL_STACK_X_NEW_TMP = $15
 COLL_STACK_POINT_Y_COORD = $13
@@ -749,7 +749,7 @@ check_collisions:
     sta COLL_STACK_TILE_OFF, s  ; save tile offset to stack for later
 
     lda #0
-    sta COLL_STACK_POINT_ON_LEDGE, s ; set to 0
+    sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP, s ; set to 0
     sta COLL_STACK_POINT_HIT_GROUND, s
     ;; So now we have our base
     ;; Our stack, growing down looks like:
@@ -813,10 +813,10 @@ point_x_calc:
     sta COLL_STACK_POINT_TILE_OFF, s
     tax
     A8
-    lda town_coll, x    ; check collision map for point
+    lda town_coll, x           ; check collision map for point
     A16
-    bne collision       ; if not zero, collision
-    jmp collision_ledge_check   ; otherwise we can move on with ledge check
+    bne collision              ; if not zero, collision
+    jmp coll_no_coll_for_point ; otherwise, do no collision things
 collision:
     ;; Once we know x and y direction,
     ;; we can make sensible decision on snapping.
@@ -1068,14 +1068,43 @@ coll_snap_to_right_save_new_x:
     sta COLL_STACK_X_NEW_TMP, s
     bra collision_player_end
 
+;; put code here, if you want to do something specific if no
+;; collision has happened
+coll_no_coll_for_point:
+    lda sprite::vptr
+    clc
+    adc #sprite_vtable::coll_point_no_coll_callback
+    tax
+    jsr (0,x)
 
-collision_ledge_check:
+collision_player_end:
+    iny
+    iny
+    cpy sprite::bbox_size
+    beq collision_cleanup
+    jmp coll_point_loop ; not equal so we do another round
+collision_cleanup:
+    lda sprite::vptr
+    clc
+    adc #sprite_vtable::collision_end_callback
+    tax
+    jsr (0, x)
+
+collision_unwind_stack:
+    ; end of point loop so we're done
+    lda COLL_STACK_ROOM - 1, s ; restore stack
+    tcs                        ; pointer
+    rts
+
+
+player_point_no_coll_callback:
+    ;; we're ledge checking
     lda sprite::move_state ;; only check when we're idle or running
     cmp #move_state::idle
-    beq collision_ledge_check_main
+    beq player_point_no_call_ledge_check
     cmp #move_state::run
-    bne collision_player_end
-collision_ledge_check_main:
+    bne player_point_no_call_end
+player_point_no_call_ledge_check:
     tyx
     tya
     lsr ; shift point offset to find offset into ledge table
@@ -1085,43 +1114,24 @@ collision_ledge_check_main:
     lda (player::bbox_ledge_lookup), y
     txy ; restore Y
     cmp #1
-    bne collision_player_end
+    bne player_point_no_call_end
     ; ok, we are interested in a ledge check
-    lda COLL_STACK_POINT_TILE_OFF, s
+    lda COLL_STACK_POINT_TILE_OFF + 2, s
     clc
     adc #$20 ;; set to tile under point
     tax
     A8
     lda town_coll, x
     A16
-    beq collision_player_end ; not a collision, so we move on
+    beq player_point_no_call_end ; not a collision, so we move on
     ;; it's a collision, so we register it
     ;; we only need one collision to know that we're standing with at least
     ;; one point on the ledge, so we can just write 1 whenever we find
     ;; something
     lda #1
-    sta COLL_STACK_POINT_ON_LEDGE, s
-
-    
-collision_player_end:
-    iny
-    iny
-    cpy sprite::bbox_size
-    beq collision_cleanup
-    jmp coll_point_loop ; not equal so we do another round
-collision_cleanup:
-    ldy #sprite_vtable::collision_end_callback
-    lda (sprite::vptr), y
-    sta .loword(W0)
-    ldx #0
-    jsr (W0, x)
-
-collision_unwind_stack:
-    ; end of point loop so we're done
-    lda COLL_STACK_ROOM - 1, s ; restore stack
-    tcs                        ; pointer
+    sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
+player_point_no_call_end:
     rts
-
 
 
 player_coll_end_callback:
@@ -1131,7 +1141,7 @@ player_coll_end_callback:
     cmp #move_state::run
     bne player_coll_store_y_new
 player_coll_ledge_fall:
-    lda COLL_STACK_POINT_ON_LEDGE + 2, s
+    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
     bne player_coll_store_y_new ; we didn't fall off the ledge
     ; we  did fall off the ledge. we're now fallling
     lda #0
@@ -1166,6 +1176,7 @@ player_coll_end_callback_end:
 
 player_sprite_vtable:
 .addr .loword(player_coll_end_callback)
+.addr .loword(player_point_no_coll_callback)
 
 player_bbox_default:
 ;; top left
