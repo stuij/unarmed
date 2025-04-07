@@ -39,6 +39,15 @@ p2: .tag player
 p3: .tag player
 p4: .tag player
 
+;; bullet data
+;; start at 0 because we're not insane. player start kinda forced by
+;; snes naming
+b0: .tag bullet
+b1: .tag bullet
+b2: .tag bullet
+b3: .tag bullet
+
+
 OAM_MIRROR: .res $220
 
 .endif ; DATA_INC

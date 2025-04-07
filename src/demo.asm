@@ -208,8 +208,50 @@ dma_OAM:
 	plp
 	rts
 
-
+.a16
+.i16
 ;; game specific
+init_bullets:
+    lda #$04                ; tile offset of fourth sprite
+    sta OAM_MIRROR + $12
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + $13
+
+    lda #$fe
+    sta OAM_MIRROR + $201
+
+    lda .loword(bullet_table)
+    tcd
+
+    ldy #$10
+    sty sprite::h_velo
+    sty sprite::v_velo
+
+    ; p1 start position
+    ; $80 pixel offset and $0 subpixels
+
+    ldy #$100
+    sty sprite::x_pos
+    sty sprite::y_pos
+
+    ldy #bullet_state::fly
+    sty sprite::move_state
+
+    ldy #face_dir::right
+    sty sprite::face_dir
+
+    ldy #.loword(bullet_bbox_default)
+    sty sprite::bbox
+
+    ldy #.sizeof(bullet_bbox)
+    sty sprite::bbox_size
+
+    ldy #.loword(bullet_sprite_vtable)
+    sty sprite::vptr
+    lda #0
+    tcd
+    rts
+
 
 .a8
 .i16
@@ -348,6 +390,8 @@ player_init_loop:
     lda #0
     tcd
 
+    jsr init_bullets
+
     A8
     ;; set oam for sprite 1 directly.
     ;; this and the above sprite init data should all be done with some
@@ -382,9 +426,11 @@ player_init_loop:
     rts
 
 
+
+
+
 .a8
 .i16
-
 read_input:
 wait_for_joypad:
     lda HVBJOY            ; get joypad status
@@ -629,6 +675,12 @@ player_table:
 .addr .loword(p3)
 .addr .loword(p4)
 
+bullet_table:
+.addr .loword(b0)
+.addr .loword(b1)
+.addr .loword(b2)
+.addr .loword(b3)
+
 
 player_start_coords:
 .word $200 ; p1 x
@@ -654,9 +706,32 @@ player_start_coords:
 ;;   we fall left, we check left up, left down and right down
 ;;   we might want to check 6 points so we don't allow impaling ourselves horizontally on
 ;;   8x8 blocks
+
+
 .a16
 .i16
-handle_player_movement:
+handle_bullet_movement:
+    lda .loword(bullet_table)
+    tcd
+
+    lda sprite::x_pos
+    clc
+    adc sprite::h_velo
+    sta sprite::x_new
+
+    lda sprite::y_pos
+    clc
+    adc sprite::v_velo
+    sta sprite::y_new
+
+    jsr check_collisions
+    lda #$0
+    tcd
+    rts
+
+.a16
+.i16
+handle_single_player_movement:
     lda sprite::move_state
     asl
     tax
@@ -666,16 +741,14 @@ handle_player_movement:
     rts
 
 
-.a16
-.i16
-handle_movement:
+handle_player_movement:
     ;; loop over player movement
     ldx #0
     phx
 player_movement_loop:
     lda .loword(player_table), x
     tcd ;; remapping dp to player x
-    jsr handle_player_movement
+    jsr handle_single_player_movement
     pla
     inc
     inc
@@ -686,6 +759,11 @@ player_movement_loop:
     plx ; clear the stack
     lda #$0
     tcd
+    rts
+
+handle_movement:
+    jsr handle_player_movement
+    jsr handle_bullet_movement
     rts
 
 COLL_STACK_ROOM = $21
@@ -1097,6 +1175,23 @@ collision_unwind_stack:
     rts
 
 
+bullet_point_no_coll_callback:
+    rts
+
+bullet_coll_end_callback:
+bullet_coll_store_x_new:
+    lda COLL_STACK_X_NEW_TMP + 2, s
+    bmi bullet_coll_end_callback_end
+    ;; x collision occured.
+    ;; we record new x, and set x velo to 0
+    sta sprite::x_new
+    lda #0
+    sta sprite::h_velo
+    lda #0
+    sta sprite::v_velo
+bullet_coll_end_callback_end:
+    rts
+
 player_point_no_coll_callback:
     ;; we're ledge checking
     lda sprite::move_state ;; only check when we're idle or running
@@ -1177,6 +1272,14 @@ player_coll_end_callback_end:
 player_sprite_vtable:
 .addr .loword(player_coll_end_callback)
 .addr .loword(player_point_no_coll_callback)
+
+bullet_sprite_vtable:
+.addr .loword(bullet_coll_end_callback)
+.addr .loword(bullet_point_no_coll_callback)
+
+bullet_bbox_default:
+.word 7 ;; y
+.word 7 ;; x
 
 player_bbox_default:
 ;; top left
@@ -1334,6 +1437,21 @@ finalise:
     rshift 4
     A8
     sta OAM_MIRROR + $d
+
+    ;; bullets
+    A16
+    lda b0 + sprite::x_new
+    sta b0 + sprite::x_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + $10
+    A16
+    lda b0 + sprite::y_new
+    sta b0 + sprite::y_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + $11
+
 
     rts
 

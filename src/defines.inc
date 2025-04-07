@@ -34,6 +34,10 @@ PLAYER_TABLE_I = $8
     climb
 .endenum
 
+.enum bullet_state
+    fly
+.endenum
+
 .enum face_dir
     left
     right
@@ -56,6 +60,10 @@ PLAYER_TABLE_I = $8
     top_right     .tag point ; 14
     middle_right  .tag point ; 18
     bottom_right  .tag point ; 1c
+.endstruct
+
+.struct bullet_bbox
+    top_left      .tag point ; 0
 .endstruct
 
 ; x/y nrs are in sub-pixels,
@@ -86,7 +94,6 @@ PLAYER_TABLE_I = $8
 
 .struct player
     sprite .tag sprite
-    ledge_p             .word ; 18
     bbox_ledge_lookup   .word ; 1a
     joy                 .word ; 1c - last frame buttons
     joy_trigger         .word ; 1e - only buttons that weren't pressed last frame
@@ -100,6 +107,10 @@ PLAYER_TABLE_I = $8
     p2                  .word ; 2a
     p3                  .word ; 2c
     p4                  .word ; 2e
+.endstruct
+
+.struct bullet
+    sprite .tag sprite
 .endstruct
 
 .endif ; DEFINES_INC
