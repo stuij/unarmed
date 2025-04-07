@@ -411,10 +411,10 @@ player_init_loop:
     lda #$20                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $b
 
-    lda #$00                ; tile offset of fourth sprite
-    sta OAM_MIRROR + $e
-    lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $f
+    ; lda #$00                ; tile offset of fourth sprite
+    ; sta OAM_MIRROR + $e
+    ; lda #$20                ; no flip, prio 2, palette 0
+    ; sta OAM_MIRROR + $f
 
 
     ; set top bit of x pos for all 4 sprites to 0 so we show them on
@@ -449,7 +449,13 @@ joy_loop:
     lda .loword(player_table), x
     tcd ;; remapping dp to player x
 
-    lda JOY1L, x                     ; get new input from this frame
+    cpx #$4 ; in multitap config, the third joypad needs to be read raw
+            ; the 4th joypad can be read through the convenience joy
+            ; registers
+    bne :+
+    inx
+    inx
+  : lda JOY1L, x                     ; get new input from this frame
     ldy player::joy                 ; get input from last frame
     sta player::joy                 ; store new input from this frame
     tya                              ; check for newly pressed buttons...
@@ -477,6 +483,7 @@ joy_loop:
     inc
     tax
     cpx #PLAYER_TABLE_I
+
     bne joy_loop
     lda #$0
     tcd
@@ -523,7 +530,7 @@ h_move:
     lda player::h_tribool
     beq h_move_no_push ;; we've got momentum, but we are not actually pushing a button
     bmi h_move_push_left ; we're pushing left on direction pad
-    
+
     ;; we're pushing right
     lda sprite::h_velo
     bmi h_move_push_right_move_left
@@ -687,10 +694,10 @@ player_start_coords:
 .word $200 ; p1 y
 .word $500 ; p2 x
 .word $200 ; p2 y
-.word $900 ; p3 x
-.word $700 ; p3 y
-.word $d00 ; p4 x
-.word $200 ; p4 y
+.word $b00 ; p3 x
+.word $200 ; p3 y
+.word $900 ; p4 x
+.word $700 ; p4 y
 
 
 ;; my current thinking is:
@@ -977,7 +984,7 @@ collision:
     adc COLL_STACK_POINT_Y_OFF_NEW_SUB, s ; (~velocity) + point offset
     and #$FF80 ; not z flag set, so bigger than 8 + subpixels
                ; tells us we moved out of the block
-    bne :+ 
+    bne :+
     jmp coll_snap_to_right
     ;; if n flag set, we moved from upper block, so downwards
   : bmi coll_left_down
@@ -1067,7 +1074,7 @@ coll_left_down:
     jsr snap_to_right
     jsr snap_to_top
     bra collision_player_end
-    
+
 coll_right_up:
     lda COLL_STACK_POINT_TILE_OFF, s
     sec
@@ -1533,18 +1540,18 @@ finalise:
     A8
     sta OAM_MIRROR + 9
 
-    A16
-    lda p4 + sprite::x_new
-    sta p4 + sprite::x_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR + $c
-    A16
-    lda p4 + sprite::y_new
-    sta p4 + sprite::y_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR + $d
+    ; A16
+    ; lda p4 + sprite::x_new
+    ; sta p4 + sprite::x_pos
+    ; rshift 4
+    ; A8
+    ; sta OAM_MIRROR + $c
+    ; A16
+    ; lda p4 + sprite::y_new
+    ; sta p4 + sprite::y_pos
+    ; rshift 4
+    ; A8
+    ; sta OAM_MIRROR + $d
 
     ;; bullets
     A16

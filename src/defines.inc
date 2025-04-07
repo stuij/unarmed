@@ -23,7 +23,7 @@ P1_START_Y = $970
 ;; for iterating over the player table
 ;; double the amount of actual players, as we're iterating over words
 ;; pointing to the player structs
-PLAYER_TABLE_I = $8
+PLAYER_TABLE_I = $6
 
 
 .enum move_state
