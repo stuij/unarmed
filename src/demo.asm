@@ -212,7 +212,7 @@ dma_OAM:
 .i16
 ;; game specific
 init_bullets:
-    lda #$04                ; tile offset of fourth sprite
+    lda #$02                ; tile offset of second sprite
     sta OAM_MIRROR + $12
     lda #$20                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $13
@@ -223,7 +223,7 @@ init_bullets:
     lda .loword(bullet_table)
     tcd
 
-    ldy #$10
+    ldy #$40
     sty sprite::h_velo
     sty sprite::v_velo
 
@@ -996,7 +996,9 @@ coll_x_right:
     bne coll_x_right_cont
     jmp coll_snap_to_left
 coll_x_right_cont:
-    bmi coll_right_down
+    bpl coll_x_right_end
+    jmp coll_right_down
+coll_x_right_end:
     bra coll_right_up
 
 coll_snap_y:
@@ -1015,135 +1017,129 @@ coll_snap_y:
     jmp collision_player_end ;; assuming we got here from x also not out of bounds
 coll_snap_y_cont:
     ;; if n flag set, we moved from upper block, so downwards
-    bmi coll_snap_to_top
-    bra coll_snap_to_bottom
+    bpl coll_snap_y_end
+    jmp coll_snap_to_top
+coll_snap_y_end:
+    jmp coll_snap_to_bottom
 
 ;; now we resolved straight up/down, left/right
 ;; but if we moved diagonal into a new block, which way should we snap?
 coll_left_up:
-    lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
-    cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
-    ;; for both, higher nr means shallower
-    ;; carry clear means x is higher
-    jmp coll_snap_to_right ;; bcc
-    ;; bra coll_snap_to_bottom
-
+    lda COLL_STACK_POINT_TILE_OFF, s
+    clc
+    adc #$1
+    tax
+    A8
+    lda town_coll, x
+    A16
+    bne :+
+    jmp coll_snap_to_right
+  : lda COLL_STACK_POINT_TILE_OFF, s
+    clc
+    adc #$20
+    tax
+    A8
+    lda town_coll, x
+    A16
+    bne :+
+    jmp coll_snap_to_bottom
+  : jsr snap_to_right
+    jsr snap_to_bottom
+    jmp collision_player_end
 
 coll_left_down:
-    lda #7 ;; reverse x to be able to compare sensibly
+    lda COLL_STACK_POINT_TILE_OFF, s
+    clc
+    adc #$1
+    tax
+    A8
+    lda town_coll, x
+    A16
+    beq coll_snap_to_right
+    lda COLL_STACK_POINT_TILE_OFF, s
     sec
-    sbc COLL_STACK_POINT_X_OFF_NEW_SUB, s
-    cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
-    ;; carry clear means x is higher (while inversed direction)
-    ;; bcc coll_snap_to_top
-    jmp coll_snap_to_right
+    sbc #$20
+    tax
+    A8
+    lda town_coll, x
+    A16
+    beq coll_snap_to_top
+    jsr snap_to_right
+    jsr snap_to_top
+    bra collision_player_end
     
 coll_right_up:
-    lda #7 ;; reverse x to be able to compare sensibly
+    lda COLL_STACK_POINT_TILE_OFF, s
     sec
-    sbc COLL_STACK_POINT_X_OFF_NEW_SUB, s
-    cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
-    ;; carry clear means x is higher (while inversed direction)
-    bra coll_snap_to_left ;; bcc
-    ;; bra coll_snap_to_bottom    
+    sbc #$1
+    tax
+    A8
+    lda town_coll, x
+    A16
+    beq coll_snap_to_left
+    lda COLL_STACK_POINT_TILE_OFF, s
+    clc
+    adc #$20
+    tax
+    A8
+    lda town_coll, x
+    A16
+    beq coll_snap_to_bottom
+    jsr snap_to_left
+    jsr snap_to_bottom
+    bra collision_player_end
 
+
+; we're moving in right/down direction
 coll_right_down:
-    lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
-    cmp COLL_STACK_POINT_Y_OFF_NEW_SUB, s
-    ;; carry clear means x is higher
-    ;; bcc coll_snap_to_top
-    bra coll_snap_to_left
+    ;; first we check if the squares that we want to snap into
+    ;; aren't taken up by tiles.
+    ;; We first check for left. If the tile there isn't obstructed,
+    ;; we snap to it. Then we do same for right.
+    ;; If both squares are obstructed we snap to both, aka, the corner
+    ;; of the tile we left.
+    lda COLL_STACK_POINT_TILE_OFF, s
+    sec
+    sbc #$1
+    tax
+    A8
+    lda town_coll, x
+    A16
+    beq coll_snap_to_left
+    ;; check top
+    lda COLL_STACK_POINT_TILE_OFF, s
+    sec
+    sbc #$20
+    tax
+    A8
+    lda town_coll, x
+    A16
+    beq coll_snap_to_top
+    ; no space at left or up
+    ; we need to snap to tile we came from,
+    ; aka both left and top
+    ; of current tile
+    jsr snap_to_left
+    jsr snap_to_top
+    bra collision_player_end
 
 
 ;; snapping to what?
 coll_snap_to_top:
-    lda COLL_STACK_POINT_Y_OFF_NEW_SUB, s
-    ;; so the bit that sticks out upwards is now in A
-    ;; we AND with 7f, so we know how much of it sticks up,
-    and #$7f
-    sta COLL_STACK_TMP, s
-    lda sprite::y_new ; so we're effectively
-    sec
-    sbc COLL_STACK_TMP, s
-    sbc #$1
-    tax
-    lda COLL_STACK_Y_NEW_TMP, s      ; did we already save a new temp y?
-    bmi coll_snap_to_top_save_new_y  ; if not we can directly save this one
-    txa
-    cmp COLL_STACK_Y_NEW_TMP, s      ; otherwise we need to see which one is lower
-    bcs coll_snap_to_top_cont; if current y is higher, we don't save
-coll_snap_to_top_save_new_y:
-    txa
-    sta COLL_STACK_Y_NEW_TMP, s
-coll_snap_to_top_cont:
-    ;; this means we just hit the bottom
-    lda #1
-    sta COLL_STACK_POINT_HIT_GROUND, s
+    jsr snap_to_top
     jmp collision_player_end
 
 coll_snap_to_bottom:
-    lda COLL_STACK_POINT_Y_OFF_NEW_SUB, s
-    ;; so the bit that sticks out downwards is now in A
-    and #$7f
-    eor #$FFFF
-    clc
-    adc #$1
-    clc
-    adc #$80 ; effectively y_new + (8 - nr)
-    adc sprite::y_new ; and we want to add that to the new y
-    tax
-    lda COLL_STACK_Y_NEW_TMP, s      ; did we already save a new temp y?
-    bmi coll_snap_to_bottom_save_new_y  ; if not we can directly save this one
-    txa
-    cmp COLL_STACK_Y_NEW_TMP, s      ; otherwise we need to see which one is lower
-    bcc collision_player_end ; if current y is lower, we don't save
-coll_snap_to_bottom_save_new_y:
-    txa
-    sta COLL_STACK_Y_NEW_TMP, s
+    jsr snap_to_bottom
     bra collision_player_end
 
 
 coll_snap_to_left:
-    lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
-    ;; so the bit that sticks out right-wards is now in A
-    ;; we AND with 7f, so we know how much of it sticks up,
-    and #$7f
-    sta COLL_STACK_TMP, s
-    lda sprite::x_new ; so we're effectively
-    sec
-    sbc COLL_STACK_TMP, s
-    sbc #$1
-    tax
-    lda COLL_STACK_X_NEW_TMP, s      ; did we already save a new temp y?
-    bmi coll_snap_to_left_save_new_x  ; if not we can directly save this one
-    txa
-    cmp COLL_STACK_X_NEW_TMP, s      ; otherwise we need to see which one is lower
-    bcs coll_snap_to_left_cont; if current y is higher, we don't save
-coll_snap_to_left_save_new_x:
-    txa
-    sta COLL_STACK_X_NEW_TMP, s
-coll_snap_to_left_cont:
+    jsr snap_to_left
     bra collision_player_end
 
 coll_snap_to_right:
-    lda COLL_STACK_POINT_X_OFF_NEW_SUB, s
-    ;; so the bit that sticks out left-wards is now in A
-    and #$7f
-    eor #$FFFF
-    clc
-    adc #$1
-    clc
-    adc #$80 ; effectively x_new + (8 - nr)
-    adc sprite::x_new ; and we want to add that to the new x
-    tax
-    lda COLL_STACK_X_NEW_TMP, s      ; did we already save a new temp y?
-    bmi coll_snap_to_right_save_new_x  ; if not we can directly save this one
-    txa
-    cmp COLL_STACK_X_NEW_TMP, s      ; otherwise we need to see which one is lower
-    bcc collision_player_end ; if current y is lower, we don't save
-coll_snap_to_right_save_new_x:
-    txa
-    sta COLL_STACK_X_NEW_TMP, s
+    jsr snap_to_right
     bra collision_player_end
 
 ;; put code here, if you want to do something specific if no
@@ -1174,21 +1170,132 @@ collision_unwind_stack:
     tcs                        ; pointer
     rts
 
+;; -------- end of mega collision fn
+
+snap_to_top:
+   lda COLL_STACK_POINT_Y_OFF_NEW_SUB + 2, s
+    ;; so the bit that sticks out upwards is now in A
+    ;; we AND with 7f, so we know how much of it sticks up,
+    and #$7f
+    sta COLL_STACK_TMP + 2, s
+    lda sprite::y_new ; so we're effectively
+    sec
+    sbc COLL_STACK_TMP + 2, s
+    sbc #$1
+    tax
+    lda COLL_STACK_Y_NEW_TMP + 2, s      ; did we already save a new temp y?
+    bmi snap_to_top_save_new_y  ; if not we can directly save this one
+    txa
+    cmp COLL_STACK_Y_NEW_TMP + 2, s      ; otherwise we need to see which one is lower
+    bcs snap_to_top_cont; if current y is higher, we don't save
+snap_to_top_save_new_y:
+    txa
+    sta COLL_STACK_Y_NEW_TMP + 2, s
+snap_to_top_cont:
+    ;; this means we just hit the bottom
+    lda #1
+    ;; this one we sould probably make a bit more generic.
+    ;; for example by registering in all of these snap fns
+    ;; what we hit in one var.
+    sta COLL_STACK_POINT_HIT_GROUND + 2, s
+    rts
+
+
+snap_to_bottom:
+    lda COLL_STACK_POINT_Y_OFF_NEW_SUB + 2, s
+    ;; so the bit that sticks out downwards is now in A
+    and #$7f
+    eor #$FFFF
+    clc
+    adc #$1
+    clc
+    adc #$80 ; effectively y_new + (8 - nr)
+    adc sprite::y_new ; and we want to add that to the new y
+    tax
+    lda COLL_STACK_Y_NEW_TMP + 2, s      ; did we already save a new temp y?
+    bmi snap_to_bottom_save_new_y  ; if not we can directly save this one
+    txa
+    cmp COLL_STACK_Y_NEW_TMP + 2, s      ; otherwise we need to see which one is lower
+    rts ; if current y is lower, we don't save
+snap_to_bottom_save_new_y:
+    txa
+    sta COLL_STACK_Y_NEW_TMP + 2, s
+    rts
+
+
+snap_to_left:
+   lda COLL_STACK_POINT_X_OFF_NEW_SUB +2, s
+    ;; so the bit that sticks out right-wards is now in A
+    ;; we AND with 7f, so we know how much of it sticks up,
+    and #$7f
+    sta COLL_STACK_TMP +2, s
+    lda sprite::x_new ; so we're effectively
+    sec
+    sbc COLL_STACK_TMP +2, s
+    sbc #$1
+    tax
+    lda COLL_STACK_X_NEW_TMP + 2, s      ; did we already save a new temp y?
+    bmi coll_snap_to_left_save_new_x  ; if not we can directly save this one
+    txa
+    cmp COLL_STACK_X_NEW_TMP + 2, s      ; otherwise we need to see which one is lower
+    bcs coll_snap_to_left_cont ; if current y is higher, we don't save
+coll_snap_to_left_save_new_x:
+    txa
+    sta COLL_STACK_X_NEW_TMP + 2, s
+coll_snap_to_left_cont:
+    rts
+
+snap_to_right:
+    lda COLL_STACK_POINT_X_OFF_NEW_SUB + 2, s
+    ;; so the bit that sticks out left-wards is now in A
+    and #$7f
+    eor #$FFFF
+    clc
+    adc #$1
+    clc
+    adc #$80 ; effectively x_new + (8 - nr)
+    adc sprite::x_new ; and we want to add that to the new x
+    tax
+    lda COLL_STACK_X_NEW_TMP + 2, s      ; did we already save a new temp y?
+    bmi snap_to_right_save_new_x  ; if not we can directly save this one
+    txa
+    cmp COLL_STACK_X_NEW_TMP + 2, s      ; otherwise we need to see which one is lower
+    bcc snap_to_right_cont ; if current y is lower, we don't save
+snap_to_right_save_new_x:
+    txa
+    sta COLL_STACK_X_NEW_TMP + 2, s
+snap_to_right_cont:
+    rts
+
+
 
 bullet_point_no_coll_callback:
     rts
 
 bullet_coll_end_callback:
-bullet_coll_store_x_new:
+bullet_coll_end_flip_h:
+    lda COLL_STACK_Y_NEW_TMP + 2, s
+    bmi bullet_coll_end_flip_v
+    ;; x collision occured, save new x.
+    sta sprite::y_new
+    ;; we flip x speed
+    lda sprite::v_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::v_velo
+    bra bullet_coll_end_callback_end
+bullet_coll_end_flip_v:
     lda COLL_STACK_X_NEW_TMP + 2, s
     bmi bullet_coll_end_callback_end
-    ;; x collision occured.
-    ;; we record new x, and set x velo to 0
+    ;; x collision occured, save new y
     sta sprite::x_new
-    lda #0
+    ;; we flip y speed
+    lda sprite::h_velo
+    eor #$FFFF
+    clc
+    adc #$1
     sta sprite::h_velo
-    lda #0
-    sta sprite::v_velo
 bullet_coll_end_callback_end:
     rts
 
@@ -1285,27 +1392,28 @@ player_bbox_default:
 ;; top left
 .word 1  ;; y   $0
 .word 3  ;; x   $2
-;; middle left
-.word 8  ;; y   $4
-.word 3  ;; x   $6
 ;; bottom left
 .word $f ;; y   $8
 .word 3  ;; x   $a
+;; top right
+.word 1  ;; y   $14
+.word $d ;; x   $16
+;; bottom right
+.word $f ;; y   $1c
+.word $d ;; x   $1e
+;; middle left
+.word 8  ;; y   $4
+.word 3  ;; x   $6
 ;; top middle
 .word 1  ;; y   $c
 .word 8  ;; x   $e
 ;; bottom middle
 .word $f ;; y   $10
 .word 8  ;; x   $12
-;; top right
-.word 1  ;; y   $14
-.word $d ;; x   $16
 ;; middle right
 .word 8  ;; y   $18
 .word $d ;; x   $1a
-;; bottom right
-.word $f ;; y   $1c
-.word $d ;; x   $1e
+
 
 
 ;; for this point, do we need to test if it's on

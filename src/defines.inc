@@ -53,13 +53,13 @@ PLAYER_TABLE_I = $8
 ;;   one byte for x, and one for y
 .struct player_bbox
     top_left      .tag point ; 0
-    middle_left   .tag point ; 4
     bottom_left   .tag point ; 8
+    top_right     .tag point ; 14
+    bottom_right  .tag point ; 1c
+    middle_left   .tag point ; 4
     top_middle    .tag point ; c
     bottom_middle .tag point ; 10
-    top_right     .tag point ; 14
     middle_right  .tag point ; 18
-    bottom_right  .tag point ; 1c
 .endstruct
 
 .struct bullet_bbox
