@@ -25,6 +25,7 @@ P1_START_Y = $970
 ;; pointing to the player structs
 PLAYER_TABLE_I = $6
 
+BULLET_TABLE_I = $40
 
 .enum move_state
     idle

@@ -212,44 +212,82 @@ dma_OAM:
 .i16
 ;; game specific
 init_bullets:
-    lda #$02                ; tile offset of second sprite
-    sta OAM_MIRROR + $12
-    lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $13
-
-    lda #$fe
-    sta OAM_MIRROR + $201
-
-    lda .loword(bullet_table)
+    ldx #$150
+    stx .loword(W0)
+    ldx #$0
+    ldy #$12
+init_bullets_loop:
+    lda .loword(bullet_table), x
     tcd
 
-    ldy #$40
-    sty sprite::h_velo
-    sty sprite::v_velo
+    lda #$04                ; tile offset of second sprite
+    sta OAM_MIRROR, y
+    iny
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR, y
+    iny
+    iny
+    iny
+
+    lda #$10
+    sta sprite::h_velo
+    sta sprite::v_velo
 
     ; p1 start position
     ; $80 pixel offset and $0 subpixels
 
-    ldy #$100
-    sty sprite::x_pos
-    sty sprite::y_pos
+    lda .loword(W0)
+    sta sprite::x_pos
 
-    ldy #bullet_state::fly
-    sty sprite::move_state
+    lda #$100
+    sta sprite::y_pos
 
-    ldy #face_dir::right
-    sty sprite::face_dir
+    lda #bullet_state::fly
+    sta sprite::move_state
 
-    ldy #.loword(bullet_bbox_default)
-    sty sprite::bbox
+    lda #face_dir::right
+    sta sprite::face_dir
 
-    ldy #.sizeof(bullet_bbox)
-    sty sprite::bbox_size
+    lda #.loword(bullet_bbox_default)
+    sta sprite::bbox
 
-    ldy #.loword(bullet_sprite_vtable)
-    sty sprite::vptr
+    lda #.sizeof(bullet_bbox)
+    sta sprite::bbox_size
+
+    lda #.loword(bullet_sprite_vtable)
+    sta sprite::vptr
+
+    lda .loword(W0)
+    clc
+    adc #$60
+    sta .loword(W0)
+    inx
+    inx
+    cpx #BULLET_TABLE_I
+    bne init_bullets_loop
+
     lda #0
     tcd
+
+    ;; handle this blasted table separately
+    lda #$00
+    sta OAM_MIRROR + $201
+    lda #$00
+    sta OAM_MIRROR + $202
+    lda #$00
+    sta OAM_MIRROR + $203
+    lda #$00
+    sta OAM_MIRROR + $204
+    lda #$00
+    sta OAM_MIRROR + $205
+    lda #$00
+    sta OAM_MIRROR + $206
+    lda #$00
+    sta OAM_MIRROR + $207
+    lda #$00
+    sta OAM_MIRROR + $208
+
+
     rts
 
 
@@ -687,6 +725,35 @@ bullet_table:
 .addr .loword(b1)
 .addr .loword(b2)
 .addr .loword(b3)
+.addr .loword(b4)
+.addr .loword(b5)
+.addr .loword(b6)
+.addr .loword(b7)
+.addr .loword(b8)
+.addr .loword(b9)
+.addr .loword(b10)
+.addr .loword(b11)
+.addr .loword(b12)
+.addr .loword(b13)
+.addr .loword(b14)
+.addr .loword(b15)
+.addr .loword(b16)
+.addr .loword(b17)
+.addr .loword(b18)
+.addr .loword(b19)
+.addr .loword(b20)
+.addr .loword(b21)
+.addr .loword(b22)
+.addr .loword(b23)
+.addr .loword(b24)
+.addr .loword(b25)
+.addr .loword(b26)
+.addr .loword(b27)
+.addr .loword(b28)
+.addr .loword(b29)
+.addr .loword(b30)
+.addr .loword(b31)
+
 
 
 player_start_coords:
@@ -718,9 +785,11 @@ player_start_coords:
 .a16
 .i16
 handle_bullet_movement:
-    lda .loword(bullet_table)
+    ldx #$0
+    phx
+handle_bullet_loop:
+    lda .loword(bullet_table), x
     tcd
-
     lda sprite::x_pos
     clc
     adc sprite::h_velo
@@ -732,6 +801,13 @@ handle_bullet_movement:
     sta sprite::y_new
 
     jsr check_collisions
+    plx
+    inx
+    inx
+    phx
+    cpx #BULLET_TABLE_I
+    bne handle_bullet_loop
+    plx
     lda #$0
     tcd
     rts
@@ -1553,20 +1629,38 @@ finalise:
     ; A8
     ; sta OAM_MIRROR + $d
 
+    A16
     ;; bullets
+    ldx #$0
+    ldy #$10;; here's where we track where in OAM we need to put vals
+bullets_to_oam_loop:
     A16
-    lda b0 + sprite::x_new
-    sta b0 + sprite::x_pos
+    lda .loword(bullet_table), x
+    tcd
+    lda sprite::x_new
+    sta sprite::x_pos
     rshift 4
     A8
-    sta OAM_MIRROR + $10
+    sta OAM_MIRROR, y
+    iny
     A16
-    lda b0 + sprite::y_new
-    sta b0 + sprite::y_pos
+    lda sprite::y_new
+    sta sprite::y_pos
     rshift 4
     A8
-    sta OAM_MIRROR + $11
+    sta OAM_MIRROR, y
+    A16
+    iny
+    iny
+    iny
 
+    inx
+    inx
+    cpx #BULLET_TABLE_I
+    bne bullets_to_oam_loop
+    lda #$0
+    tcd
+    A8
 
     rts
 

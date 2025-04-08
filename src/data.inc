@@ -46,6 +46,35 @@ b0: .tag bullet
 b1: .tag bullet
 b2: .tag bullet
 b3: .tag bullet
+b4: .tag bullet
+b5: .tag bullet
+b6: .tag bullet
+b7: .tag bullet
+b8: .tag bullet
+b9: .tag bullet
+b10: .tag bullet
+b11: .tag bullet
+b12: .tag bullet
+b13: .tag bullet
+b14: .tag bullet
+b15: .tag bullet
+b16: .tag bullet
+b17: .tag bullet
+b18: .tag bullet
+b19: .tag bullet
+b20: .tag bullet
+b21: .tag bullet
+b22: .tag bullet
+b23: .tag bullet
+b24: .tag bullet
+b25: .tag bullet
+b26: .tag bullet
+b27: .tag bullet
+b28: .tag bullet
+b29: .tag bullet
+b30: .tag bullet
+b31: .tag bullet
+
 
 
 OAM_MIRROR: .res $220
