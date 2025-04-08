@@ -9,378 +9,135 @@
 .include "io.inc"
 
 .include "init.inc"
+.include "lib.inc"
+.include "vectors.inc"
 .include "../build/assets/audio.inc"
 .include "../terrific-audio-driver/audio-driver/ca65-api/tad-audio.inc"
 .include "assets.inc"
 .include "data.inc"
 
-.segment "VECTORS"
-.word 0, 0                          ;; Native mode handlers
-.word .loword(spinloop_handler)     ; COP
-.word .loword(spinloop_handler)     ; BRK
-.word .loword(spinloop_handler)     ; ABORT
-.word .loword(nmi_handler)          ; NMI
-.word .loword(spinloop_handler)     ; RST
-.word .loword(irq_handler)          ; IRQ
-
-.word 0, 0                          ;; Emulation mode
-.word .loword(spinloop_handler)     ; COP
-.word 0
-.word .loword(spinloop_handler)     ; ABORT
-.word .loword(spinloop_handler)     ; NMI
-.word .loword(reset_handler)        ; RESET
-.word .loword(spinloop_handler)     ; IRQBRK
-
-
 .code
-;; handlers
 
-.a8     ; A is 8 bits
-.i16    ; X/Y are 16 bits
-reset_handler:
-    jml :+
-:   sei
-    clc
-    xce
-	; FYI: coming out of emulation mode, the M and X bits of the
-	; status registers are set to one. So resp. A and X/Y
-	; are set to 8 bit.
-	I16
-    A8
-    cld                     ; clear decimal flag
-    lda #$80                ; force v-blanking
-    sta INIDISP
-    stz NMITIMEN            ; disable NMI
-    ; set the stack pointer to $1fff
-    ldx #$1fff              ; load X with $1fff
-    txs                     ; copy X to stack pointer
-
-    lda     #$01            ; Enable FastROM. Should not be necessary
-    sta     MEMSEL          ; when FastROM is enabled in header?
-
-    phk
-    plb                     ; set b to current bank
-
-    ;; clear all
-    jsr clear_registers
-    jsr clear_VRAM
-    jsr clear_CGRAM
-    jsr clear_OAM_mirror
-    A16
-    I8
-    jsr dma_OAM
-    A8
-	I16
-    jmp main
+;; ---------------
+;; entity specific
 
 
-    nmi_handler:
-    jml :+
-:   bit RDNMI ; it is required to read this register
-              ; in the NMI handler
-    inc .loword(in_nmi)
-    rti
+;; player data
+;; ------
 
-irq_handler:
-    jml :+
-:   bit TIMEUP	; it is required to read this register
-				; in the IRQ handler
-@loop:
-    jmp @loop
+player_table:
+.addr .loword(p1)
+.addr .loword(p2)
+.addr .loword(p3)
+.addr .loword(p4)
 
 
-; This shouldn't get called, so if it does we'd like to know more
-; in a controlled manner, instead of say branching to $00000 and
-; crashing out violently.
-spinloop_handler:
-    jml :+
-:   jmp spinloop_handler
+; jump table of player movement states
+move_table:
+.addr idle
+.addr run
+.addr jump
+.addr cling
+.addr climb
 
 
-;; setup lib code
-
-; dma_to_vram
-; arguments:
-;   - a: src bank
-;   - x: src loword
-;   - y: dst VRAM base address
-;   - stack: size
-.a8
-.i16
-dma_to_vram:
-    sta A1B0 ; set bank of source address
-    stx A1T0L ; set loword of source address
-    sty VMADDL ; set VRAM base address
-    ldy <W0 ; get size from zero page word reg 1
-    sty DAS0L ; set DMA byte counter
-
-    lda #<VMDATAL
-    sta BBAD0 ; so set DMA destination to VMDATAL
-    lda #1
-    sta DMAP0 ; transfer mode, 2 registers 1 write
-    lda #1
-    sta MDMAEN ; start dma, channel 0
-    rts
-
-; dma_to_palette
-; arguments:
-;   - a: src bank
-;   - x: src loword
-;   - y: dst VRAM base address
-;   - stack: size
-.a8
-.i16
-dma_to_palette:
-    sta A1B0 ; set bank of source address
-    stx A1T0L ; set loword of source address
-    tya ; CGADD is a byte
-    sta CGADD ; set VRAM base address
-    ldy <W0 ; get size from zero page word reg 1
-    sty DAS0L ; set DMA byte counter
-
-    lda #<CGDATA
-    sta BBAD0 ; so set DMA destination to VMDATAL
-    lda #00
-    sta DMAP0 ; transfer mode, 1 register, 1 write
-    lda #1
-    sta MDMAEN ; start dma, channel 0
-    rts
+player_start_coords:
+.word $200 ; p1 x
+.word $200 ; p1 y
+.word $500 ; p2 x
+.word $200 ; p2 y
+.word $b00 ; p3 x
+.word $200 ; p3 y
+.word $900 ; p4 x
+.word $700 ; p4 y
 
 
-SpriteUpperEmpty:
-DMAZero:
-.word $0000
-
-SpriteEmptyVal:
-.byte $e0 ; 224
+player_sprite_vtable:
+.addr .loword(player_coll_end_callback)
+.addr .loword(player_point_no_coll_callback)
 
 
-.a8
-.i16
-clear_OAM_mirror:
-;fills the buffer with 224 for low table
-;and $00 for high table
-	php
-	ldx #.loword(OAM_MIRROR)
-	stx WMADDL ;WRAM_ADDR_L
-	stz WMADDH ;WRAM_ADDR_H
+player_bbox_default:
+;; top left
+.word 1  ;; y   $0
+.word 3  ;; x   $2
+;; bottom left
+.word $f ;; y   $8
+.word 3  ;; x   $a
+;; top right
+.word 1  ;; y   $14
+.word $d ;; x   $16
+;; bottom right
+.word $f ;; y   $1c
+.word $d ;; x   $1e
+;; middle left
+.word 8  ;; y   $4
+.word 3  ;; x   $6
+;; top middle
+.word 1  ;; y   $c
+.word 8  ;; x   $e
+;; bottom middle
+.word $f ;; y   $10
+.word 8  ;; x   $12
+;; middle right
+.word 8  ;; y   $18
+.word $d ;; x   $1a
 
-	ldx #$8008 ;fixed transfer to WRAM data 2180
-	stx DMAP0
-	ldx	#.loword(SpriteEmptyVal)
-	stx A1T0L ; and 4303
-	lda #^SpriteEmptyVal ;bank #
-	sta A1B0
-	ldx #$200 ;size 512 bytes
-	stx DAS0L ;and 4306
-	lda #1
-	sta MDMAEN ; DMA_ENABLE start dma, channel 0
 
-	ldx	#.loword(SpriteUpperEmpty)
-	stx A1T0L ; and 4303
-	lda #^SpriteUpperEmpty ;bank #
-	sta A1B0
-	ldx #$0020 ;size 32 bytes
-	stx DAS0L ;and 4306
-	lda #1
-	sta MDMAEN ; DMA_ENABLE start dma, channel 0
-	plp
-	rts
+;; for this point, do we need to test if it's on
+;; a ledge, yes or no?
+player_bbox_default_ledge_lookup:
+.word 0 ; top left
+.word 0 ; middle left
+.word 1 ; bottom left
+.word 0 ; top middle
+.word 1 ; bottom middle
+.word 0 ; top right
+.word 0 ; middle right
+.word 1 ; bottom right
 
 
 .a16
-.i8
-dma_OAM:
-;copy from OAM_MIRROR to the OAM RAM
-	php
-	stz OAMADDL ;OAM address
-
-	lda #$0400 ;1 reg 1 write, 2104 oam data
-	sta DMAP0
-	lda #.loword(OAM_MIRROR)
-	sta A1T0L ; source
-	ldx #^OAM_MIRROR
-	stx A1B0 ; bank
-	lda #$220
-	sta DAS0L ; length
-	ldx #1
-	stx MDMAEN ; DMA_ENABLE start dma, channel 0
-	plp
-	rts
-
-.a16
 .i16
-;; game specific
-init_bullets:
-    ldx #$150
-    stx .loword(W0)
-    ldx #$0
-    ldy #$12
-init_bullets_loop:
-    lda .loword(bullet_table), x
-    tcd
-
-    lda #$04                ; tile offset of second sprite
-    sta OAM_MIRROR, y
-    iny
+init_players:
+    ;; set oam for sprite 1 directly.
+    ;; this and the above sprite init data should all be done with some
+    ;; kind of generalized player sprite init routine
+    lda #$00                ; tile offset of first sprite
+    sta OAM_MIRROR + 2
     lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR, y
-    iny
-    iny
-    iny
+    sta OAM_MIRROR + 3
 
-    lda #$10
-    sta sprite::h_velo
-    sta sprite::v_velo
+    lda #$00                ; tile offset of second sprite
+    sta OAM_MIRROR + 6
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + 7
 
-    ; p1 start position
-    ; $80 pixel offset and $0 subpixels
+    lda #$00                ; tile offset of third sprite
+    sta OAM_MIRROR + $a
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + $b
 
-    lda .loword(W0)
-    sta sprite::x_pos
-
-    lda #$100
-    sta sprite::y_pos
-
-    lda #bullet_state::fly
-    sta sprite::move_state
-
-    lda #face_dir::right
-    sta sprite::face_dir
-
-    lda #.loword(bullet_bbox_default)
-    sta sprite::bbox
-
-    lda #.sizeof(bullet_bbox)
-    sta sprite::bbox_size
-
-    lda #.loword(bullet_sprite_vtable)
-    sta sprite::vptr
-
-    lda .loword(W0)
-    clc
-    adc #$60
-    sta .loword(W0)
-    inx
-    inx
-    cpx #BULLET_TABLE_I
-    bne init_bullets_loop
-
-    lda #0
-    tcd
-
-    ;; handle this blasted table separately
-    lda #$00
-    sta OAM_MIRROR + $201
-    lda #$00
-    sta OAM_MIRROR + $202
-    lda #$00
-    sta OAM_MIRROR + $203
-    lda #$00
-    sta OAM_MIRROR + $204
-    lda #$00
-    sta OAM_MIRROR + $205
-    lda #$00
-    sta OAM_MIRROR + $206
-    lda #$00
-    sta OAM_MIRROR + $207
-    lda #$00
-    sta OAM_MIRROR + $208
+    ; lda #$00                ; tile offset of fourth sprite
+    ; sta OAM_MIRROR + $e
+    ; lda #$20                ; no flip, prio 2, palette 0
+    ; sta OAM_MIRROR + $f
 
 
-    rts
+    ; set top bit of x pos for all 4 sprites to 0 so we show them on
+    ; screen, and set 16x16 tile
+    ; so a nibble, representing two sprites becomes 1010, aka a.
+    lda #$aa
+    sta OAM_MIRROR + $200
 
 
-.a8
-.i16
-;; set up data
-init_game_data:
-    ;; set up bg registers
-    lda #1 ; mode 1
-    sta BGMODE
-    lda #((VRAM_MAP_BASE >> 10) << 2)
-    sta BG2SC ; set bg 2 tile map
-    ; set bg 2 char vram base addr (implicitly setting bg1 to 0, but we don't
-    ; care)
-    lda #((VRAM_CHR_BASE >> 12) << 4)
-    sta BG12NBA
-
-    lda #$80
-    sta VMAIN
-
-    ; let's copy over some binary data
-    ;; first the palette
-    ldy #(town_palette_end - town_palette) ; # of palette entries
-    sty <W0
-    lda #^town_palette
-    ldx #.loword(town_palette)
-    ldy #00000
-    jsr dma_to_palette
-
-    ; load map
-    ldy #(town_map_end - town_map)
-    sty <W0
-    lda #^town_map
-    ldx #.loword(town_map)
-    ldy #VRAM_MAP_BASE
-    jsr dma_to_vram
-
-    ; load tiles
-    ldy #(town_tiles_end - town_tiles) ; size of transfer
-    sty <W0
-    lda #^town_tiles
-    ldx #.loword(town_tiles)
-    ldy #VRAM_CHR_BASE
-    jsr dma_to_vram
-
-    ;; sprites
-    ; set sprite base
-    lda #(VRAM_SPRITE_BASE >> 13)
-    sta OBJSEL
-
-    ; load sprites
-    ldy #(demo_sprite_palette_end - demo_sprite_palette) ; # of palette entries
-    sty <W0
-    lda #^demo_sprite_palette
-    ldx #.loword(demo_sprite_palette)
-    ldy #$80 ; sprite palette offset
-    jsr dma_to_palette
-
-    ; load sprite tiles
-    ldy #(demo_sprite_tiles_end - demo_sprite_tiles)
-    sty <W0
-    lda #^demo_sprite_tiles
-    ldx #.loword(demo_sprite_tiles)
-    ldy #VRAM_SPRITE_BASE
-    jsr dma_to_vram
-
-    A8
-    I16
-    ; init sound
-    lda     #$7f
-    pha
-    plb
-    ; DB = $7f
-    jsl     Tad_Init
-
-    phk
-    plb
-    ; DB = $80
-
-
-    ; set init program variables
-    ldx #$FF   ;; first vertical line is blank, and there's an extra line at the
-    stx map_y  ;; bottom, so we shift vertical offset by 1
-    ldx #0
-    stx map_x
-
-    A16
+    ldx #$0
     ;; ldx is still 0
 player_init_loop:
     lda .loword(player_table), x ; player struct under x offset
     tcd ; set dp to it
 
-    ldy #0
+    ldy #$0
     sty sprite::h_velo
     sty sprite::v_velo
     sty player::joy
@@ -427,107 +184,11 @@ player_init_loop:
 
     lda #0
     tcd
-
-    jsr init_bullets
-
-    A8
-    ;; set oam for sprite 1 directly.
-    ;; this and the above sprite init data should all be done with some
-    ;; kind of generalized player sprite init routine
-    lda #$00                ; tile offset of first sprite
-    sta OAM_MIRROR + 2
-    lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + 3
-
-    lda #$00                ; tile offset of second sprite
-    sta OAM_MIRROR + 6
-    lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + 7
-
-    lda #$00                ; tile offset of third sprite
-    sta OAM_MIRROR + $a
-    lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $b
-
-    ; lda #$00                ; tile offset of fourth sprite
-    ; sta OAM_MIRROR + $e
-    ; lda #$20                ; no flip, prio 2, palette 0
-    ; sta OAM_MIRROR + $f
-
-
-    ; set top bit of x pos for all 4 sprites to 0 so we show them on
-    ; screen, and set 16x16 tile
-    ; so a nibble, representing two sprites becomes 1010, aka a.
-    lda #$aa
-    sta OAM_MIRROR + $200
-
     rts
 
 
-
-
-
-.a8
+.a16
 .i16
-read_input:
-wait_for_joypad:
-    lda HVBJOY            ; get joypad status
-    lsr a                 ; check whether joypad done reading...
-    bcs wait_for_joypad   ; ...if not, wait a bit more
-
-    A16
-    ; read joypad
-    rep #$20                         ; set A to 16-bit
-
-    ldx #0 ;; we use this for both the offset into the player table
-           ;; as well as the offset into the joypad info hw regs, as both are
-           ;; spaced one word apart.
-joy_loop:
-    stx .loword(W1)
-    lda .loword(player_table), x
-    tcd ;; remapping dp to player x
-
-    cpx #$4 ; in multitap config, the third joypad needs to be read raw
-            ; the 4th joypad can be read through the convenience joy
-            ; registers
-    bne :+
-    inx
-    inx
-  : lda JOY1L, x                     ; get new input from this frame
-    ldy player::joy                 ; get input from last frame
-    sta player::joy                 ; store new input from this frame
-    tya                              ; check for newly pressed buttons...
-    eor player::joy                  ; filter buttons that were not pressed last frame
-    and player::joy                  ; filter held buttons from last frame
-    sta player::joy_trigger          ; ...and store them
-    ; second, check for buttons held from last frame
-    tya                              ; get input from last frame
-    and player::joy                  ; filter held buttons from last frame...
-    sta player::joy_held             ; ...store them
-    ; for convenience store the or of trigger and held
-    ora player::joy_trigger
-    sta player::joy_trigger_held
-
-    ; set some conveniet things
-    bit_tribool JOY_RIGHT_SH, JOY_LEFT_SH
-    sta player::h_tribool
-    lda player::joy_trigger_held
-    bit_tribool JOY_DOWN_SH, JOY_UP_SH
-    sta player::v_tribool
-
-    ;; and increment x and redo for
-    lda .loword(W1)
-    inc
-    inc
-    tax
-    cpx #PLAYER_TABLE_I
-
-    bne joy_loop
-    lda #$0
-    tcd
-    rts
-
-
 jump:
     ;; first do horizontal movement logic shared with running
     jsr h_move
@@ -675,21 +336,19 @@ run:
 run_eval_h_move:
     jmp h_move
 
+
 idle:
     ;; are we instructed to jump?
     lda player::joy_trigger_held
     and #JOY_B
     beq idle_test_run
     jmp init_jump
-
 idle_test_run:
     ;; are we moving left or right
     lda player::h_tribool
     bne init_run ; we pressed left or right, so we want to run
     jmp still_idle ;; zero set, no match
     ;; state change to jump
-
-
 still_idle:
     ;; new x/y is old x/y
     lda sprite::x_pos
@@ -702,24 +361,182 @@ still_idle:
 cling:
     rts
 
+
 climb:
     rts
 
-; jump table of player movement states
-move_table:
-.addr idle
-.addr run
-.addr jump
-.addr cling
-.addr climb
+
+.a16
+.i16
+handle_single_player_movement:
+    lda sprite::move_state
+    asl
+    tax
+    jsr (.loword(move_table), x)
+
+    jsr check_collisions
+    rts
 
 
-player_table:
-.addr .loword(p1)
-.addr .loword(p2)
-.addr .loword(p3)
-.addr .loword(p4)
+handle_player_movement:
+    ;; loop over player movement
+    ldx #0
+    phx
+player_movement_loop:
+    lda .loword(player_table), x
+    tcd ;; remapping dp to player x
+    jsr handle_single_player_movement
+    pla
+    inc
+    inc
+    tax
+    phx
+    cpx #PLAYER_TABLE_I
+    bne player_movement_loop
+    plx ; clear the stack
+    lda #$0
+    tcd
+    rts
 
+
+player_point_no_coll_callback:
+    ;; we're ledge checking
+    lda sprite::move_state ;; only check when we're idle or running
+    cmp #move_state::idle
+    beq player_point_no_call_ledge_check
+    cmp #move_state::run
+    bne player_point_no_call_end
+player_point_no_call_ledge_check:
+    tyx
+    tya
+    lsr ; shift point offset to find offset into ledge table
+    lsr
+    asl
+    tay
+    lda (player::bbox_ledge_lookup), y
+    txy ; restore Y
+    cmp #1
+    bne player_point_no_call_end
+    ; ok, we are interested in a ledge check
+    lda COLL_STACK_POINT_TILE_OFF + 2, s
+    clc
+    adc #$20 ;; set to tile under point
+    tax
+    A8
+    lda town_coll, x
+    A16
+    beq player_point_no_call_end ; not a collision, so we move on
+    ;; it's a collision, so we register it
+    ;; we only need one collision to know that we're standing with at least
+    ;; one point on the ledge, so we can just write 1 whenever we find
+    ;; something
+    lda #1
+    sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
+player_point_no_call_end:
+    rts
+
+
+player_coll_end_callback:
+    lda sprite::move_state ;; only execute
+    cmp #move_state::idle
+    beq player_coll_ledge_fall
+    cmp #move_state::run
+    bne player_coll_store_y_new
+player_coll_ledge_fall:
+    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
+    bne player_coll_store_y_new ; we didn't fall off the ledge
+    ; we  did fall off the ledge. we're now fallling
+    lda #0
+    sta sprite::v_velo
+    lda #move_state::jump
+    sta sprite::move_state
+    lda #V_VELO_DEC
+    sta sprite::v_velo_dec
+player_coll_store_y_new:
+    lda COLL_STACK_Y_NEW_TMP + 2, s
+    bmi player_coll_store_x_new
+    ;; y collision occured.
+    ;; we record new y, and set y velo to 0
+    sta sprite::y_new
+    lda #0
+    sta sprite::v_velo
+    lda COLL_STACK_POINT_HIT_GROUND + 2, s
+    beq player_coll_store_x_new
+    lda #move_state::idle
+    sta sprite::move_state
+
+player_coll_store_x_new:
+    lda COLL_STACK_X_NEW_TMP + 2, s
+    bmi player_coll_end_callback_end
+    ;; x collision occured.
+    ;; we record new x, and set x velo to 0
+    sta sprite::x_new
+    lda #0
+    sta sprite::h_velo
+player_coll_end_callback_end:
+    rts
+
+
+.a16
+.i16
+finalize_players:
+    ;; for shame, make this more fancy
+
+    ;; we now know x and y won't change anymore, so lock them into x/y_pos
+    ;; also write them to the OAM mirror
+    lda p1 + sprite::x_new
+    sta p1 + sprite::x_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR
+    A16
+    lda p1 + sprite::y_new
+    sta p1 + sprite::y_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + 1
+
+    A16
+    lda p2 + sprite::x_new
+    sta p2 + sprite::x_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + 4
+    A16
+    lda p2 + sprite::y_new
+    sta p2 + sprite::y_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + 5
+
+    A16
+    lda p3 + sprite::x_new
+    sta p3 + sprite::x_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + 8
+    A16
+    lda p3 + sprite::y_new
+    sta p3 + sprite::y_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR + 9
+    A16
+    ; lda p4 + sprite::x_new
+    ; sta p4 + sprite::x_pos
+    ; rshift 4
+    ; A8
+    ; sta OAM_MIRROR + $c
+    ; A16
+    ; lda p4 + sprite::y_new
+    ; sta p4 + sprite::y_pos
+    ; rshift 4
+    ; A8
+    ; sta OAM_MIRROR + $d
+    rts
+
+;; bullet
+;; ------
 bullet_table:
 .addr .loword(b0)
 .addr .loword(b1)
@@ -755,31 +572,96 @@ bullet_table:
 .addr .loword(b31)
 
 
-
-player_start_coords:
-.word $200 ; p1 x
-.word $200 ; p1 y
-.word $500 ; p2 x
-.word $200 ; p2 y
-.word $b00 ; p3 x
-.word $200 ; p3 y
-.word $900 ; p4 x
-.word $700 ; p4 y
+bullet_sprite_vtable:
+.addr .loword(bullet_coll_end_callback)
+.addr .loword(bullet_point_no_coll_callback)
 
 
-;; my current thinking is:
-;; - first handle all movement to see what new coordinate
-;;   our sprite would end up
-;; - then do collision tests, for now only with terrain
-;; - if collision, this will mean a new state, and we need to process the
-;; aftermath
-;;
-;; - sprites have a bounding box that we need to check for collisions.
-;;   depending on which direction we move in, we can check different points
-;;   of this box. So say we go left, we check left up and left down,
-;;   we fall left, we check left up, left down and right down
-;;   we might want to check 6 points so we don't allow impaling ourselves horizontally on
-;;   8x8 blocks
+bullet_bbox_default:
+.word 2 ;; y
+.word 2 ;; x
+
+
+.a16
+.i16
+;; game specific
+init_bullets:
+    ldx #$150
+    stx .loword(W0)
+    ldx #$0
+    ldy #$12
+init_bullets_loop:
+    lda .loword(bullet_table), x
+    tcd
+
+    lda #$04                ; tile offset of second sprite
+    sta OAM_MIRROR, y
+    iny
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR, y
+    iny
+    iny
+    iny
+
+    lda #$10
+    sta sprite::h_velo
+    sta sprite::v_velo
+
+    ; p1 start position
+    ; $80 pixel offset and $0 subpixels
+
+    lda .loword(W0)
+    sta sprite::x_pos
+
+    lda #$100
+    sta sprite::y_pos
+
+    lda #bullet_state::fly
+    sta sprite::move_state
+
+    lda #face_dir::right
+    sta sprite::face_dir
+
+    lda #.loword(bullet_bbox_default)
+    sta sprite::bbox
+
+    lda #.sizeof(bullet_bbox)
+    sta sprite::bbox_size
+
+    lda #.loword(bullet_sprite_vtable)
+    sta sprite::vptr
+
+    lda .loword(W0)
+    clc
+    adc #$60
+    sta .loword(W0)
+    inx
+    inx
+    cpx #BULLET_TABLE_I
+    bne init_bullets_loop
+
+    lda #0
+    tcd
+
+    ;; handle this blasted table separately
+    lda #$00
+    sta OAM_MIRROR + $201
+    lda #$00
+    sta OAM_MIRROR + $202
+    lda #$00
+    sta OAM_MIRROR + $203
+    lda #$00
+    sta OAM_MIRROR + $204
+    lda #$00
+    sta OAM_MIRROR + $205
+    lda #$00
+    sta OAM_MIRROR + $206
+    lda #$00
+    sta OAM_MIRROR + $207
+    lda #$00
+    sta OAM_MIRROR + $208
+
+    rts
 
 
 .a16
@@ -812,37 +694,263 @@ handle_bullet_loop:
     tcd
     rts
 
-.a16
-.i16
-handle_single_player_movement:
-    lda sprite::move_state
-    asl
-    tax
-    jsr (.loword(move_table), x)
 
-    jsr check_collisions
+bullet_point_no_coll_callback:
     rts
 
 
-handle_player_movement:
-    ;; loop over player movement
-    ldx #0
-    phx
-player_movement_loop:
-    lda .loword(player_table), x
-    tcd ;; remapping dp to player x
-    jsr handle_single_player_movement
-    pla
-    inc
-    inc
-    tax
-    phx
-    cpx #PLAYER_TABLE_I
-    bne player_movement_loop
-    plx ; clear the stack
+bullet_coll_end_callback:
+bullet_coll_end_flip_h:
+    lda COLL_STACK_Y_NEW_TMP + 2, s
+    bmi bullet_coll_end_flip_v
+    ;; x collision occured, save new x.
+    sta sprite::y_new
+    ;; we flip x speed
+    lda sprite::v_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::v_velo
+    bra bullet_coll_end_callback_end
+bullet_coll_end_flip_v:
+    lda COLL_STACK_X_NEW_TMP + 2, s
+    bmi bullet_coll_end_callback_end
+    ;; x collision occured, save new y
+    sta sprite::x_new
+    ;; we flip y speed
+    lda sprite::h_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::h_velo
+bullet_coll_end_callback_end:
+    rts
+
+
+finalize_bullets:
+    ;; bullets
+    ldx #$0
+    ldy #$10;; here's where we track where in OAM we need to put vals
+bullets_to_oam_loop:
+    lda .loword(bullet_table), x
+    tcd
+    lda sprite::x_new
+    sta sprite::x_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR, y
+    iny
+    A16
+    lda sprite::y_new
+    sta sprite::y_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR, y
+    A16
+    iny
+    iny
+    iny
+
+    inx
+    inx
+    cpx #BULLET_TABLE_I
+    bne bullets_to_oam_loop
     lda #$0
     tcd
     rts
+
+
+;; ----
+;; init
+
+.a8
+.i16
+init_binary_data:
+    ; let's copy over some binary data
+    ;; first the palette
+    ldy #(town_palette_end - town_palette) ; # of palette entries
+    sty <W0
+    lda #^town_palette
+    ldx #.loword(town_palette)
+    ldy #00000
+    jsr dma_to_palette
+
+    ; load map
+    ldy #(town_map_end - town_map)
+    sty <W0
+    lda #^town_map
+    ldx #.loword(town_map)
+    ldy #VRAM_MAP_BASE
+    jsr dma_to_vram
+
+    ; load tiles
+    ldy #(town_tiles_end - town_tiles) ; size of transfer
+    sty <W0
+    lda #^town_tiles
+    ldx #.loword(town_tiles)
+    ldy #VRAM_CHR_BASE
+    jsr dma_to_vram
+
+    ;; sprites
+    ; set sprite base
+    lda #(VRAM_SPRITE_BASE >> 13)
+    sta OBJSEL
+
+    ; load sprites
+    ldy #(demo_sprite_palette_end - demo_sprite_palette) ; # of palette entries
+    sty <W0
+    lda #^demo_sprite_palette
+    ldx #.loword(demo_sprite_palette)
+    ldy #$80 ; sprite palette offset
+    jsr dma_to_palette
+
+    ; load sprite tiles
+    ldy #(demo_sprite_tiles_end - demo_sprite_tiles)
+    sty <W0
+    lda #^demo_sprite_tiles
+    ldx #.loword(demo_sprite_tiles)
+    ldy #VRAM_SPRITE_BASE
+    jsr dma_to_vram
+    rts
+
+
+.a8
+.i16
+init_sound:
+    A8
+    I16
+    ; init sound
+    lda     #$7f
+    pha
+    plb
+    ; DB = $7f
+    jsl     Tad_Init
+
+    phk
+    plb
+    ; DB = $80
+    rts
+
+
+.a8
+.i16
+;; set up data
+init_game_data:
+    jsr init_binary_data
+    jsr init_sound
+
+    A16
+    jsr init_players
+    jsr init_bullets
+
+    A8
+    ;; set up bg registers
+    lda #1 ; mode 1
+    sta BGMODE
+    lda #((VRAM_MAP_BASE >> 10) << 2)
+    sta BG2SC ; set bg 2 tile map
+    ; set bg 2 char vram base addr (implicitly setting bg1 to 0, but we don't
+    ; care)
+    lda #((VRAM_CHR_BASE >> 12) << 4)
+    sta BG12NBA
+
+    lda #$80
+    sta VMAIN
+
+    ; set init program variables
+    ldx #$FF   ;; first vertical line is blank, and there's an extra line at the
+    stx map_y  ;; bottom, so we shift vertical offset by 1
+    ldx #$0
+    stx map_x
+
+    rts
+
+
+;; -----
+;; input
+
+.a8
+.i16
+read_input:
+wait_for_joypad:
+    lda HVBJOY            ; get joypad status
+    lsr a                 ; check whether joypad done reading...
+    bcs wait_for_joypad   ; ...if not, wait a bit more
+
+    A16
+    ; read joypad
+    rep #$20                         ; set A to 16-bit
+
+    ldx #0 ;; we use this for both the offset into the player table
+           ;; as well as the offset into the joypad info hw regs, as both are
+           ;; spaced one word apart.
+joy_loop:
+    stx .loword(W1)
+    lda .loword(player_table), x
+    tcd ;; remapping dp to player x
+
+    cpx #$4 ; in multitap config, the third joypad needs to be read raw
+            ; the 4th joypad can be read through the convenience joy
+            ; registers
+    bne :+
+    inx
+    inx
+  : lda JOY1L, x                     ; get new input from this frame
+    ldy player::joy                 ; get input from last frame
+    sta player::joy                 ; store new input from this frame
+    tya                              ; check for newly pressed buttons...
+    eor player::joy                  ; filter buttons that were not pressed last frame
+    and player::joy                  ; filter held buttons from last frame
+    sta player::joy_trigger          ; ...and store them
+    ; second, check for buttons held from last frame
+    tya                              ; get input from last frame
+    and player::joy                  ; filter held buttons from last frame...
+    sta player::joy_held             ; ...store them
+    ; for convenience store the or of trigger and held
+    ora player::joy_trigger
+    sta player::joy_trigger_held
+
+    ; set some conveniet things
+    bit_tribool JOY_RIGHT_SH, JOY_LEFT_SH
+    sta player::h_tribool
+    lda player::joy_trigger_held
+    bit_tribool JOY_DOWN_SH, JOY_UP_SH
+    sta player::v_tribool
+
+    ;; and increment x and redo for
+    lda .loword(W1)
+    inc
+    inc
+    tax
+    cpx #PLAYER_TABLE_I
+
+    bne joy_loop
+    lda #$0
+    tcd
+    rts
+
+
+;; --------
+;; movement
+
+
+
+
+
+
+;; my current thinking is:
+;; - first handle all movement to see what new coordinate
+;;   our sprite would end up
+;; - then do collision tests, for now only with terrain
+;; - if collision, this will mean a new state, and we need to process the
+;; aftermath
+;;
+;; - sprites have a bounding box that we need to check for collisions.
+;;   depending on which direction we move in, we can check different points
+;;   of this box. So say we go left, we check left up and left down,
+;;   we fall left, we check left up, left down and right down
+;;   we might want to check 6 points so we don't allow impaling ourselves horizontally on
+;;   8x8 blocks
 
 handle_movement:
     jsr handle_player_movement
@@ -1277,7 +1385,7 @@ snap_to_top_save_new_y:
 snap_to_top_cont:
     ;; this means we just hit the bottom
     lda #1
-    ;; this one we sould probably make a bit more generic.
+    ;; this one we should probably make a bit more generic.
     ;; for example by registering in all of these snap fns
     ;; what we hit in one var.
     sta COLL_STACK_POINT_HIT_GROUND + 2, s
@@ -1351,166 +1459,8 @@ snap_to_right_cont:
     rts
 
 
-
-bullet_point_no_coll_callback:
-    rts
-
-bullet_coll_end_callback:
-bullet_coll_end_flip_h:
-    lda COLL_STACK_Y_NEW_TMP + 2, s
-    bmi bullet_coll_end_flip_v
-    ;; x collision occured, save new x.
-    sta sprite::y_new
-    ;; we flip x speed
-    lda sprite::v_velo
-    eor #$FFFF
-    clc
-    adc #$1
-    sta sprite::v_velo
-    bra bullet_coll_end_callback_end
-bullet_coll_end_flip_v:
-    lda COLL_STACK_X_NEW_TMP + 2, s
-    bmi bullet_coll_end_callback_end
-    ;; x collision occured, save new y
-    sta sprite::x_new
-    ;; we flip y speed
-    lda sprite::h_velo
-    eor #$FFFF
-    clc
-    adc #$1
-    sta sprite::h_velo
-bullet_coll_end_callback_end:
-    rts
-
-player_point_no_coll_callback:
-    ;; we're ledge checking
-    lda sprite::move_state ;; only check when we're idle or running
-    cmp #move_state::idle
-    beq player_point_no_call_ledge_check
-    cmp #move_state::run
-    bne player_point_no_call_end
-player_point_no_call_ledge_check:
-    tyx
-    tya
-    lsr ; shift point offset to find offset into ledge table
-    lsr
-    asl
-    tay
-    lda (player::bbox_ledge_lookup), y
-    txy ; restore Y
-    cmp #1
-    bne player_point_no_call_end
-    ; ok, we are interested in a ledge check
-    lda COLL_STACK_POINT_TILE_OFF + 2, s
-    clc
-    adc #$20 ;; set to tile under point
-    tax
-    A8
-    lda town_coll, x
-    A16
-    beq player_point_no_call_end ; not a collision, so we move on
-    ;; it's a collision, so we register it
-    ;; we only need one collision to know that we're standing with at least
-    ;; one point on the ledge, so we can just write 1 whenever we find
-    ;; something
-    lda #1
-    sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
-player_point_no_call_end:
-    rts
-
-
-player_coll_end_callback:
-    lda sprite::move_state ;; only execute
-    cmp #move_state::idle
-    beq player_coll_ledge_fall
-    cmp #move_state::run
-    bne player_coll_store_y_new
-player_coll_ledge_fall:
-    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
-    bne player_coll_store_y_new ; we didn't fall off the ledge
-    ; we  did fall off the ledge. we're now fallling
-    lda #0
-    sta sprite::v_velo
-    lda #move_state::jump
-    sta sprite::move_state
-    lda #V_VELO_DEC
-    sta sprite::v_velo_dec
-player_coll_store_y_new:
-    lda COLL_STACK_Y_NEW_TMP + 2, s
-    bmi player_coll_store_x_new
-    ;; y collision occured.
-    ;; we record new y, and set y velo to 0
-    sta sprite::y_new
-    lda #0
-    sta sprite::v_velo
-    lda COLL_STACK_POINT_HIT_GROUND + 2, s
-    beq player_coll_store_x_new
-    lda #move_state::idle
-    sta sprite::move_state
-
-player_coll_store_x_new:
-    lda COLL_STACK_X_NEW_TMP + 2, s
-    bmi player_coll_end_callback_end
-    ;; x collision occured.
-    ;; we record new x, and set x velo to 0
-    sta sprite::x_new
-    lda #0
-    sta sprite::h_velo
-player_coll_end_callback_end:
-    rts
-
-player_sprite_vtable:
-.addr .loword(player_coll_end_callback)
-.addr .loword(player_point_no_coll_callback)
-
-bullet_sprite_vtable:
-.addr .loword(bullet_coll_end_callback)
-.addr .loword(bullet_point_no_coll_callback)
-
-bullet_bbox_default:
-.word 7 ;; y
-.word 7 ;; x
-
-player_bbox_default:
-;; top left
-.word 1  ;; y   $0
-.word 3  ;; x   $2
-;; bottom left
-.word $f ;; y   $8
-.word 3  ;; x   $a
-;; top right
-.word 1  ;; y   $14
-.word $d ;; x   $16
-;; bottom right
-.word $f ;; y   $1c
-.word $d ;; x   $1e
-;; middle left
-.word 8  ;; y   $4
-.word 3  ;; x   $6
-;; top middle
-.word 1  ;; y   $c
-.word 8  ;; x   $e
-;; bottom middle
-.word $f ;; y   $10
-.word 8  ;; x   $12
-;; middle right
-.word 8  ;; y   $18
-.word $d ;; x   $1a
-
-
-
-;; for this point, do we need to test if it's on
-;; a ledge, yes or no?
-player_bbox_default_ledge_lookup:
-.word 0 ; top left
-.word 0 ; middle left
-.word 1 ; bottom left
-.word 0 ; top middle
-.word 1 ; bottom middle
-.word 0 ; top right
-.word 0 ; middle right
-.word 1 ; bottom right
-
+;; --------- 
+;; sound
 
 .a8
 .i16
@@ -1530,6 +1480,10 @@ load_song:
     bra     @loop
 @return:
     rts
+
+
+;; ---------
+;; game loop
 
 
 .a8
@@ -1574,94 +1528,8 @@ update_vram:
 .a16
 .i16
 finalise:
-    ;; for shame, make this more fancy
-
-    ;; we now know x and y won't change anymore, so lock them into x/y_pos
-    ;; also write them to the OAM mirror
-    lda p1 + sprite::x_new
-    sta p1 + sprite::x_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR
-    A16
-    lda p1 + sprite::y_new
-    sta p1 + sprite::y_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR + 1
-
-    A16
-    lda p2 + sprite::x_new
-    sta p2 + sprite::x_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR + 4
-    A16
-    lda p2 + sprite::y_new
-    sta p2 + sprite::y_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR + 5
-
-    A16
-    lda p3 + sprite::x_new
-    sta p3 + sprite::x_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR + 8
-    A16
-    lda p3 + sprite::y_new
-    sta p3 + sprite::y_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR + 9
-
-    ; A16
-    ; lda p4 + sprite::x_new
-    ; sta p4 + sprite::x_pos
-    ; rshift 4
-    ; A8
-    ; sta OAM_MIRROR + $c
-    ; A16
-    ; lda p4 + sprite::y_new
-    ; sta p4 + sprite::y_pos
-    ; rshift 4
-    ; A8
-    ; sta OAM_MIRROR + $d
-
-    A16
-    ;; bullets
-    ldx #$0
-    ldy #$10;; here's where we track where in OAM we need to put vals
-bullets_to_oam_loop:
-    A16
-    lda .loword(bullet_table), x
-    tcd
-    lda sprite::x_new
-    sta sprite::x_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR, y
-    iny
-    A16
-    lda sprite::y_new
-    sta sprite::y_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR, y
-    A16
-    iny
-    iny
-    iny
-
-    inx
-    inx
-    cpx #BULLET_TABLE_I
-    bne bullets_to_oam_loop
-    lda #$0
-    tcd
-    A8
-
+    jsr finalize_players
+    jsr finalize_bullets
     rts
 
 .a8
@@ -1677,6 +1545,9 @@ game_loop:
     A8
     jmp game_loop
 
+
+;; ----
+;; main
 
 .a8
 .i16

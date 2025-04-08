@@ -7,37 +7,14 @@ VRAM_SPRITE_BASE = $2000
 VRAM_CHR_BASE = $6000
 VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
 
-;; move state of player, potential other things
-H_VELO_INC = $1 ; 1 subpixel
-H_VELO_INC_OPPOSITE = $5
-H_VELO_INC_RELAX = $2
-H_VELO_MAX = $40
-V_VELO_INIT = $ffd0 ;; -30
-V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
-V_VELO_DOWN_MAX = $42
 
-P1_START_X = $7a0
-P1_START_Y = $970
+;;------------
+;; base struct
 
-
-;; for iterating over the player table
-;; double the amount of actual players, as we're iterating over words
-;; pointing to the player structs
-PLAYER_TABLE_I = $6
-
-BULLET_TABLE_I = $40
-
-.enum move_state
-    idle
-    run
-    jump
-    cling
-    climb
-.endenum
-
-.enum bullet_state
-    fly
-.endenum
+.struct sprite_vtable
+    collision_end_callback       .addr
+    coll_point_no_coll_callback  .addr
+.endstruct
 
 .enum face_dir
     left
@@ -47,24 +24,6 @@ BULLET_TABLE_I = $40
 .struct point
     y_off .word
     x_off .word
-.endstruct
-
-; bounding box
-;; points are offset from top-left corner:
-;;   one byte for x, and one for y
-.struct player_bbox
-    top_left      .tag point ; 0
-    bottom_left   .tag point ; 8
-    top_right     .tag point ; 14
-    bottom_right  .tag point ; 1c
-    middle_left   .tag point ; 4
-    top_middle    .tag point ; c
-    bottom_middle .tag point ; 10
-    middle_right  .tag point ; 18
-.endstruct
-
-.struct bullet_bbox
-    top_left      .tag point ; 0
 .endstruct
 
 ; x/y nrs are in sub-pixels,
@@ -88,10 +47,46 @@ BULLET_TABLE_I = $40
     vptr                .word ; 18 - pointer to the sprite vtable
 .endstruct
 
-.struct sprite_vtable
-    collision_end_callback       .addr
-    coll_point_no_coll_callback  .addr
+
+;; -------------
+;; player things
+
+;; for iterating over the player table
+;; double the amount of actual players, as we're iterating over words
+;; pointing to the player structs
+PLAYER_TABLE_I = $6
+
+;; move state of player, potential other things
+H_VELO_INC = $1 ; 1 subpixel
+H_VELO_INC_OPPOSITE = $5
+H_VELO_INC_RELAX = $2
+H_VELO_MAX = $40
+V_VELO_INIT = $ffd0 ;; -30
+V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
+V_VELO_DOWN_MAX = $42
+
+.enum move_state
+    idle
+    run
+    jump
+    cling
+    climb
+.endenum
+
+; bounding box
+;; points are offset from top-left corner:
+;;   one byte for x, and one for y
+.struct player_bbox
+    top_left      .tag point ; 0
+    bottom_left   .tag point ; 8
+    top_right     .tag point ; 14
+    bottom_right  .tag point ; 1c
+    middle_left   .tag point ; 4
+    top_middle    .tag point ; c
+    bottom_middle .tag point ; 10
+    middle_right  .tag point ; 18
 .endstruct
+
 
 .struct player
     sprite .tag sprite
@@ -109,6 +104,22 @@ BULLET_TABLE_I = $40
     p3                  .word ; 2c
     p4                  .word ; 2e
 .endstruct
+
+
+;; -------------
+;; bullet things
+
+BULLET_TABLE_I = $40
+
+.enum bullet_state
+    fly
+.endenum
+
+
+.struct bullet_bbox
+    top_left      .tag point ; 0
+.endstruct
+
 
 .struct bullet
     sprite .tag sprite
