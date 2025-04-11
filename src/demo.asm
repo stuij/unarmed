@@ -59,29 +59,44 @@ player_sprite_vtable:
 
 player_bbox_default:
 ;; top left
-.word 1  ;; y   $0
-.word 3  ;; x   $2
+.word $1  ;; y   $0
+.word $3  ;; x   $2
 ;; bottom left
-.word $f ;; y   $8
-.word 3  ;; x   $a
+.word $f  ;; y   $4
+.word $3  ;; x   $6
 ;; top right
-.word 1  ;; y   $14
-.word $d ;; x   $16
+.word $1  ;; y   $8
+.word $d  ;; x   $a
 ;; bottom right
-.word $f ;; y   $1c
-.word $d ;; x   $1e
+.word $f  ;; y   $1c
+.word $d  ;; x   $1e
 ;; middle left
-.word 8  ;; y   $4
-.word 3  ;; x   $6
+.word $8  ;; y   $20
+.word $3  ;; x   $22
 ;; top middle
-.word 1  ;; y   $c
-.word 8  ;; x   $e
+.word $1  ;; y   $24
+.word $8  ;; x   $26
 ;; bottom middle
-.word $f ;; y   $10
-.word 8  ;; x   $12
+.word $f  ;; y   $28
+.word $8  ;; x   $2a
 ;; middle right
-.word 8  ;; y   $18
-.word $d ;; x   $1a
+.word $8  ;; y   $2c
+.word $d  ;; x   $2e
+
+player_bbox_default_fine:
+;; top left
+.word $10  ;; y  $0
+.word $30  ;; x  $2
+;; bottom left
+.word $f0  ;; y   $4
+.word $30  ;; x   $6
+;; top right
+.word $10  ;; y   $8
+.word $d0  ;; x   $a
+;; bottom right
+.word $f0  ;; y   $c
+.word $d0  ;; x   $e
+
 
 
 ;; for this point, do we need to test if it's on
@@ -165,6 +180,9 @@ player_init_loop:
 
     ldy #.loword(player_bbox_default)
     sty sprite::bbox
+
+    ldy #.loword(player_bbox_default_fine)
+    sty sprite::bbox_fine
 
     ldy #.sizeof(player_bbox)
     sty sprite::bbox_size
@@ -380,16 +398,15 @@ handle_single_player_movement:
 
 handle_player_movement:
     ;; loop over player movement
-    ldx #0
+    ldx #$0
     phx
 player_movement_loop:
     lda .loword(player_table), x
     tcd ;; remapping dp to player x
     jsr handle_single_player_movement
-    pla
-    inc
-    inc
-    tax
+    plx
+    inx
+    inx
     phx
     cpx #PLAYER_TABLE_I
     bne player_movement_loop
@@ -578,9 +595,12 @@ bullet_sprite_vtable:
 
 
 bullet_bbox_default:
-.word 2 ;; y
-.word 2 ;; x
+.word $2  ;; y
+.word $2  ;; x
 
+bullet_bbox_default_fine:
+.word $20 ;; y
+.word $20 ;; x
 
 .a16
 .i16
@@ -603,8 +623,13 @@ init_bullets_loop:
     iny
     iny
 
-    lda #$10
+    lda #BULLET_H_VELO
     sta sprite::h_velo
+
+    txa
+    clc
+    adc #10
+    lsr
     sta sprite::v_velo
 
     ; p1 start position
@@ -624,6 +649,9 @@ init_bullets_loop:
 
     lda #.loword(bullet_bbox_default)
     sta sprite::bbox
+
+    lda #.loword(bullet_bbox_default_fine)
+    sta sprite::bbox_fine
 
     lda #.sizeof(bullet_bbox)
     sta sprite::bbox_size
@@ -932,11 +960,6 @@ joy_loop:
 
 ;; --------
 ;; movement
-
-
-
-
-
 
 ;; my current thinking is:
 ;; - first handle all movement to see what new coordinate
@@ -1436,6 +1459,7 @@ coll_snap_to_left_save_new_x:
 coll_snap_to_left_cont:
     rts
 
+
 snap_to_right:
     lda COLL_STACK_POINT_X_OFF_NEW_SUB + 2, s
     ;; so the bit that sticks out left-wards is now in A
@@ -1481,6 +1505,112 @@ load_song:
 @return:
     rts
 
+
+;; ------
+;; sprite-bumps
+
+BBOX_SQUARE_SIZE = $10 ;; 4 * x/y coords * 2 (word) = 16
+
+BBOX_X_LEFT = $0
+BBOX_Y_TOP = $2
+BBOX_X_RIGHT = $4
+BBOX_Y_BOTTOM = $6
+
+.a16
+.i16
+handle_sprite_bumps:
+    ldx #$0
+    phx
+sprite_bumps_player_loop:
+    lda .loword(player_table), x
+    tcd
+
+    ldy #square_bbox::top_left + point::x_off
+    lda (sprite::bbox_fine), y
+    clc
+    adc sprite::x_new
+    sta .loword(W0)
+
+    ldy #square_bbox::top_left + point::y_off
+    lda (sprite::bbox_fine), y
+    clc
+    adc sprite::y_new
+    sta .loword(W1)
+
+    ldy #square_bbox::bottom_right + point::x_off
+    lda (sprite::bbox_fine), y
+    clc
+    adc sprite::x_new
+    sta .loword(W2)
+
+    ldy #square_bbox::bottom_right + point::y_off
+    lda (sprite::bbox_fine), y
+    clc
+    adc sprite::y_new
+    sta .loword(W3)
+
+    ;; ------------------------------------------
+    ;; now we can start comparing with our bullet
+
+    ldx #$0
+sprite_bumps_bullet_loop:
+    lda .loword(bullet_table), x
+    tcd
+
+    ;; take Y coord of our bullet
+    lda (sprite::bbox_fine) ;; y
+    clc
+    adc sprite::y_new
+
+    ;; is it higer than top y?
+    cmp .loword(W1)
+    bmi sprite_bumps_bullet_end ;; yes, so no collision
+    ;; is it lower than bottom y?
+    cmp .loword(W3)
+    bpl sprite_bumps_bullet_end
+
+    ;; check x
+    ldy #point::x_off
+    lda (sprite::bbox_fine), y ;; x
+    clc
+    adc sprite::x_new
+    ;; is it lefter than left x?
+    cmp .loword(W0)
+    bmi sprite_bumps_bullet_end ;; yes, so no collision
+    ;; is it righter than right x?
+    cmp .loword(W2)
+    bpl sprite_bumps_bullet_end
+
+    ;; it's a hit!!
+    lda sprite::v_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::v_velo
+
+    lda sprite::h_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::h_velo
+sprite_bumps_bullet_end:
+    inx
+    inx
+    cpx #BULLET_TABLE_I
+    bne sprite_bumps_bullet_loop
+
+    ;; check for player loop things
+    plx
+    inx
+    inx
+    phx
+    cpx #PLAYER_TABLE_I
+    bne sprite_bumps_player_loop
+    plx ; clear the stack
+
+    lda #$0
+    tcd
+    rts
 
 ;; ---------
 ;; game loop
@@ -1541,6 +1671,7 @@ game_loop:
     jsr read_input
     A16
     jsr handle_movement
+    jsr handle_sprite_bumps
     jsr finalise
     A8
     jmp game_loop

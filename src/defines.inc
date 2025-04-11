@@ -41,10 +41,11 @@ VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
     y_new               .word ;  c
     v_velo_dec          .word ;  e
     bbox                .addr ; 10 - pointer to actual bbox
-    bbox_size           .word ; 12 - how many points in the bbox
-    move_state          .word ; 14
-    face_dir            .word ; 16
-    vptr                .word ; 18 - pointer to the sprite vtable
+    bbox_fine           .addr ; 12
+    bbox_size           .word ; 14 - how many points in the bbox
+    move_state          .word ; 16
+    face_dir            .word ; 18
+    vptr                .word ; 20 - pointer to the sprite vtable
 .endstruct
 
 
@@ -58,12 +59,13 @@ PLAYER_TABLE_I = $6
 
 ;; move state of player, potential other things
 H_VELO_INC = $1 ; 1 subpixel
+H_VELO_MAX = $20
 H_VELO_INC_OPPOSITE = $5
 H_VELO_INC_RELAX = $2
-H_VELO_MAX = $40
-V_VELO_INIT = $ffd0 ;; -30
+
+V_VELO_INIT = $ffd7 ;; -29
 V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
-V_VELO_DOWN_MAX = $42
+V_VELO_DOWN_MAX = $40
 
 .enum move_state
     idle
@@ -73,14 +75,20 @@ V_VELO_DOWN_MAX = $42
     climb
 .endenum
 
+; ------------
 ; bounding box
-;; points are offset from top-left corner:
-;;   one byte for x, and one for y
-.struct player_bbox
+
+.struct square_bbox
     top_left      .tag point ; 0
     bottom_left   .tag point ; 8
     top_right     .tag point ; 14
     bottom_right  .tag point ; 1c
+.endstruct
+
+;; points are offset from top-left corner:
+;;   one byte for x, and one for y
+.struct player_bbox
+    square        .tag square_bbox
     middle_left   .tag point ; 4
     top_middle    .tag point ; c
     bottom_middle .tag point ; 10
@@ -89,7 +97,7 @@ V_VELO_DOWN_MAX = $42
 
 
 .struct player
-    sprite .tag sprite
+    sprite              .tag sprite
     bbox_ledge_lookup   .word ; 1a
     joy                 .word ; 1c - last frame buttons
     joy_trigger         .word ; 1e - only buttons that weren't pressed last frame
@@ -102,12 +110,14 @@ V_VELO_DOWN_MAX = $42
     p1                  .word ; 28
     p2                  .word ; 2a
     p3                  .word ; 2c
-    p4                  .word ; 2e
 .endstruct
 
 
 ;; -------------
 ;; bullet things
+
+BULLET_H_VELO = $20
+BULLET_V_VELO = $20
 
 BULLET_TABLE_I = $40
 
