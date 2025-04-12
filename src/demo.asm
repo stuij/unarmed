@@ -595,12 +595,12 @@ bullet_sprite_vtable:
 
 
 bullet_bbox_default:
-.word $2  ;; y
-.word $2  ;; x
+.word $3  ;; y
+.word $3  ;; x
 
 bullet_bbox_default_fine:
-.word $20 ;; y
-.word $20 ;; x
+.word $30 ;; y
+.word $30 ;; x
 
 .a16
 .i16
@@ -739,7 +739,6 @@ bullet_coll_end_flip_h:
     clc
     adc #$1
     sta sprite::v_velo
-    bra bullet_coll_end_callback_end
 bullet_coll_end_flip_v:
     lda COLL_STACK_X_NEW_TMP + 2, s
     bmi bullet_coll_end_callback_end
@@ -1395,6 +1394,7 @@ snap_to_top:
     lda sprite::y_new ; so we're effectively
     sec
     sbc COLL_STACK_TMP + 2, s
+    sec
     sbc #$1
     tax
     lda COLL_STACK_Y_NEW_TMP + 2, s      ; did we already save a new temp y?
@@ -1424,6 +1424,7 @@ snap_to_bottom:
     adc #$1
     clc
     adc #$80 ; effectively y_new + (8 - nr)
+    clc
     adc sprite::y_new ; and we want to add that to the new y
     tax
     lda COLL_STACK_Y_NEW_TMP + 2, s      ; did we already save a new temp y?
@@ -1446,6 +1447,7 @@ snap_to_left:
     lda sprite::x_new ; so we're effectively
     sec
     sbc COLL_STACK_TMP +2, s
+    sec
     sbc #$1
     tax
     lda COLL_STACK_X_NEW_TMP + 2, s      ; did we already save a new temp y?
@@ -1469,6 +1471,7 @@ snap_to_right:
     adc #$1
     clc
     adc #$80 ; effectively x_new + (8 - nr)
+    clc
     adc sprite::x_new ; and we want to add that to the new x
     tax
     lda COLL_STACK_X_NEW_TMP + 2, s      ; did we already save a new temp y?
