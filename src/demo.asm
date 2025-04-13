@@ -68,20 +68,20 @@ player_bbox_default:
 .word $1  ;; y   $8
 .word $d  ;; x   $a
 ;; bottom right
-.word $f  ;; y   $1c
-.word $d  ;; x   $1e
+.word $f  ;; y   $c
+.word $d  ;; x   $e
 ;; middle left
-.word $8  ;; y   $20
-.word $3  ;; x   $22
+.word $8  ;; y   $10
+.word $3  ;; x   $12
 ;; top middle
-.word $1  ;; y   $24
-.word $8  ;; x   $26
+.word $1  ;; y   $14
+.word $8  ;; x   $16
 ;; bottom middle
-.word $f  ;; y   $28
-.word $8  ;; x   $2a
+.word $f  ;; y   $18
+.word $8  ;; x   $1a
 ;; middle right
-.word $8  ;; y   $2c
-.word $d  ;; x   $2e
+.word $8  ;; y   $1c
+.word $d  ;; x   $1e
 
 player_bbox_default_fine:
 ;; top left
@@ -96,6 +96,18 @@ player_bbox_default_fine:
 ;; bottom right
 .word $f0  ;; y   $c
 .word $d0  ;; x   $e
+;; middle left
+.word $80  ;; y   $10
+.word $30  ;; x   $12
+;; top middle
+.word $10  ;; y   $14
+.word $80  ;; x   $16
+;; bottom middle
+.word $f0  ;; y   $18
+.word $80  ;; x   $1a
+;; middle right
+.word $80  ;; y   $1c
+.word $d0  ;; x   $1e
 
 
 
@@ -1503,15 +1515,76 @@ load_song:
     rts
 
 
-;; ------
+;; -------
+;; actions
+
+.a16
+.i16
+handle_actions:
+;; prologue
+    ldx #$0
+    phx
+actions_player_loop:
+    lda .loword(player_table), x
+    tcd
+;; meat
+    ;; are we instructed to shoot?
+    lda player::joy_trigger
+    and #JOY_A
+    beq :+
+    ;; we are shooting something!
+    ;; save left x and y
+    ;; x
+    ldy #(player_bbox::middle_right + point::x_off)
+    lda (sprite::bbox_fine), y
+    clc
+    adc sprite::x_new
+    sta .loword(W0)
+    ;; y
+    ldy #(player_bbox::middle_right + point::y_off)
+    lda (sprite::bbox_fine), y
+    clc
+    adc sprite::y_new
+    sta .loword(W1)
+
+    ;; switch dp to bullet
+    lda .loword(bullet_table)
+    tcd
+
+    lda #$0
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    sta sprite::h_velo
+
+    lda .loword(W0)
+    ldy #point::x_off
+    sec
+    sbc (sprite::bbox_fine), y
+    ;; adc #$10 ;; do we need to add 1 pixel?
+    ;; on one hand this way it can't intersect w us when shooting
+    ;; on the other hand, it might mess up wall collisions
+    sta sprite::x_new
+
+    lda .loword(W1)
+    sec
+    sbc (sprite::bbox_fine)
+    sta sprite::y_new
+
+  : plx
+    inx
+    inx
+    phx
+    cpx #PLAYER_TABLE_I
+    bne actions_player_loop
+;; epilogue
+    plx ; clear the stack
+    lda #$0
+    tcd
+    rts
+
+
+;; ------------
 ;; sprite-bumps
-
-BBOX_SQUARE_SIZE = $10 ;; 4 * x/y coords * 2 (word) = 16
-
-BBOX_X_LEFT = $0
-BBOX_Y_TOP = $2
-BBOX_X_RIGHT = $4
-BBOX_Y_BOTTOM = $6
 
 .a16
 .i16
@@ -1609,9 +1682,9 @@ sprite_bumps_bullet_end:
     tcd
     rts
 
+
 ;; ---------
 ;; game loop
-
 
 .a8
 .i16
@@ -1669,6 +1742,7 @@ game_loop:
     A16
     jsr handle_movement
     jsr handle_sprite_bumps
+    jsr handle_actions
     jsr finalise
     A8
     jmp game_loop
