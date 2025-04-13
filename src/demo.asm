@@ -606,7 +606,7 @@ bullet_bbox_default_fine:
 .i16
 ;; game specific
 init_bullets:
-    ldx #$150
+    ldx #BULLET_X_POS_INIT
     stx .loword(W0)
     ldx #$0
     ldy #$12
@@ -623,25 +623,19 @@ init_bullets_loop:
     iny
     iny
 
-    lda #BULLET_H_VELO
+    lda #$0
     sta sprite::h_velo
-
-    txa
-    clc
-    adc #10
-    lsr
     sta sprite::v_velo
-
-    ; p1 start position
-    ; $80 pixel offset and $0 subpixels
 
     lda .loword(W0)
     sta sprite::x_pos
+    sta sprite::x_new
 
-    lda #$100
+    lda #BULLET_Y_POS_INIT
     sta sprite::y_pos
+    sta sprite::y_new
 
-    lda #bullet_state::fly
+    lda #bullet_state::rest
     sta sprite::move_state
 
     lda #face_dir::right
@@ -672,21 +666,21 @@ init_bullets_loop:
     tcd
 
     ;; handle this blasted table separately
-    lda #$00
+    lda #BULLET_OAM_DEFAULT
     sta OAM_MIRROR + $201
-    lda #$00
+    lda #BULLET_OAM_DEFAULT
     sta OAM_MIRROR + $202
-    lda #$00
+    lda #BULLET_OAM_DEFAULT
     sta OAM_MIRROR + $203
-    lda #$00
+    lda #BULLET_OAM_DEFAULT
     sta OAM_MIRROR + $204
-    lda #$00
+    lda #BULLET_OAM_DEFAULT
     sta OAM_MIRROR + $205
-    lda #$00
+    lda #BULLET_OAM_DEFAULT
     sta OAM_MIRROR + $206
-    lda #$00
+    lda #BULLET_OAM_DEFAULT
     sta OAM_MIRROR + $207
-    lda #$00
+    lda #BULLET_OAM_DEFAULT
     sta OAM_MIRROR + $208
 
     rts

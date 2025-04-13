@@ -116,13 +116,18 @@ V_VELO_DOWN_MAX = $40
 ;; -------------
 ;; bullet things
 
-BULLET_H_VELO = $20
-BULLET_V_VELO = $20
+BULLET_OAM_DEFAULT = $00
+BULLET_X_POS_INIT = $150
+BULLET_Y_POS_INIT = $10
+
+BULLET_H_VELO = $60
+BULLET_V_VELO = $58
 
 BULLET_TABLE_I = $40
 
 .enum bullet_state
     fly
+    rest
 .endenum
 
 
