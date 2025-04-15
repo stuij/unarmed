@@ -16,9 +16,16 @@ VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
     coll_point_no_coll_callback  .addr
 .endstruct
 
+;; locked to player_bbox order
 .enum face_dir
-    left
-    right
+    top_left        = $0
+    bottom_left     = $2
+    top_right       = $4
+    bottom_right    = $6
+    left            = $8
+    top             = $a
+    bottom          = $c
+    right           = $e
 .endenum
 
 .struct point
@@ -105,9 +112,9 @@ V_VELO_DOWN_MAX = $40
     joy_trigger_held    .word ; 22 - both new and held buttons
     h_tribool           .word ; 24
     v_tribool           .word ; 26
+    bullets             .word ; 28
     ;; these are just padding to more easily see the
     ;; values of the individual players in the debugger
-    p1                  .word ; 28
     p2                  .word ; 2a
     p3                  .word ; 2c
 .endstruct
@@ -121,9 +128,9 @@ BULLET_X_POS_INIT = $150
 BULLET_Y_POS_INIT = $10
 
 BULLET_H_VELO = $60
-BULLET_V_VELO = $58
+BULLET_V_VELO = $60
 
-BULLET_TABLE_I = $40
+BULLET_TABLE_I = $6
 
 .enum bullet_state
     fly

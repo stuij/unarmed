@@ -110,18 +110,17 @@ player_bbox_default_fine:
 .word $d0  ;; x   $1e
 
 
-
 ;; for this point, do we need to test if it's on
 ;; a ledge, yes or no?
 player_bbox_default_ledge_lookup:
 .word 0 ; top left
-.word 0 ; middle left
 .word 1 ; bottom left
+.word 0 ; top right
+.word 1 ; bottom right
+.word 0 ; middle left
 .word 0 ; top middle
 .word 1 ; bottom middle
-.word 0 ; top right
 .word 0 ; middle right
-.word 1 ; bottom right
 
 
 .a16
@@ -169,9 +168,14 @@ player_init_loop:
     sty sprite::v_velo
     sty player::joy
 
+    ;; nice and hacky right now
+    ;; at some point this will hold some sensible structure
+    ;; say a list of bullets
+    lda .loword(bullet_table), x
+    sta player::bullets
+
     ; p1 start position
     ; $80 pixel offset and $0 subpixels
-
     txa
     asl
     tax
@@ -399,6 +403,7 @@ climb:
 .a16
 .i16
 handle_single_player_movement:
+    jsr set_player_direction
     lda sprite::move_state
     asl
     tax
@@ -564,6 +569,71 @@ finalize_players:
     ; sta OAM_MIRROR + $d
     rts
 
+set_player_direction:
+    lda player::joy
+    tax
+    and #(JOY_UP + JOY_LEFT)
+    cmp #(JOY_UP + JOY_LEFT)
+    bne set_player_direction_check_down_left
+    lda #face_dir::top_left
+    sta sprite::face_dir
+    bra set_player_direction_done
+set_player_direction_check_down_left:
+    txa
+    and #(JOY_DOWN + JOY_LEFT)
+    cmp #(JOY_DOWN + JOY_LEFT)
+    bne set_player_direction_check_up_right
+    lda #face_dir::bottom_left
+    sta sprite::face_dir
+    bra set_player_direction_done
+set_player_direction_check_up_right:
+    txa
+    and #(JOY_UP + JOY_RIGHT)
+    cmp #(JOY_UP + JOY_RIGHT)
+    bne set_player_direction_check_down_right
+    lda #face_dir::top_right
+    sta sprite::face_dir
+    bra set_player_direction_done
+set_player_direction_check_down_right:
+    txa
+    and #(JOY_DOWN + JOY_RIGHT)
+    cmp #(JOY_DOWN + JOY_RIGHT)
+    bne set_player_direction_check_left
+    lda #face_dir::bottom_right
+    sta sprite::face_dir
+    bra set_player_direction_done
+set_player_direction_check_left:
+    txa
+    and #JOY_LEFT
+    beq set_player_direction_check_up
+    lda #face_dir::left
+    sta sprite::face_dir
+    bra set_player_direction_done
+set_player_direction_check_up:
+    txa
+    and #JOY_UP
+    beq set_player_direction_check_down
+    lda #face_dir::top
+    sta sprite::face_dir
+    bra set_player_direction_done
+set_player_direction_check_down:
+    txa
+    and #JOY_DOWN
+    beq set_player_direction_check_right
+    lda #face_dir::bottom
+    sta sprite::face_dir
+    bra set_player_direction_done
+set_player_direction_check_right:
+    txa
+    and #JOY_RIGHT
+    beq set_player_direction_done
+    lda #face_dir::right
+    sta sprite::face_dir
+set_player_direction_done:
+    ;; no more possible directions pressed, so we're keeping the
+    ;; previous direction
+    rts
+
 ;; bullet
 ;; ------
 bullet_table:
@@ -607,12 +677,12 @@ bullet_sprite_vtable:
 
 
 bullet_bbox_default:
-.word $3  ;; y
-.word $3  ;; x
+.word $1  ;; y
+.word $1  ;; x
 
 bullet_bbox_default_fine:
-.word $30 ;; y
-.word $30 ;; x
+.word $10 ;; y
+.word $10 ;; x
 
 .a16
 .i16
@@ -1517,6 +1587,89 @@ load_song:
 
 ;; -------
 ;; actions
+bullet_fire_direction_table:
+.addr bullet_fire_top_left
+.addr bullet_fire_bottom_left
+.addr bullet_fire_top_right
+.addr bullet_fire_bottom_right
+.addr bullet_fire_left
+.addr bullet_fire_top
+.addr bullet_fire_bottom
+.addr bullet_fire_right
+
+.a16
+.i16
+bullet_fire_top_left:
+    lda #(BULLET_V_VELO)
+    eor #$ffff
+    inc
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    eor #$ffff
+    inc
+    sta sprite::h_velo
+    rts
+
+
+.a16
+.i16
+bullet_fire_bottom_left:
+    lda #(BULLET_V_VELO)
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    eor #$ffff
+    inc
+    sta sprite::h_velo
+    rts
+
+bullet_fire_top_right:
+    lda #(BULLET_V_VELO)
+    eor #$ffff
+    inc
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    sta sprite::h_velo
+    rts
+
+bullet_fire_bottom_right:
+    lda #(BULLET_V_VELO)
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    sta sprite::h_velo
+    rts
+
+bullet_fire_left:
+    lda #$0
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    eor #$ffff
+    inc
+    sta sprite::h_velo
+    rts
+
+bullet_fire_top:
+    lda #(BULLET_V_VELO)
+    eor #$ffff
+    inc
+    sta sprite::v_velo
+    lda #$0
+    sta sprite::h_velo
+    rts
+
+bullet_fire_bottom:
+    lda #(BULLET_V_VELO)
+    sta sprite::v_velo
+    lda #$0
+    sta sprite::h_velo
+    rts
+
+bullet_fire_right:
+    lda #$0
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    sta sprite::h_velo
+    rts
+
 
 .a16
 .i16
@@ -1535,27 +1688,33 @@ actions_player_loop:
     ;; we are shooting something!
     ;; save left x and y
     ;; x
-    ldy #(player_bbox::middle_right + point::x_off)
+    lda sprite::face_dir
+    asl
+    tax
+    clc
+    adc #point::x_off
+    tay
     lda (sprite::bbox_fine), y
     clc
     adc sprite::x_new
     sta .loword(W0)
     ;; y
-    ldy #(player_bbox::middle_right + point::y_off)
+    txy
     lda (sprite::bbox_fine), y
     clc
     adc sprite::y_new
     sta .loword(W1)
 
+    ;; this one is already in x, but we'll rewrite this
+    ;; and I'll have forgotten about this then
+    ldx sprite::face_dir
+
     ;; switch dp to bullet
-    lda .loword(bullet_table)
+    lda player::bullets
     tcd
+    jsr (.loword(bullet_fire_direction_table), x)
 
-    lda #$0
-    sta sprite::v_velo
-    lda #(BULLET_H_VELO)
-    sta sprite::h_velo
-
+    ;; fire from right pos of sprite
     lda .loword(W0)
     ldy #point::x_off
     sec
