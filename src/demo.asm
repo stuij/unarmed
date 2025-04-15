@@ -1090,12 +1090,12 @@ check_collisions:
     sta COLL_STACK_X_NEW_TMP, s
 
     lda sprite::y_new  ; load y of first sprite
-    rshift 4           ; remove sub-pixels
+    a_rshift 4           ; remove sub-pixels
     tay
     and #7
     sta COLL_STACK_Y_OFF_NEW, s ; position of y within tile
     tya
-    rshift 3                ; divide by 8, truncating to get y tile offset
+    a_rshift 3                ; divide by 8, truncating to get y tile offset
     A8
     ; multiply Y by 32
     sta WRMPYA ; set first nr to muliply: y offset
@@ -1105,12 +1105,12 @@ check_collisions:
     ;; multiplication to complete
     A16
     lda sprite::x_new   ; load x of first sprite
-    rshift 4            ; remove sub-pixels
+    a_rshift 4            ; remove sub-pixels
     tax
     and #7
     sta COLL_STACK_X_OFF_NEW, s  ; position of x within tile
     txa
-    rshift 3            ; divide by 8 to get x tile offset
+    a_rshift 3            ; divide by 8 to get x tile offset
     clc
     adc RDMPYL          ; add y to x, tile offset is in A
     sta COLL_STACK_TILE_OFF, s  ; save tile offset to stack for later
@@ -1148,7 +1148,7 @@ coll_point_loop:
     clc
     adc (sprite::bbox), y
     sta COLL_STACK_POINT_Y_OFF_NEW, s ;; save offset for if we need to do micro pushback
-    rshift 3 ;; truncate to see if we're spilling over into another tile
+    a_rshift 3 ;; truncate to see if we're spilling over into another tile
     beq y_no_spill  ; we're not spilling over
     A8
     sta WRMPYA      ; unfortunately we have to do more muliplications
@@ -1174,7 +1174,7 @@ point_x_calc:
     clc
     adc (sprite::bbox), y ; again, do x in the meantime
     sta COLL_STACK_POINT_X_OFF_NEW, s
-    rshift 3
+    a_rshift 3
     clc
     adc COLL_STACK_POINT_TILE_OFF, s ;; add to point-local collision map offset
     sta COLL_STACK_POINT_TILE_OFF, s
