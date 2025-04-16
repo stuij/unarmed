@@ -1098,9 +1098,11 @@ check_collisions:
     a_rshift 3                ; divide by 8, truncating to get y tile offset
     A8
     ; multiply Y by 32
-    sta WRMPYA ; set first nr to muliply: y offset
+    sta M7A ; set first nr to muliply: y offset
+    xba
+    sta M7A ; write twice to write full 16 bit nr. low bits first.
     lda #$20
-    sta WRMPYB ; set second nr to multiply row size
+    sta M7B ; set second nr to multiply row size
     ;; now calculate X tile offset while we wait (more than) 8 cycles for
     ;; multiplication to complete
     A16
@@ -1112,7 +1114,7 @@ check_collisions:
     txa
     a_rshift 3            ; divide by 8 to get x tile offset
     clc
-    adc RDMPYL          ; add y to x, tile offset is in A
+    adc MPYL          ; add y to x, tile offset is in A
     sta COLL_STACK_TILE_OFF, s  ; save tile offset to stack for later
 
     lda #0
@@ -1151,14 +1153,17 @@ coll_point_loop:
     a_rshift 3 ;; truncate to see if we're spilling over into another tile
     beq y_no_spill  ; we're not spilling over
     A8
-    sta WRMPYA      ; unfortunately we have to do more muliplications
+    sta M7A      ; unfortunately we have to do more muliplications
+    xba
+    sta M7A
     lda #$20
-    sta WRMPYB ; set second nr to multiply row size
+    sta M7B ; set second nr to multiply row size
     A16
     lda COLL_STACK_TILE_OFF, s  ; collision map tile from stack 4 cycles
     clc        ; 2 cycles
-    adc RDMPYL ; 4 cycles = enough cycles before reading to make up
-               ; multiplication budget
+    adc MPYL   ; 4 cycles = enough cycles before reading to make up
+               ; multiplication budget. note: we switched to PPU signed muliplier,
+               ; and now results are instant, so no need for staggering results.
     sta COLL_STACK_POINT_TILE_OFF, s   ; push collision map tile for this point (we need other tile later)
     bra point_x_calc
 y_no_spill: ;; y didn't spill. to keep symmetry with above basic block, push unmodified
