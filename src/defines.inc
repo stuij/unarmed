@@ -52,7 +52,9 @@ VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
     bbox_size           .word ; 14 - how many points in the bbox
     move_state          .word ; 16
     face_dir            .word ; 18
-    vptr                .word ; 20 - pointer to the sprite vtable
+    anim_tick           .word ; 20 - keep track of where we should
+                              ;      be in our sprite animation
+    vptr                .word ; 22 - pointer to the sprite vtable
 .endstruct
 
 
@@ -115,8 +117,7 @@ V_VELO_DOWN_MAX = $40
     bullets             .word ; 28
     ;; these are just padding to more easily see the
     ;; values of the individual players in the debugger
-    p2                  .word ; 2a
-    p3                  .word ; 2c
+    p1                  .word ; 2a
 .endstruct
 
 
@@ -127,8 +128,8 @@ BULLET_OAM_DEFAULT = $00
 BULLET_X_POS_INIT = $150
 BULLET_Y_POS_INIT = $10
 
-BULLET_H_VELO = $60
-BULLET_V_VELO = $60
+BULLET_H_VELO = $77
+BULLET_V_VELO = $77
 
 BULLET_TABLE_I = $6
 

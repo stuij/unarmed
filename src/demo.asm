@@ -167,6 +167,7 @@ player_init_loop:
     sty sprite::h_velo
     sty sprite::v_velo
     sty player::joy
+    sty sprite::anim_tick
 
     ;; nice and hacky right now
     ;; at some point this will hold some sensible structure
@@ -253,6 +254,8 @@ init_jump:
     sta sprite::v_velo
     lda #V_VELO_DEC
     sta sprite::v_velo_dec
+    lda #$0
+    sta sprite::anim_tick
     lda #move_state::jump
     sta sprite::move_state
     asl ;; times 2 to get proper fn offset
@@ -347,13 +350,16 @@ h_move_set_to_idle:
     bne h_move_end
     lda #move_state::idle
     sta sprite::move_state
+    lda #$0
+    sta sprite::anim_tick
 h_move_end:
     rts
 
 
 init_run:
-    lda #0
+    lda #$0
     sta sprite::h_velo
+    sta sprite::anim_tick
     lda #move_state::run
     sta sprite::move_state
     asl ;; times 2 to get proper fn offset
@@ -482,6 +488,7 @@ player_coll_ledge_fall:
     ; we  did fall off the ledge. we're now fallling
     lda #0
     sta sprite::v_velo
+    sta sprite::anim_tick
     lda #move_state::jump
     sta sprite::move_state
     lda #V_VELO_DEC
@@ -498,6 +505,8 @@ player_coll_store_y_new:
     beq player_coll_store_x_new
     lda #move_state::idle
     sta sprite::move_state
+    lda #$0
+    sta sprite::anim_tick
 
 player_coll_store_x_new:
     lda COLL_STACK_X_NEW_TMP + 2, s
@@ -719,6 +728,8 @@ init_bullets_loop:
 
     lda #bullet_state::rest
     sta sprite::move_state
+    lda #$0
+    sta sprite::anim_tick
 
     lda #face_dir::right
     sta sprite::face_dir
@@ -734,6 +745,9 @@ init_bullets_loop:
 
     lda #.loword(bullet_sprite_vtable)
     sta sprite::vptr
+
+    lda #$0
+    sta sprite::anim_tick
 
     lda .loword(W0)
     clc
@@ -1719,7 +1733,6 @@ actions_player_loop:
     tcd
     jsr (.loword(bullet_fire_direction_table), x)
 
-    ;; fire from right pos of sprite
     lda .loword(W0)
     ldy #point::x_off
     sec
@@ -1733,6 +1746,11 @@ actions_player_loop:
     sec
     sbc (sprite::bbox_fine)
     sta sprite::y_new
+
+    lda #bullet_state::fly
+    sta sprite::move_state
+    lda #$0
+    sta sprite::anim_tick
 
   : plx
     inx
@@ -1896,17 +1914,25 @@ finalise:
     jsr finalize_bullets
     rts
 
+.a16
+.i16
+update_sprites:
+    rts
+
 .a8
 .i16
 game_loop:
     jsr wait_nmi ; wait for NMI / V-Blank
-    ; we're in vblank, so first upddate video memory things
+    ; we're in vblank, so first update video memory things
     jsr update_vram
+
+    ; then do the rest
     jsr read_input
     A16
     jsr handle_movement
     jsr handle_sprite_bumps
     jsr handle_actions
+    jsr update_sprites
     jsr finalise
     A8
     jmp game_loop
