@@ -135,10 +135,8 @@ init_players:
     ;; p2
     lda #$20                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $b
-
     lda #$00                ; tile offset of third sprite
     sta OAM_MIRROR + $e
-
 
     ;; p3
     lda #$20                ; no flip, prio 2, palette 0
@@ -146,10 +144,11 @@ init_players:
     lda #$20                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $17
 
-    ; lda #$00                ; tile offset of fourth sprite
-    ; sta OAM_MIRROR + $e
-    ; lda #$20                ; no flip, prio 2, palette 0
-    ; sta OAM_MIRROR + $f
+    ;; p4
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + $1b
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + $1e
 
 
     ; set top bit of x pos for all 4 sprites to 0 so we show them on
@@ -1057,6 +1056,33 @@ init_game_data:
 ;; -----
 ;; input
 
+;; serial NES read joy routine
+.a16
+.i16
+read_serial:
+    lda #$1
+    sta .loword(W2)
+    A8
+    lda #$7F
+    sta WRIO
+    ; lda #$1
+    ; sta JOYOUT
+    ; lsr a
+    ; sta JOYOUT
+read_serial_loop:
+    A8
+    lda JOYSER1
+    A16
+    lsr a        ; bit 0 -> Carry
+    rol .loword(W2)  ; Carry -> bit 0; bit 15 -> Carry
+    bcc read_serial_loop
+    A8
+    lda #$FF
+    sta WRIO
+    A16
+    lda .loword(W2)
+    rts
+
 .a8
 .i16
 read_input:
@@ -1065,10 +1091,8 @@ wait_for_joypad:
     lsr a                 ; check whether joypad done reading...
     bcs wait_for_joypad   ; ...if not, wait a bit more
 
-    A16
     ; read joypad
-    rep #$20                         ; set A to 16-bit
-
+    A16
     ldx #0 ;; we use this for both the offset into the player table
            ;; as well as the offset into the joypad info hw regs, as both are
            ;; spaced one word apart.
@@ -1076,16 +1100,32 @@ joy_loop:
     stx .loword(W1)
     lda .loword(player_table), x
     tcd ;; remapping dp to player x
-
-    cpx #$4 ; in multitap config, the third joypad needs to be read raw
-            ; the 4th joypad can be read through the convenience joy
-            ; registers
+    cpx #$6
+    beq joy_read_serial
+    cpx #$4 ; in multitap config, the third physical joypad is read
+            ; from JOY4
     bne :+
     inx
     inx
   : lda JOY1L, x                     ; get new input from this frame
-    ldy player::joy                 ; get input from last frame
-    sta player::joy                 ; store new input from this frame
+    bra joy_set_player_vals
+joy_read_serial:
+    jsr read_serial
+joy_set_player_vals:
+    jsr set_player_joy
+    ;; and increment x as loop var again
+    ldx .loword(W1)
+    inx
+    inx
+  : cpx #PLAYER_TABLE_I
+    bne joy_loop
+    lda #$0
+    tcd
+    rts
+
+set_player_joy:
+    ldy player::joy                  ; get input from last frame
+    sta player::joy                  ; store new input from this frame
     tya                              ; check for newly pressed buttons...
     eor player::joy                  ; filter buttons that were not pressed last frame
     and player::joy                  ; filter held buttons from last frame
@@ -1104,17 +1144,6 @@ joy_loop:
     lda player::joy_trigger_held
     bit_tribool JOY_DOWN_SH, JOY_UP_SH
     sta player::v_tribool
-
-    ;; and increment x and redo for
-    lda .loword(W1)
-    inc
-    inc
-    tax
-    cpx #PLAYER_TABLE_I
-
-    bne joy_loop
-    lda #$0
-    tcd
     rts
 
 
