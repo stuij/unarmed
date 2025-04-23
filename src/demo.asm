@@ -59,55 +59,55 @@ player_sprite_vtable:
 
 player_bbox_default:
 ;; top left
-.word $1  ;; y   $0
-.word $3  ;; x   $2
+.word $2  ;; y   $0
+.word $0  ;; x   $2
 ;; bottom left
-.word $f  ;; y   $4
-.word $3  ;; x   $6
+.word $d  ;; y   $4
+.word $0  ;; x   $6
 ;; top right
-.word $1  ;; y   $8
-.word $d  ;; x   $a
+.word $2  ;; y   $8
+.word $6  ;; x   $a
 ;; bottom right
-.word $f  ;; y   $c
-.word $d  ;; x   $e
+.word $d  ;; y   $c
+.word $6  ;; x   $e
 ;; middle left
 .word $8  ;; y   $10
-.word $3  ;; x   $12
+.word $0  ;; x   $12
 ;; top middle
-.word $1  ;; y   $14
-.word $8  ;; x   $16
+.word $2  ;; y   $14
+.word $3  ;; x   $16
 ;; bottom middle
-.word $f  ;; y   $18
-.word $8  ;; x   $1a
+.word $d  ;; y   $18
+.word $3  ;; x   $1a
 ;; middle right
 .word $8  ;; y   $1c
-.word $d  ;; x   $1e
+.word $6  ;; x   $1e
 
 player_bbox_default_fine:
 ;; top left
-.word $10  ;; y  $0
-.word $30  ;; x  $2
+.word $20  ;; y  $0
+.word $00  ;; x  $2
 ;; bottom left
-.word $f0  ;; y   $4
-.word $30  ;; x   $6
+.word $d0  ;; y   $4
+.word $00  ;; x   $6
 ;; top right
-.word $10  ;; y   $8
-.word $d0  ;; x   $a
+.word $20  ;; y   $8
+.word $60  ;; x   $a
 ;; bottom right
-.word $f0  ;; y   $c
-.word $d0  ;; x   $e
+.word $d0  ;; y   $c
+.word $60  ;; x   $e
 ;; middle left
 .word $80  ;; y   $10
-.word $30  ;; x   $12
+.word $00  ;; x   $12
 ;; top middle
-.word $10  ;; y   $14
-.word $80  ;; x   $16
+.word $20  ;; y   $14
+.word $30  ;; x   $16
 ;; bottom middle
-.word $f0  ;; y   $18
-.word $80  ;; x   $1a
+.word $d0  ;; y   $18
+.word $30  ;; x   $1a
 ;; middle right
 .word $80  ;; y   $1c
-.word $d0  ;; x   $1e
+.word $60  ;; x   $1e
 
 
 ;; for this point, do we need to test if it's on
@@ -126,23 +126,25 @@ player_bbox_default_ledge_lookup:
 .a16
 .i16
 init_players:
-    ;; set oam for sprite 1 directly.
-    ;; this and the above sprite init data should all be done with some
-    ;; kind of generalized player sprite init routine
-    lda #$00                ; tile offset of first sprite
-    sta OAM_MIRROR + 2
+    ;; p1
     lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + 3
-
-    lda #$00                ; tile offset of second sprite
-    sta OAM_MIRROR + 6
+    sta OAM_MIRROR + $3
     lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + 7
+    sta OAM_MIRROR + $7
 
-    lda #$00                ; tile offset of third sprite
-    sta OAM_MIRROR + $a
+    ;; p2
     lda #$20                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $b
+
+    lda #$00                ; tile offset of third sprite
+    sta OAM_MIRROR + $e
+
+
+    ;; p3
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + $13
+    lda #$20                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR + $17
 
     ; lda #$00                ; tile offset of fourth sprite
     ; sta OAM_MIRROR + $e
@@ -151,23 +153,22 @@ init_players:
 
 
     ; set top bit of x pos for all 4 sprites to 0 so we show them on
-    ; screen, and set 16x16 tile
-    ; so a nibble, representing two sprites becomes 1010, aka a.
-    lda #$aa
+    ; screen, and set 8x8 tile.
+    ; so a nibble, representing two sprites becomes b0000, aka 0.
+    lda #$00
     sta OAM_MIRROR + $200
 
 
     ldx #$0
-    ;; ldx is still 0
 player_init_loop:
     lda .loword(player_table), x ; player struct under x offset
     tcd ; set dp to it
 
-    ldy #$0
-    sty sprite::h_velo
-    sty sprite::v_velo
-    sty player::joy
-    sty sprite::anim_tick
+    lda #$0
+    sta sprite::h_velo
+    sta sprite::v_velo
+    sta player::joy
+    sta sprite::anim_tick
 
     ;; nice and hacky right now
     ;; at some point this will hold some sensible structure
@@ -268,6 +269,8 @@ h_move:
     bmi h_move_push_left ; we're pushing left on direction pad
 
     ;; we're pushing right
+    lda #stance_dir::right
+    sta player::stance_dir
     lda sprite::h_velo
     bmi h_move_push_right_move_left
     ;; we push right and we move right
@@ -289,6 +292,8 @@ h_move_push_right_move_left:
     ;;   we can't be hitting max velo
     ;; - if velo is negative, we invert, and compare to H_MAX_VELO
 h_move_push_left:
+    lda #stance_dir::left
+    sta player::stance_dir
     lda sprite::h_velo
     beq h_move_push_left_move_left
     bpl h_move_push_left_move_right
@@ -520,62 +525,128 @@ player_coll_end_callback_end:
     rts
 
 
+;; ----------------
+;; sprite animation
+
+;; To not have to deal with an explosion of animations,
+;; we're using two sprites to animate different types of things.
+;; The upper sprite animates the shooting direction.
+;; The lower sprite animates movement.
+
+
+.a16
+.i16
+;; Y holds OAM shadow mem position of third player byte,
+;; so the actual sprite address
+animate_player_shoot_dir:
+    lda sprite::face_dir
+    lsr
+    clc
+    adc #PLAYER_OAM_SHOOT_DIR_BASE
+    A8
+    sta OAM_MIRROR, y
+    A16
+    rts
+
+
+.a16
+.i16
+;; Y holds OAM shadow mem position of third player byte,
+;; so the actual sprite address
+;;
+;; First we need to know what move state we're in.
+;; Currently we only have animation for running,
+;; For the other states we just use the first
+;; frame of the running state.
+animate_player_movement:
+    lda sprite::move_state
+    cmp #move_state::run
+    bne animate_player_movement_other
+    lda sprite::anim_tick
+    rshift 3
+    and #$3
+    ldx player::stance_dir
+    bne animate_player_movement_set_sprite
+    clc
+    adc #$4
+    bra animate_player_movement_set_sprite
+animate_player_movement_other:
+    lda #$1
+    ldx player::stance_dir
+    bne animate_player_movement_set_sprite
+    clc
+    adc #$4
+animate_player_movement_set_sprite:
+    clc
+    adc #PLAYER_OAM_RUN_ANIM_BASE
+    A8
+    sta OAM_MIRROR, y
+    A16
+    rts
+
+
 .a16
 .i16
 finalize_players:
-    ;; for shame, make this more fancy
-
+    ldx #$0
+    ldy #PLAYER_OAM_OFFSET
+    phx
+finalize_player_loop:
+    lda .loword(player_table), x
+    tcd
     ;; we now know x and y won't change anymore, so lock them into x/y_pos
     ;; also write them to the OAM mirror
-    lda p1 + sprite::x_new
-    sta p1 + sprite::x_pos
+    ;; and we figure out what graphic the sprites should get
+    ;;
+    ;; first the top sprite - nuzzle direction
+    lda sprite::x_new
+    sta sprite::x_pos
     rshift 4
+    sta .loword(W0)
     A8
-    sta OAM_MIRROR
+    sta OAM_MIRROR, y
     A16
-    lda p1 + sprite::y_new
-    sta p1 + sprite::y_pos
+    iny
+    lda sprite::y_new
+    sta sprite::y_pos
     rshift 4
+    sta .loword(W1)
     A8
-    sta OAM_MIRROR + 1
-
+    sta OAM_MIRROR, y
     A16
-    lda p2 + sprite::x_new
-    sta p2 + sprite::x_pos
-    rshift 4
+    ;; sprite animation logic here
+    ;; which will deal with the two remaining OAM bytes
+    iny
+    jsr animate_player_shoot_dir
+    iny
+    iny
+    ;; now bottom sprite - movement
+    lda .loword(W0)
     A8
-    sta OAM_MIRROR + 4
+    sta OAM_MIRROR, y
     A16
-    lda p2 + sprite::y_new
-    sta p2 + sprite::y_pos
-    rshift 4
+    iny
+    lda .loword(W1)
+    clc
+    adc #$8
     A8
-    sta OAM_MIRROR + 5
-
+    sta OAM_MIRROR, y
     A16
-    lda p3 + sprite::x_new
-    sta p3 + sprite::x_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR + 8
-    A16
-    lda p3 + sprite::y_new
-    sta p3 + sprite::y_pos
-    rshift 4
-    A8
-    sta OAM_MIRROR + 9
-    A16
-    ; lda p4 + sprite::x_new
-    ; sta p4 + sprite::x_pos
-    ; rshift 4
-    ; A8
-    ; sta OAM_MIRROR + $c
-    ; A16
-    ; lda p4 + sprite::y_new
-    ; sta p4 + sprite::y_pos
-    ; rshift 4
-    ; A8
-    ; sta OAM_MIRROR + $d
+    iny
+    jsr animate_player_movement
+    iny
+    iny
+    ;; increment the anim tick, after all uses
+    inc sprite::anim_tick
+    plx
+    inx
+    inx
+    phx
+    cpx #PLAYER_TABLE_I
+    bne finalize_player_loop
+    plx
+    lda #$0
+    tcd
     rts
 
 set_player_direction:
@@ -700,12 +771,12 @@ init_bullets:
     ldx #BULLET_X_POS_INIT
     stx .loword(W0)
     ldx #$0
-    ldy #$12
+    ldy #(BULLET_OAM_OFFSET + $2)
 init_bullets_loop:
     lda .loword(bullet_table), x
     tcd
 
-    lda #$04                ; tile offset of second sprite
+    lda #BULLET_SPRITE_OFFSET
     sta OAM_MIRROR, y
     iny
     lda #$20                ; no flip, prio 2, palette 0
@@ -847,7 +918,7 @@ bullet_coll_end_callback_end:
 finalize_bullets:
     ;; bullets
     ldx #$0
-    ldy #$10;; here's where we track where in OAM we need to put vals
+    ldy #BULLET_OAM_OFFSET
 bullets_to_oam_loop:
     lda .loword(bullet_table), x
     tcd
@@ -1627,6 +1698,11 @@ bullet_fire_top_left:
     eor #$ffff
     inc
     sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sta sprite::y_new
     rts
 
 
@@ -1639,6 +1715,13 @@ bullet_fire_bottom_left:
     eor #$ffff
     inc
     sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sec
+    sbc #BULLET_SHOOT_DOWN_Y_ADJUST
+    sta sprite::y_new
     rts
 
 bullet_fire_top_right:
@@ -1648,6 +1731,11 @@ bullet_fire_top_right:
     sta sprite::v_velo
     lda #(BULLET_H_VELO)
     sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sta sprite::y_new
     rts
 
 bullet_fire_bottom_right:
@@ -1655,6 +1743,13 @@ bullet_fire_bottom_right:
     sta sprite::v_velo
     lda #(BULLET_H_VELO)
     sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sec
+    sbc #BULLET_SHOOT_DOWN_Y_ADJUST
+    sta sprite::y_new
     rts
 
 bullet_fire_left:
@@ -1664,6 +1759,13 @@ bullet_fire_left:
     eor #$ffff
     inc
     sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sec
+    sbc #BULLET_SHOOT_SIDE_Y_ADJUST
+    sta sprite::y_new
     rts
 
 bullet_fire_top:
@@ -1673,6 +1775,11 @@ bullet_fire_top:
     sta sprite::v_velo
     lda #$0
     sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sta sprite::y_new
     rts
 
 bullet_fire_bottom:
@@ -1680,6 +1787,11 @@ bullet_fire_bottom:
     sta sprite::v_velo
     lda #$0
     sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sta sprite::y_new
     rts
 
 bullet_fire_right:
@@ -1687,6 +1799,13 @@ bullet_fire_right:
     sta sprite::v_velo
     lda #(BULLET_H_VELO)
     sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sec
+    sbc #BULLET_SHOOT_SIDE_Y_ADJUST
+    sta sprite::y_new
     rts
 
 
@@ -1727,11 +1846,11 @@ actions_player_loop:
     ;; this one is already in x, but we'll rewrite this
     ;; and I'll have forgotten about this then
     ldx sprite::face_dir
+    stx .loword(W3)
 
     ;; switch dp to bullet
     lda player::bullets
     tcd
-    jsr (.loword(bullet_fire_direction_table), x)
 
     lda .loword(W0)
     ldy #point::x_off
@@ -1740,12 +1859,15 @@ actions_player_loop:
     ;; adc #$10 ;; do we need to add 1 pixel?
     ;; on one hand this way it can't intersect w us when shooting
     ;; on the other hand, it might mess up wall collisions
-    sta sprite::x_new
+    sta .loword(W0)
 
     lda .loword(W1)
     sec
     sbc (sprite::bbox_fine)
-    sta sprite::y_new
+    sta .loword(W1)
+
+    ldx .loword(W3)
+    jsr (.loword(bullet_fire_direction_table), x)
 
     lda #bullet_state::fly
     sta sprite::move_state
@@ -1914,11 +2036,6 @@ finalise:
     jsr finalize_bullets
     rts
 
-.a16
-.i16
-update_sprites:
-    rts
-
 .a8
 .i16
 game_loop:
@@ -1932,7 +2049,6 @@ game_loop:
     jsr handle_movement
     jsr handle_sprite_bumps
     jsr handle_actions
-    jsr update_sprites
     jsr finalise
     A8
     jmp game_loop

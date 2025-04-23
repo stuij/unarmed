@@ -65,6 +65,9 @@ VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
 ;; double the amount of actual players, as we're iterating over words
 ;; pointing to the player structs
 PLAYER_TABLE_I = $6
+PLAYER_OAM_OFFSET = $0
+PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
+PLAYER_OAM_RUN_ANIM_BASE = ($0 + ($1 * $10))
 
 ;; move state of player, potential other things
 H_VELO_INC = $1 ; 1 subpixel
@@ -104,20 +107,23 @@ V_VELO_DOWN_MAX = $40
     middle_right  .tag point ; 18
 .endstruct
 
+.struct stance_dir
+    left  .word
+    right .word
+.endstruct
 
 .struct player
     sprite              .tag sprite
-    bbox_ledge_lookup   .word ; 1a
-    joy                 .word ; 1c - last frame buttons
-    joy_trigger         .word ; 1e - only buttons that weren't pressed last frame
-    joy_held            .word ; 20 - buttons pressed this frame and last frame
-    joy_trigger_held    .word ; 22 - both new and held buttons
-    h_tribool           .word ; 24
-    v_tribool           .word ; 26
-    bullets             .word ; 28
-    ;; these are just padding to more easily see the
-    ;; values of the individual players in the debugger
-    p1                  .word ; 2a
+    bbox_ledge_lookup   .word ; 24
+    joy                 .word ; 26 - last frame buttons
+    joy_trigger         .word ; 28 - only buttons that weren't pressed last frame
+    joy_held            .word ; 2a - buttons pressed this frame and last frame
+    joy_trigger_held    .word ; 2c - both new and held buttons
+    h_tribool           .word ; 2e
+    v_tribool           .word ; 30
+    bullets             .word ; 32
+    stance_dir          .word ; 34
+;   crouch              .word ; 36
 .endstruct
 
 
@@ -128,10 +134,20 @@ BULLET_OAM_DEFAULT = $00
 BULLET_X_POS_INIT = $150
 BULLET_Y_POS_INIT = $10
 
+BULLET_SHOOT_DOWN_Y_ADJUST = $60
+BULLET_SHOOT_SIDE_Y_ADJUST = $40
+
 BULLET_H_VELO = $77
 BULLET_V_VELO = $77
 
 BULLET_TABLE_I = $6
+
+BULLET_OAM_OFFSET = $20
+
+; sprite tile offset of bullet. first slot on x axis,
+; and on 7th row of y axis (rows are $10 wide)
+BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
+
 
 .enum bullet_state
     fly
