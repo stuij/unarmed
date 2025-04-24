@@ -1056,7 +1056,8 @@ init_game_data:
 ;; -----
 ;; input
 
-;; serial NES read joy routine
+;; kernel of this fn taken from serial NES read joy routine from
+;; nesdev wiki: https://www.nesdev.org/wiki/Controller_reading_code
 .a16
 .i16
 read_serial:
@@ -1065,15 +1066,22 @@ read_serial:
     A8
     lda #$7F
     sta WRIO
-    ; lda #$1
-    ; sta JOYOUT
-    ; lsr a
-    ; sta JOYOUT
+    ;; Still not sure if prodding $4016 is needed after automatic
+    ;; reading of p1-3, but snes9x, which on MacOS doesn't stay in
+    ;; multitap mode when starting a game will show jumping behavior
+    ;; so first bit is 1, if I don't tell controller to re-latch.
+    ;; Mesen is working fine for 4 players when set in multitap mode
+    ;; either way. Not having erratic behaviour on non-multitap mode
+    ;; alone justifies just doing the prodding.
+    lda #$1
+    sta JOYOUT
+    lsr
+    sta JOYOUT
 read_serial_loop:
     A8
     lda JOYSER1
     A16
-    lsr a        ; bit 0 -> Carry
+    lsr              ; bit 0 -> Carry
     rol .loword(W2)  ; Carry -> bit 0; bit 15 -> Carry
     bcc read_serial_loop
     A8
@@ -1082,6 +1090,7 @@ read_serial_loop:
     A16
     lda .loword(W2)
     rts
+
 
 .a8
 .i16
