@@ -182,10 +182,12 @@ player_init_loop:
     tax
     ldy player_start_coords, x
     sty sprite::x_pos
+    sty sprite::x_new
     inx
     inx
     ldy player_start_coords, x
     sty sprite::y_pos
+    sty sprite::y_new
     lsr
     tax
 
