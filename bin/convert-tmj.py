@@ -19,17 +19,22 @@ class IndexEntry:
         self.ty_name = ty_name
         self.valid = valid
 
+
 def read_file(path):
     with open(path) as f:
         return json.load(f)
 
-
-def encode_tile(top_byte, bottom_byte):
+def encode_word(top_byte, bottom_byte):
     return pack("BB", bottom_byte & 0xFF, top_byte)
 
-def encode_props(byte):
+def encode_tile(top_byte, bottom_byte):
+    return encode_word(top_byte, bottom_byte)
+
+def encode_byte(byte):
     return pack("B", byte)
 
+def encode_props(byte):
+    return encode_byte(byte)
 
 def choose_nr_to_props(nr, choose_table):
     entry = choose_table[nr]
@@ -83,17 +88,18 @@ def tiled_tile_to_tile(tile_idx, choose_table):
     return encode_tile(top_byte, bottom_byte)
 
 
-def encode_map(layer, choose_table, out):
+def encode_map(layer, choose_table):
     if layer['width'] != 32 or layer['height'] != 28:
         error("map isn't 32x28")
 
-    with open(out + ".map", "wb") as char:
-        with open(out + ".coll", "wb") as coll:
+    with open(layer['name'] + ".map", "wb") as tile_map:
+        with open(layer['name'] + ".coll", "wb") as coll:
             count = 0
+            # print("{}".format(count))
             for tile in layer['data']:
                 row, col = divmod(count, 32)
                 # print("row: {}, column: {}".format(row, col))
-                char.write(tiled_tile_to_tile(tile, choose_table))
+                tile_map.write(tiled_tile_to_tile(tile, choose_table))
                 coll.write(tiled_tile_to_props(tile, choose_table))
                 count += 1
 
@@ -121,9 +127,7 @@ def make_invalid_IndexEntry(choose_row, choose_row_idx, choose_idx):
     return IndexEntry(choose_row, choose_row_idx, choose_idx, -1, -1, "invalid", False)
 
 
-def tile_spec_to_index_lookup(file_name):
-    schema = tile_spec_from_file(file_name)
-
+def tile_spec_to_index_lookup(schema):
     choose_row = 0
     choose_row_idx = 0
     choose_idx = 0
@@ -136,13 +140,13 @@ def tile_spec_to_index_lookup(file_name):
         ty_name = row[0]
         tiles_in_row = row[1]
         props = prop_list_to_nr(row[2])
-        
+
         for _ in range(tiles_in_row):
             entry = IndexEntry(choose_row, choose_row_idx, choose_idx,
                                tile_idx, props, ty_name, True)
             index_table.append(entry)
             choose_table.append(entry)
-            # create choose_bg table binary items inline    
+            # create choose_bg table binary items inline
             choose_idx += 1
             choose_row_idx += 1
             tile_idx += 1
@@ -158,30 +162,56 @@ def tile_spec_to_index_lookup(file_name):
     return index_table, choose_table
 
 
-def schema_sanity_check(file_name):
-    index, choose = tile_spec_to_index_lookup(file_name)
+def schema_sanity_check(schema):
+    index, choose = tile_spec_to_index_lookup(schema)
     for i in choose:
         print("{}, {}, {}, {}, {}, {}, {}".format(i.choose_idx, i.choose_row, i.choose_row_idx, i.tile_idx, i.props, i.ty_name, i.valid))
 
     for i in index:
         print("{}, {}, {}, {}".format(i.choose_idx, i.tile_idx, i.props,  i.ty_name))
 
-choose_table_glb = []
 
-def main(tmj_in, spec_in, file_out):
+def encode_string(string, max_len, file):
+    str_len = len(string)
+    if str_len > max_len:
+        raise ValueError("string length {} higher than max {}"
+                           .format(str_len, length))
+    for char in string:
+        file.write(encode_byte(ord(char)))
 
+    for pad in range(max_len - str_len):
+        file.write(encode_byte(0))
+
+
+def encode_tile_select_bits(choose_table, schema):
+    with open("select_tile.map", "wb") as tile_map:
+        for item in choose_table:
+            tile_map.write(encode_tile(0, item.tile_idx if item.valid else 0))
+
+    with open("select_row_count.bin", "wb") as row_count:
+        row_count.write(encode_word(0, len(schema)))
+
+    with open("select_column_count.bin", "wb") as column_count:
+        for row in schema:
+            column_count.write(encode_word(0, row[1]))
+
+    with open("select_row_name.bin", "wb") as row_name:
+        for row in schema:
+            encode_string(row[0], 16, row_name)
+
+def main(tmj_in, spec_in):
     tmj = read_file(tmj_in)
-    index_table, choose_table = tile_spec_to_index_lookup(spec_in)
-    global choose_table_glb
-    choose_table_glb = choose_table
+    schema = tile_spec_from_file(spec_in)
+
+    index_table, choose_table = tile_spec_to_index_lookup(schema)
 
     for layer in tmj['layers']:
-        if layer['name'] == 'tilemap':
-            encode_map(layer, choose_table, file_out)
+        encode_map(layer, choose_table)
+
+    encode_tile_select_bits(choose_table, schema)
 
 
 if __name__ == "__main__":
     tmj_in = sys.argv[1]
     spec_in = sys.argv[2]
-    file_out = sys.argv[3]
-    main(tmj_in, spec_in, file_out)
+    main(tmj_in, spec_in)
