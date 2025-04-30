@@ -79,4 +79,7 @@ b31: .tag bullet
 
 OAM_MIRROR: .res $220
 
+CURRENT_COLL_MAP: .res $380
+CURRENT_TILE_MAP: .res $700
+
 .endif ; DATA_INC

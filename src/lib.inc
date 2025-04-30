@@ -73,14 +73,14 @@ spinloop_handler:
 ;   - a: src bank
 ;   - x: src loword
 ;   - y: dst VRAM base address
-;   - stack: size
+;   - W0: size
 .a8
 .i16
 dma_to_vram:
     sta A1B0 ; set bank of source address
     stx A1T0L ; set loword of source address
     sty VMADDL ; set VRAM base address
-    ldy <W0 ; get size from zero page word reg 1
+    ldy <W0 ; get size from zero page word
     sty DAS0L ; set DMA byte counter
 
     lda #<VMDATAL
@@ -95,20 +95,44 @@ dma_to_vram:
 ; arguments:
 ;   - a: src bank
 ;   - x: src loword
-;   - y: dst VRAM base address
-;   - stack: size
+;   - y: dst palette base address
+;   - W0: size
 .a8
 .i16
 dma_to_palette:
     sta A1B0 ; set bank of source address
     stx A1T0L ; set loword of source address
     tya ; CGADD is a byte
-    sta CGADD ; set VRAM base address
-    ldy <W0 ; get size from zero page word reg 1
+    sta CGADD ; set palette base address
+    ldy <W0 ; get size from zero page word
     sty DAS0L ; set DMA byte counter
 
     lda #<CGDATA
-    sta BBAD0 ; so set DMA destination to VMDATAL
+    sta BBAD0 ; so set DMA destination to CGDATA
+    lda #00
+    sta DMAP0 ; transfer mode, 1 register, 1 write
+    lda #1
+    sta MDMAEN ; start dma, channel 0
+    rts
+
+; dma_to_wram
+; arguments:
+;   - a: src bank
+;   - x: src loword
+;   - B1L: dst WRAM bank address
+;   - y: dst WRAM loword address
+;   - W0: size
+dma_to_wram:
+    sta A1B0 ; set bank of source address
+    stx A1T0L ; set loword of source address
+    lda <B1L
+    sta WMADDH ; set bank of wram dest addr
+    sty WMADDL ; set loword of wram dest addr
+    ldy <W0 ; get size from zero page word reg 1
+    sty DAS0L ; set DMA byte counter
+
+    lda #<WMDATA
+    sta BBAD0 ; so set DMA destination to WMDATA
     lda #00
     sta DMAP0 ; transfer mode, 1 register, 1 write
     lda #1

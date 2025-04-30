@@ -469,7 +469,7 @@ player_point_no_call_ledge_check:
     adc #$20 ;; set to tile under point
     tax
     A8
-    lda town_coll, x
+    lda CURRENT_COLL_MAP, x
     A16
     beq player_point_no_call_end ; not a collision, so we move on
     ;; it's a collision, so we register it
@@ -972,6 +972,16 @@ init_binary_data:
     ldy #VRAM_MAP_BASE
     jsr dma_to_vram
 
+    ; load collision map to wram
+    lda #^CURRENT_COLL_MAP
+    sta <B1L
+    ldy #(town_coll_end - town_coll)
+    sty <W0
+    lda #^town_coll
+    ldx #.loword(town_coll)
+    ldy #.loword(CURRENT_COLL_MAP)
+    jsr dma_to_wram
+
     ; load tiles
     ldy #(town_tiles_end - town_tiles) ; size of transfer
     sty <W0
@@ -1128,7 +1138,7 @@ joy_set_player_vals:
     ldx .loword(W1)
     inx
     inx
-  : cpx #PLAYER_TABLE_I
+    cpx #PLAYER_TABLE_I
     bne joy_loop
     lda #$0
     tcd
@@ -1310,7 +1320,7 @@ point_x_calc:
     sta COLL_STACK_POINT_TILE_OFF, s
     tax
     A8
-    lda town_coll, x           ; check collision map for point
+    lda CURRENT_COLL_MAP, x           ; check collision map for point
     A16
     bne collision              ; if not zero, collision
     jmp coll_no_coll_for_point ; otherwise, do no collision things
@@ -1449,7 +1459,7 @@ coll_left_up:
     adc #$1
     tax
     A8
-    lda town_coll, x
+    lda CURRENT_COLL_MAP, x
     A16
     bne :+
     jmp coll_snap_to_right
@@ -1458,7 +1468,7 @@ coll_left_up:
     adc #$20
     tax
     A8
-    lda town_coll, x
+    lda CURRENT_COLL_MAP, x
     A16
     bne :+
     jmp coll_snap_to_bottom
@@ -1472,7 +1482,7 @@ coll_left_down:
     adc #$1
     tax
     A8
-    lda town_coll, x
+    lda CURRENT_COLL_MAP, x
     A16
     beq coll_snap_to_right
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -1480,7 +1490,7 @@ coll_left_down:
     sbc #$20
     tax
     A8
-    lda town_coll, x
+    lda CURRENT_COLL_MAP, x
     A16
     beq coll_snap_to_top
     jsr snap_to_right
@@ -1493,7 +1503,7 @@ coll_right_up:
     sbc #$1
     tax
     A8
-    lda town_coll, x
+    lda CURRENT_COLL_MAP, x
     A16
     beq coll_snap_to_left
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -1501,7 +1511,7 @@ coll_right_up:
     adc #$20
     tax
     A8
-    lda town_coll, x
+    lda CURRENT_COLL_MAP, x
     A16
     beq coll_snap_to_bottom
     jsr snap_to_left
@@ -1522,7 +1532,7 @@ coll_right_down:
     sbc #$1
     tax
     A8
-    lda town_coll, x
+    lda CURRENT_COLL_MAP, x
     A16
     beq coll_snap_to_left
     ;; check top
@@ -1531,7 +1541,7 @@ coll_right_down:
     sbc #$20
     tax
     A8
-    lda town_coll, x
+    lda CURRENT_COLL_MAP, x
     A16
     beq coll_snap_to_top
     ; no space at left or up
