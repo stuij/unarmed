@@ -5,11 +5,18 @@ DEFINES_INC = 1
 ;; vram offsets
 VRAM_SPRITE_BASE = $2000
 VRAM_CHR_BASE = $6000
-VRAM_MAP_BASE = $8800 ;; $800 alignment == 256x256 (32x32x2) map
+VRAM_MAP_BG1_BASE = $9000 ;; $800 alignment == 256x256 pixels,
+VRAM_MAP_BG2_BASE = $9800 ;; aka (32x32x2 bytes) map
+
+;; -----------
+;; tile select defines
+
+SELECT_SCREEN_X_COORDS = $E0
+SELECT_SCREEN_Y_COORDS = $C4
 
 
 ;;------------
-;; base struct
+;; sprite base struct
 
 .struct sprite_vtable
     collision_end_callback       .addr

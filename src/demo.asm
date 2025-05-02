@@ -969,7 +969,7 @@ init_binary_data:
     sty <W0
     lda #^town_map
     ldx #.loword(town_map)
-    ldy #VRAM_MAP_BASE
+    ldy #VRAM_MAP_BG2_BASE
     jsr dma_to_vram
 
     ; load collision map to wram
@@ -1010,6 +1010,32 @@ init_binary_data:
     ldx #.loword(demo_sprite_tiles)
     ldy #VRAM_SPRITE_BASE
     jsr dma_to_vram
+
+    jsr draw_select_screen
+    rts
+
+.a8
+.i16
+draw_select_screen:
+    ldy #(select_tile_map_end - select_tile_map)
+    sty <W0
+    lda #^select_tile_map
+    ldx #.loword(select_tile_map)
+    ldy #VRAM_MAP_BG1_BASE
+    jsr dma_to_vram
+
+    lda #SELECT_SCREEN_X_COORDS
+    ;; this is one of those latching regs
+    sta BG1HOFS
+    ;; we're effectively lobbing off the top two bits of the offset..
+    stz BG1HOFS
+
+    lda #SELECT_SCREEN_Y_COORDS
+    ;; this is one of those latching regs
+    sta BG1VOFS
+    ;; we're effectively lobbing off the top two bits of the offset..
+    stz BG1VOFS
+
     rts
 
 
@@ -1046,12 +1072,16 @@ init_game_data:
     ;; set up bg registers
     lda #1 ; mode 1
     sta BGMODE
-    lda #((VRAM_MAP_BASE >> 10) << 2)
-    sta BG2SC ; set bg 2 tile map
-    ; set bg 2 char vram base addr (implicitly setting bg1 to 0, but we don't
-    ; care)
-    lda #((VRAM_CHR_BASE >> 12) << 4)
+
+    ; set bg 1 and bg 2 char vram base addr. both the same for now.
+    lda #((VRAM_CHR_BASE >> 12) << 4 | (VRAM_CHR_BASE >> 12))
     sta BG12NBA
+
+    lda #((VRAM_MAP_BG1_BASE >> 10) << 2)
+    sta BG1SC ; set bg 1 tile map
+
+    lda #((VRAM_MAP_BG2_BASE >> 10) << 2)
+    sta BG2SC ; set bg 2 tile map
 
     lda #$80
     sta VMAIN
@@ -2086,6 +2116,18 @@ finalise:
     jsr finalize_bullets
     rts
 
+.a16
+.i16
+handle_fight:
+    jsr handle_movement
+    jsr handle_sprite_bumps
+    jsr handle_actions
+    jsr finalise
+    rts
+
+handle_map:
+    rts
+
 .a8
 .i16
 game_loop:
@@ -2095,11 +2137,10 @@ game_loop:
 
     ; then do the rest
     jsr read_input
+
     A16
-    jsr handle_movement
-    jsr handle_sprite_bumps
-    jsr handle_actions
-    jsr finalise
+    jsr handle_map
+    ;; jsr handle_fight
     A8
     jmp game_loop
 
@@ -2117,8 +2158,8 @@ main:
     jsr load_song
 
 
-    ; turn on BG2
-    lda #$12
+    ; turn on BG1, BG2 and sprites
+    lda #$13
     sta TM
 
     ; Maximum screen brightness
