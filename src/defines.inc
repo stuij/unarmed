@@ -8,12 +8,22 @@ VRAM_CHR_BASE = $6000
 VRAM_MAP_BG1_BASE = $9000 ;; $800 alignment == 256x256 pixels,
 VRAM_MAP_BG2_BASE = $9800 ;; aka (32x32x2 bytes) map
 
-;; -----------
-;; tile select defines
 
-SELECT_SCREEN_X_COORDS = $E0
-SELECT_SCREEN_Y_COORDS = $C4
+; OAM offsets
 
+.struct oam_entry
+    x_pos       .byte
+    y_pos       .byte
+    tile_pos    .byte
+    attrs       .byte
+.endstruct
+
+
+OAM_PLAYER_SIZE     = (4 * 4)
+OAM_BULLET_SIZE     = (4 * 32)
+OAM_MENU_CARET_SIZE = (1 * 32)
+
+OAM_MENU_CARET_OFFSET = (OAM_MIRROR + OAM_PLAYER_SIZE + OAM_BULLET_SIZE)
 
 ;;------------
 ;; sprite base struct
@@ -169,6 +179,47 @@ BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
 .struct bullet
     sprite .tag sprite
+.endstruct
+
+
+;; -----
+;; menus
+
+.struct menu
+    cursor_x_pos    .word
+    cursor_y_pos    .word
+    no_rows         .word
+    row_table       .addr
+    curr_row        .word
+    curr_column     .word
+    player          .addr
+    callback        .addr
+    anim_tick       .word
+.endstruct
+
+
+;; tile menu
+.struct select_tile_menu
+    menu  .tag menu
+    tile_type_names .addr
+.endstruct
+
+
+SELECT_SCREEN_X_COORDS = $E0
+SELECT_SCREEN_X_TABLE_OFFSET = $27
+SELECT_SCREEN_Y_COORDS = $ce
+SELECT_SCREEN_Y_TABLE_OFFSET = $38
+
+;; ----------------
+;; global game data
+
+SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
+
+.struct game_data
+    no_players      .word
+    curr_map        .word
+    curr_map_dirty  .word
+    game_mode       .word
 .endstruct
 
 .endif ; DEFINES_INC

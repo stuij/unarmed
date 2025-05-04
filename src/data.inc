@@ -39,6 +39,8 @@ p2: .tag player
 p3: .tag player
 p4: .tag player
 
+select_tile_menu: .tag select_tile_menu
+
 ;; bullet data
 ;; start at 0 because we're not insane. player start kinda forced by
 ;; snes naming

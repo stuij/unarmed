@@ -949,6 +949,49 @@ bullets_to_oam_loop:
     rts
 
 
+;; -----------
+;; select menu
+
+init_select_menu:
+    lda #select_tile_menu
+    tcd
+    lda #SELECT_SCREEN_X_TABLE_OFFSET
+    sta menu::cursor_x_pos
+    lda #SELECT_SCREEN_Y_TABLE_OFFSET
+    sta menu::cursor_y_pos
+    lda #$0
+    sta menu::anim_tick
+    lda select_row_count
+    sta menu::no_rows
+    ;; this doesn't work because these are out of range for load
+    ;; and addresses are 3 wide to access. will get to them later
+    ; lda #select_column_count
+    ; sta menu::row_table
+    ; lda #select_row_name
+    ; sta select_tile_menu::tile_type_names
+
+    lda menu::cursor_x_pos
+    sta OAM_MENU_CARET_OFFSET + oam_entry::x_pos
+    lda menu::cursor_y_pos
+    sta OAM_MENU_CARET_OFFSET + oam_entry::y_pos
+
+    lda #SELECT_CARET_SPRITE_OFFSET
+    sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
+    lda #$30                ; no flip, prio 3, palette 0
+    sta OAM_MENU_CARET_OFFSET + oam_entry::attrs
+
+    ;; set sprite to 16x16px
+    ;; I think some macrology is needed to set the right bits
+    ;; given attributes and tile nr. Hope the in-assembler
+    ;; language is expressive enough for that.
+    lda #$2
+    sta OAM_MIRROR + $209
+
+    lda #$0
+    tcd
+    rts
+
+
 ;; ----
 ;; init
 
@@ -1067,6 +1110,7 @@ init_game_data:
     A16
     jsr init_players
     jsr init_bullets
+    jsr init_select_menu
 
     A8
     ;; set up bg registers
