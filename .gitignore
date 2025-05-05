@@ -1,7 +1,7 @@
 *.asm
 *.dbg
 *.o
-*.smc
+*.sfc
 .DS_Store
 build
 terrific-audio-driver

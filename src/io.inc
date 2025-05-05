@@ -1651,15 +1651,7 @@ HDMAEN = $420C
 ;
 ; For example: pattern 1 allows a DMA copy to VRAM, which requires writing to two
 ; alternating addresses.
-DMAP0 = $4300
-DMAP1 = $4310
-DMAP2 = $4320
-DMAP3 = $4330
-DMAP4 = $4340
-DMAP5 = $4350
-DMAP6 = $4360
-DMAP7 = $4370
-
+;
 ; DMA transfer patterns
 ; ---------------------
 ;
@@ -1675,6 +1667,14 @@ DMAP7 = $4370
 ;
 ; A fixed address adjust mode (A) can be used to fill the DMA target with a single
 ; repeated byte of data.
+DMAP0 = $4300
+DMAP1 = $4310
+DMAP2 = $4320
+DMAP3 = $4330
+DMAP4 = $4340
+DMAP5 = $4350
+DMAP6 = $4360
+DMAP7 = $4370
 
 ; BBADn - B-bus address ($43n1 read/write) (n = 0..7)
 ;

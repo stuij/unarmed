@@ -4,6 +4,7 @@ set( CMAKE_CA65816_COMPILE_OBJECT
                               <FLAGS> \
                               -s \
                               -g \
+                              -l listing.lst \
                               -o <OBJECT> \
                               <SOURCE>" 
 )

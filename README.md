@@ -32,6 +32,8 @@ Tips so far:
   - [nocash SNES specs](https://problemkaputt.de/fullsnes.htm)
   - [opcode summaries](https://undisbeliever.net/snesdev/65816-opcodes.html)
   - [Programming the 65816](https://www.amazon.com/Programming-65816-Including-65C02-65802/dp/0893037893)
+  - [stack article](http://6502org.wikidot.com/software-65816-parameters-on-stack) on 6502.org wiki
+  - [65816S programmer manual](https://www.westerndesigncenter.com/wdc/documentation/w65c816s.pdf)
 
 
 ## acknowledgements (besides above)
