@@ -223,21 +223,17 @@ def tile_spec_to_index_lookup(schema):
     choose_table = []
     select_table = []
 
-    opaque_tile = 0 # we know the index of these 2
-    black_tile = 1
-    select_opaque_entry = IndexEntry(-1, -1, -1, opaque_tile, 0, "select_opaque", False, False, True)
-    select_inner_entry = IndexEntry(-1, -1, -1, black_tile, 0, "select_border", False, False, True)
-    select_table_width = 24
-
-    total_schema_tiles =  0
+    total_schema_tiles = 0
     for row in schema:
         total_schema_tiles += row[1]
 
-    border_tile = total_schema_tiles
-    corner_tile = total_schema_tiles + 1
+    print(total_schema_tiles)
 
-    select_border_entry = IndexEntry(-1, -1, -1, opaque_tile, 0, "select_border", False, False, True)
-
+    opaque_tile = 0 # we know the index of these 2
+    inner_tile = total_schema_tiles + 3
+    select_opaque_entry = IndexEntry(-1, -1, -1, opaque_tile, 0, "select_opaque", False, False, True)
+    select_inner_entry = IndexEntry(-1, -1, -1, inner_tile, 0, "select_inner", False, False, True)
+    select_table_width = 24
 
     select_table.extend(make_diag_row_entries(select_table_width, True, total_schema_tiles))
     for _ in range(32 - select_table_width):
