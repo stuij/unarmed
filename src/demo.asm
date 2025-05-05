@@ -952,6 +952,10 @@ bullets_to_oam_loop:
 ;; -----------
 ;; select menu
 
+select_menu_callback:
+    rts
+
+
 init_select_menu:
     lda #select_tile_menu
     tcd
@@ -959,21 +963,26 @@ init_select_menu:
     sta menu::cursor_x_pos
     lda #SELECT_SCREEN_Y_TABLE_OFFSET
     sta menu::cursor_y_pos
-    lda #$0
-    sta menu::anim_tick
+
     lda select_row_count
     sta menu::no_rows
-    ;; this doesn't work because these are out of range for load
-    ;; and addresses are 3 wide to access. will get to them later
-    ; lda #select_column_count
-    ; sta menu::row_table
-    ; lda #select_row_name
-    ; sta select_tile_menu::tile_type_names
 
-    lda menu::cursor_x_pos
-    sta OAM_MENU_CARET_OFFSET + oam_entry::x_pos
-    lda menu::cursor_y_pos
-    sta OAM_MENU_CARET_OFFSET + oam_entry::y_pos
+    lda #.loword(select_column_count)
+    sta menu::row_table
+
+    lda #$0
+    sta menu::curr_row
+    sta menu::curr_column
+    sta menu::timeout_tick
+    sta menu::just_moved
+
+    lda #.loword(select_menu_callback)
+    sta menu::callback
+
+    lda #.loword(select_row_name)
+    sta select_tile_menu::tile_type_names
+
+    jsr set_menu_caret_position
 
     lda #SELECT_CARET_SPRITE_OFFSET
     sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
@@ -986,6 +995,10 @@ init_select_menu:
     ;; language is expressive enough for that.
     lda #$2
     sta OAM_MIRROR + $209
+
+    ;; for now by default use player 1 (for who's in control)
+    lda player_table
+    sta menu::player
 
     lda #$0
     tcd
@@ -1111,6 +1124,14 @@ init_game_data:
     jsr init_players
     jsr init_bullets
     jsr init_select_menu
+
+    lda #.loword(handle_current_menu)
+    ;; lda handle_fight
+    sta game_data + game_data::game_handler
+
+    lda #.loword(select_tile_menu)
+    sta game_data + game_data::curr_menu
+
 
     A8
     ;; set up bg registers
@@ -2155,7 +2176,7 @@ update_vram:
 
 .a16
 .i16
-finalise:
+finalize_fight:
     jsr finalize_players
     jsr finalize_bullets
     rts
@@ -2166,11 +2187,116 @@ handle_fight:
     jsr handle_movement
     jsr handle_sprite_bumps
     jsr handle_actions
-    jsr finalise
+    jsr finalize_fight
     rts
 
-handle_map:
+
+;; ----
+;; menu
+
+set_menu_caret_position:
+    A8
+    lda menu::cursor_x_pos
+    sta OAM_MENU_CARET_OFFSET + oam_entry::x_pos
+    lda menu::cursor_y_pos
+    sta OAM_MENU_CARET_OFFSET + oam_entry::y_pos
+    A16
     rts
+
+
+;; both check if we can move cursor, and if not, do internal
+;; housekeeping on cursor movement
+menu_cursor_just_moved:
+    lda menu::just_moved
+    beq menu_check_move_cursor_ret
+
+    lda menu::timeout_tick
+    cmp #MENU_MOVE_TIMEOUT
+    bcc menu_move_cursor_still_in_timeout ; tick lower than timeout
+    stz menu::timeout_tick
+    stz menu::just_moved
+    rep #$2
+    bra menu_check_move_cursor_ret
+menu_move_cursor_still_in_timeout:
+    inc menu::timeout_tick
+    rep #$2
+menu_check_move_cursor_ret:
+    rts
+
+
+menu_handle_row:
+    ldy #player::h_tribool
+    lda (menu::player), y
+    beq menu_handle_row_done ;; no left/right button pressed
+    bmi menu_handle_row_left
+    ;; handling right
+    lda menu::curr_column
+    inc a ;; we're comparing against total columns in this row
+          ;; which is counted from 1
+    ldy menu::curr_row
+    cmp (menu::row_table), y
+    bpl menu_handle_row_done
+    ;; we can move the caret right, so we do
+    inc menu::curr_column
+    lda menu::cursor_x_pos
+    clc
+    adc #$8
+    sta menu::cursor_x_pos
+    inc menu::just_moved
+    stz menu::timeout_tick
+    bra menu_handle_row_done
+menu_handle_row_left:
+    ;; handling left
+    lda menu::curr_column
+    beq menu_handle_row_done ;; if zero, we can't move further right
+    ;; but else, we move left
+    dec menu::curr_column
+    lda menu::cursor_x_pos
+    sec
+    sbc #$8
+    sta menu::cursor_x_pos
+    inc menu::just_moved
+    stz menu::timeout_tick
+menu_handle_row_done:
+    rts
+
+
+menu_handle_column:
+    rts
+
+
+;; A - map base
+handle_menu:
+    tcd
+
+    jsr menu_cursor_just_moved
+    bne handle_menu_done
+
+    jsr menu_handle_row
+    jsr menu_handle_column
+    jsr set_menu_caret_position
+
+    ;; no direct page indirect jumping, so we need to
+    ;; create an absolute address by adding the D register, which
+    ;; currently points to the current menu address, to the callback
+    ;; offset
+    tdc
+    clc
+    adc #menu::callback
+    tax
+    jsr (0, x)
+
+handle_menu_done:
+    lda #0
+    tcd
+    rts
+
+
+handle_current_menu:
+    lda game_data + game_data::curr_menu
+    jsr handle_menu
+    rts
+
 
 .a8
 .i16
@@ -2183,8 +2309,8 @@ game_loop:
     jsr read_input
 
     A16
-    jsr handle_map
-    ;; jsr handle_fight
+    ldx #$0
+    jsr (game_data + game_data::game_handler, x)
     A8
     jmp game_loop
 

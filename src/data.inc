@@ -41,6 +41,8 @@ p4: .tag player
 
 select_tile_menu: .tag select_tile_menu
 
+game_data: .tag game_data
+
 ;; bullet data
 ;; start at 0 because we're not insane. player start kinda forced by
 ;; snes naming

@@ -184,6 +184,12 @@ BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
 ;; -----
 ;; menus
+MENU_MOVE_TIMEOUT = 10
+
+.enum menus
+    select_tile = $0
+    stamp_tile = $2
+.endenum
 
 .struct menu
     cursor_x_pos    .word
@@ -194,7 +200,8 @@ BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
     curr_column     .word
     player          .addr
     callback        .addr
-    anim_tick       .word
+    timeout_tick    .word
+    just_moved      .word
 .endstruct
 
 
@@ -219,7 +226,8 @@ SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
     no_players      .word
     curr_map        .word
     curr_map_dirty  .word
-    game_mode       .word
+    game_handler    .word
+    curr_menu       .word
 .endstruct
 
 .endif ; DEFINES_INC
