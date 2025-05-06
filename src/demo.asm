@@ -961,8 +961,10 @@ init_select_menu:
     tcd
     lda #SELECT_SCREEN_X_TABLE_OFFSET
     sta menu::cursor_x_pos
+    sta menu::cursor_x_pos_origin
     lda #SELECT_SCREEN_Y_TABLE_OFFSET
     sta menu::cursor_y_pos
+    sta menu::cursor_y_pos_origin
 
     lda select_row_count
     sta menu::no_rows
@@ -2264,6 +2266,55 @@ menu_handle_row_done:
 
 
 menu_handle_column:
+    ldy #player::v_tribool
+    lda (menu::player), y
+    beq menu_handle_column_done ;; no left/right button pressed
+    bmi menu_handle_column_up
+    ;; handle column down
+    lda menu::curr_row
+    inc a ;; we're comparing against total no of rows
+    cmp menu::no_rows
+    bpl menu_handle_column_done
+    inc menu::curr_row
+    lda menu::cursor_y_pos
+    clc
+    adc #$8
+    sta menu::cursor_y_pos
+    inc menu::just_moved
+    stz menu::timeout_tick
+    bra menu_handle_column_clamp_column
+menu_handle_column_up:
+    ;; handling up
+    lda menu::curr_row
+    beq menu_handle_row_done ;; if zero, we can't move further up
+    ;; but else, we move up
+    dec menu::curr_row
+    lda menu::cursor_y_pos
+    sec
+    sbc #$8
+    sta menu::cursor_y_pos
+    inc menu::just_moved
+    stz menu::timeout_tick
+menu_handle_column_clamp_column:
+    ;; for the new row we're now on, we need to check if we are past
+    ;; the bounds of the array, and if so, clamp to the lesser of the 2
+    lda menu::curr_row
+    asl
+    tay
+    lda (menu::row_table), y
+    dec ;; compare against 0-based array, so minus 1
+    cmp menu::curr_column
+    bpl menu_handle_column_done
+    sta menu::curr_column
+    ;; column times 8 + position of first row = new caret x position:
+    asl
+    asl
+    asl
+    clc
+    adc menu::cursor_x_pos_origin
+    sta menu::cursor_x_pos
+
+menu_handle_column_done:
     rts
 
 

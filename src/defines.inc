@@ -184,7 +184,7 @@ BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
 ;; -----
 ;; menus
-MENU_MOVE_TIMEOUT = 10
+MENU_MOVE_TIMEOUT = 8
 
 .enum menus
     select_tile = $0
@@ -192,16 +192,18 @@ MENU_MOVE_TIMEOUT = 10
 .endenum
 
 .struct menu
-    cursor_x_pos    .word
-    cursor_y_pos    .word
-    no_rows         .word
-    row_table       .addr
-    curr_row        .word
-    curr_column     .word
-    player          .addr
-    callback        .addr
-    timeout_tick    .word
-    just_moved      .word
+    cursor_x_pos_origin .word
+    cursor_y_pos_origin .word
+    cursor_x_pos        .word
+    cursor_y_pos        .word
+    no_rows             .word
+    row_table           .addr
+    curr_row            .word
+    curr_column         .word
+    player              .addr
+    callback            .addr
+    timeout_tick        .word
+    just_moved          .word
 .endstruct
 
 
