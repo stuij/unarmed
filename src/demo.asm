@@ -2230,10 +2230,12 @@ menu_handle_row:
     beq menu_handle_row_done ;; no left/right button pressed
     bmi menu_handle_row_left
     ;; handling right
+    lda menu::curr_row
+    asl
+    tay
     lda menu::curr_column
     inc a ;; we're comparing against total columns in this row
           ;; which is counted from 1
-    ldy menu::curr_row
     cmp (menu::row_table), y
     bpl menu_handle_row_done
     ;; we can move the caret right, so we do
