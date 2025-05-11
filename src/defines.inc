@@ -2,11 +2,14 @@
 DEFINES_INC = 1
 
 
-;; vram offsets
+;; vram things
 VRAM_SPRITE_BASE = $2000
 VRAM_CHR_BASE = $6000
 VRAM_MAP_BG1_BASE = $9000 ;; $800 alignment == 256x256 pixels,
 VRAM_MAP_BG2_BASE = $9800 ;; aka (32x32x2 bytes) map
+GAME_MAP_SIZE = $700
+COLL_MAP_SIZE = $380
+
 
 
 ; OAM offsets

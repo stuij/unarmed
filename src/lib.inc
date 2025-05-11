@@ -140,6 +140,19 @@ dma_to_wram:
     rts
 
 
+.a8
+.i16
+load_tilemap_to_vram:
+    ; load tile map from wram to vram
+    ldy #GAME_MAP_SIZE
+    sty <W0
+    lda #^CURRENT_TILE_MAP
+    ldx #.loword(CURRENT_TILE_MAP)
+    ldy #VRAM_MAP_BG2_BASE
+    jsr dma_to_vram
+    rts
+
+
 SpriteUpperEmpty:
 DMAZero:
 .word $0000

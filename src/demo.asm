@@ -1022,18 +1022,10 @@ init_binary_data:
     ldy #00000
     jsr dma_to_palette
 
-    ; load map
-    ldy #(town_map_end - town_map)
-    sty <W0
-    lda #^town_map
-    ldx #.loword(town_map)
-    ldy #VRAM_MAP_BG2_BASE
-    jsr dma_to_vram
-
     ; load collision map to wram
     lda #^CURRENT_COLL_MAP
     sta <B1L
-    ldy #(town_coll_end - town_coll)
+    ldy #COLL_MAP_SIZE
     sty <W0
     lda #^town_coll
     ldx #.loword(town_coll)
@@ -1047,6 +1039,27 @@ init_binary_data:
     ldx #.loword(town_tiles)
     ldy #VRAM_CHR_BASE
     jsr dma_to_vram
+
+
+    ;; this should soon be handled somewhere else
+
+    ; load tile map to wram
+    lda #^CURRENT_TILE_MAP
+    sta <B1L
+    ldy #GAME_MAP_SIZE
+    sty <W0
+    lda #^town_map
+    ldx #.loword(town_map)
+    ldy #.loword(CURRENT_TILE_MAP)
+    jsr dma_to_wram
+
+    jsr load_tilemap_to_vram
+    ; ldy #GAME_MAP_SIZE
+    ; sty <W0
+    ; lda #^CURRENT_TILE_MAP
+    ; ldx #.loword(CURRENT_TILE_MAP)
+    ; ldy #VRAM_MAP_BG2_BASE
+    ; jsr dma_to_vram
 
     ;; sprites
     ; set sprite base
@@ -1128,7 +1141,7 @@ init_game_data:
     jsr init_select_menu
 
     lda #.loword(handle_current_menu)
-    ;; lda handle_fight
+    ;; lda #.loword(handle_fight)
     sta game_data + game_data::game_handler
 
     lda #.loword(select_tile_menu)
