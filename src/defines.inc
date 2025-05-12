@@ -231,6 +231,7 @@ SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
     no_players      .word
     curr_map        .word
     curr_map_dirty  .word
+    fight_p         .word
     game_handler    .word
     curr_menu       .word
 .endstruct

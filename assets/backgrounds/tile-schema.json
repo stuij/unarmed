@@ -1,7 +1,7 @@
 { "schema" : [ 
         ["nothing", 3, ""],
         ["simple wall", 10, "w"],
-        ["bounce wall", 2, "wb"],
+        ["bounce wall", 6, "wb"],
         ["climb wall", 1, "wc"]
     ]
 }

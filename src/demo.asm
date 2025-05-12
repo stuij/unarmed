@@ -1082,7 +1082,6 @@ init_binary_data:
     ldy #VRAM_SPRITE_BASE
     jsr dma_to_vram
 
-    jsr draw_select_screen
     rts
 
 .a8
@@ -1140,13 +1139,15 @@ init_game_data:
     jsr init_bullets
     jsr init_select_menu
 
-    lda #.loword(handle_current_menu)
-    ;; lda #.loword(handle_fight)
+    ;; lda #.loword(handle_current_menu)
+    lda #.loword(handle_fight)
     sta game_data + game_data::game_handler
+
+    lda #1
+    sta game_data + game_data::fight_p
 
     lda #.loword(select_tile_menu)
     sta game_data + game_data::curr_menu
-
 
     A8
     ;; set up bg registers
@@ -2364,6 +2365,78 @@ handle_current_menu:
     rts
 
 
+switch_to_select_tile_menu:
+    A8
+    jsr draw_select_screen
+    A16
+    rts
+
+.a16
+.i16
+;; A - current player
+switch_game_mode:
+    sta .loword(W0)
+    lda .loword(game_data) + game_data::fight_p
+    bne switch_to_menu_mode
+    ;; we're switching to fight_mode
+    lda #1
+    sta .loword(game_data) + game_data::fight_p
+    lda #.loword(handle_fight)
+    sta game_data + game_data::game_handler
+    bra set_game_mode_return
+switch_to_menu_mode:
+    lda .loword(W0)
+    sta .loword(select_tile_menu) + menu::player
+    ;; we initialize the select menu
+    jsr switch_to_select_tile_menu
+    ;; we switch the game_handler to the menu handler
+    lda #.loword(handle_current_menu)
+    sta game_data + game_data::game_handler
+    lda #0
+    sta .loword(game_data) + game_data::fight_p
+set_game_mode_return:
+    rts
+
+
+;; Check if a player pressed a button to take us out of
+;; a main loop. So for example if we press `select` during gameplay
+;;
+;; We need to do this before our main game loop, so we can move to another
+;; state before we've already processed some of the player's data
+;; and we find ourselves in an inconsitent game state.
+;;
+;; I'd like to do this in `read_input` but it kinda breaks the abstraction.
+.a16
+.i16
+check_game_state_change:
+    ldx #0
+game_state_change_loop:
+    lda .loword(player_table), x
+    tcd ;; remapping dp to player x
+    lda player::joy_trigger
+    and #JOY_START
+    beq game_state_change_continue
+    ;; player pressed start. we drop them in, for now, the select screen.
+    ;; first we record the player in the menu, as it's their
+    ;; presses we care about
+    tdc
+    jsr switch_game_mode
+    bra game_state_change_end
+game_state_change_continue:
+    ;; bit dangerous. we assume the only way we get here is if
+    ;; no-one presses a button and so no interesting thing happens
+    ;; to disrupt X. Otherwise we should do some register saving
+    ;; and restoring magic.
+    inx
+    inx
+    cpx #PLAYER_TABLE_I
+    bne game_state_change_loop
+game_state_change_end:
+    lda #$0
+    tcd
+    rts
+
+
 .a8
 .i16
 game_loop:
@@ -2375,6 +2448,8 @@ game_loop:
     jsr read_input
 
     A16
+    jsr check_game_state_change
+
     ldx #$0
     jsr (game_data + game_data::game_handler, x)
     A8
