@@ -5,8 +5,8 @@ DEFINES_INC = 1
 ;; vram things
 VRAM_SPRITE_BASE = $2000
 VRAM_CHR_BASE = $6000
-VRAM_MAP_BG1_BASE = $9000 ;; $800 alignment == 256x256 pixels,
-VRAM_MAP_BG2_BASE = $9800 ;; aka (32x32x2 bytes) map
+VRAM_MAP_BG_GAME_BASE = $9800 ;; $800 alignment == 256x256 pixels,
+VRAM_MAP_BG_TILE_SELECT_BASE = $9000 ;; aka (32x32x2 bytes) map
 GAME_MAP_SIZE = $700
 COLL_MAP_SIZE = $380
 
@@ -221,6 +221,10 @@ SELECT_SCREEN_X_COORDS = $E0
 SELECT_SCREEN_X_TABLE_OFFSET = $27
 SELECT_SCREEN_Y_COORDS = $ce
 SELECT_SCREEN_Y_TABLE_OFFSET = $38
+
+
+DRAW_CARET_Y_OFFSET = $0
+DRAW_CARET_X_OFFSET = $0
 
 ;; ----------------
 ;; global game data

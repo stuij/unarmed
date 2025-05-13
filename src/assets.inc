@@ -39,9 +39,9 @@ select_row_count:
 .incbin "assets/select_row_count.bin"
 select_row_count_end:
 
-select_column_count:
-.incbin "assets/select_column_count.bin"
-select_column_count_end:
+select_row_table:
+.incbin "assets/select_row_table.bin"
+select_row_table_end:
 
 select_row_name:
 .incbin "assets/select_row_name.bin"

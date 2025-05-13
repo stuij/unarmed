@@ -127,27 +127,27 @@ player_bbox_default_ledge_lookup:
 .i16
 init_players:
     ;; p1
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$10                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $3
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$10                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $7
 
     ;; p2
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$10                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $b
-    lda #$00                ; tile offset of third sprite
+    lda #$10                ; tile offset of third sprite
     sta OAM_MIRROR + $e
 
     ;; p3
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$10                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $13
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$10                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $17
 
     ;; p4
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$10                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $1b
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$10                ; no flip, prio 2, palette 0
     sta OAM_MIRROR + $1e
 
 
@@ -780,7 +780,7 @@ init_bullets_loop:
     lda #BULLET_SPRITE_OFFSET
     sta OAM_MIRROR, y
     iny
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$10                ; no flip, prio 2, palette 0
     sta OAM_MIRROR, y
     iny
     iny
@@ -952,9 +952,42 @@ bullets_to_oam_loop:
 ;; -----------
 ;; select menu
 
-select_menu_callback:
+draw_tile_menu_callback:
     rts
 
+init_draw_menu:
+    lda #tile_canvas
+    tcd
+    lda #DRAW_CARET_X_OFFSET
+    sta menu::cursor_x_pos
+    sta menu::cursor_x_pos_origin
+    lda #DRAW_CARET_Y_OFFSET
+    sta menu::cursor_y_pos
+    sta menu::cursor_y_pos_origin
+
+    lda draw_tile_row_count
+    sta menu::no_rows
+
+    lda #.loword(draw_tile_row_table)
+    sta menu::row_table
+
+    lda #$0
+    sta menu::curr_row
+    sta menu::curr_column
+    sta menu::timeout_tick
+    sta menu::just_moved
+
+    lda #.loword(draw_tile_menu_callback)
+    sta menu::callback
+
+    lda #$0
+    tcd
+    rts
+
+
+
+select_menu_callback:
+    rts
 
 init_select_menu:
     lda #select_tile_menu
@@ -969,7 +1002,7 @@ init_select_menu:
     lda select_row_count
     sta menu::no_rows
 
-    lda #.loword(select_column_count)
+    lda #.loword(select_row_table)
     sta menu::row_table
 
     lda #$0
@@ -1088,10 +1121,10 @@ init_binary_data:
 .i16
 draw_select_screen:
     ldy #(select_tile_map_end - select_tile_map)
-    sty <W0
+    sty .loword(W0)
     lda #^select_tile_map
     ldx #.loword(select_tile_map)
-    ldy #VRAM_MAP_BG1_BASE
+    ldy #VRAM_MAP_BG_TILE_SELECT_BASE
     jsr dma_to_vram
 
     lda #SELECT_SCREEN_X_COORDS
@@ -1138,6 +1171,7 @@ init_game_data:
     jsr init_players
     jsr init_bullets
     jsr init_select_menu
+    jsr init_draw_menu
 
     ;; lda #.loword(handle_current_menu)
     lda #.loword(handle_fight)
@@ -1158,11 +1192,8 @@ init_game_data:
     lda #((VRAM_CHR_BASE >> 12) << 4 | (VRAM_CHR_BASE >> 12))
     sta BG12NBA
 
-    lda #((VRAM_MAP_BG1_BASE >> 10) << 2)
+    lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
     sta BG1SC ; set bg 1 tile map
-
-    lda #((VRAM_MAP_BG2_BASE >> 10) << 2)
-    sta BG2SC ; set bg 2 tile map
 
     lda #$80
     sta VMAIN
@@ -1172,6 +1203,24 @@ init_game_data:
     stx map_y  ;; bottom, so we shift vertical offset by 1
     ldx #$0
     stx map_x
+
+    lda #$0
+    ;; this is one of those latching regs
+    sta BG1HOFS
+    stz BG1HOFS
+    sta BG2HOFS
+    stz BG2HOFS
+    sta BG3HOFS
+    stz BG3HOFS
+
+    ;; put vertical offset one below, because of how SNES works
+    lda #$FF
+    sta BG1VOFS
+    stz BG1VOFS
+    sta BG2VOFS
+    stz BG2VOFS
+    sta BG3VOFS
+    stz BG3VOFS
 
     rts
 
@@ -2168,21 +2217,21 @@ wait_nmi:
 update_bgs:
     lda map_x
     ;; this is one of those latching regs
-    sta BG2HOFS
+    sta BG1HOFS
     ;; we're effectively lobbing off the top two bits of the offset..
-    stz BG2HOFS
+    stz BG1HOFS
 
     lda map_y
     ;; this is one of those latching regs
-    sta BG2VOFS
+    sta BG1VOFS
     ;; we're effectively lobbing off the top two bits of the offset..
-    stz BG2VOFS
+    stz BG1VOFS
     rts
 
 .a8
 .i16
 update_vram:
-    jsr update_bgs
+    ;; jsr update_bgs
     A16
     I8
     jsr dma_OAM
@@ -2367,9 +2416,36 @@ handle_current_menu:
 
 switch_to_select_tile_menu:
     A8
+    lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
+    sta BG1SC ; set bg 2 tile map
+
+    lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
+    sta BG2SC ; set bg 1 tile map
+
     jsr draw_select_screen
     A16
     rts
+
+
+switch_to_fight_mode:
+    ;; set map x/y coords back
+    A8
+    lda #$0
+    sta BG1HOFS
+    stz BG1HOFS
+    lda #$FF
+    sta BG1VOFS
+    stz BG1VOFS
+    A16
+
+    lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
+    sta BG1SC ; set bg 1 tile map
+
+    ;; lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
+    ;; sta BG2SC ; set bg 2 tile map
+
+    rts
+
 
 .a16
 .i16
@@ -2379,6 +2455,7 @@ switch_game_mode:
     lda .loword(game_data) + game_data::fight_p
     bne switch_to_menu_mode
     ;; we're switching to fight_mode
+    jsr switch_to_fight_mode
     lda #1
     sta .loword(game_data) + game_data::fight_p
     lda #.loword(handle_fight)

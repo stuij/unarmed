@@ -316,9 +316,9 @@ def encode_tile_select_bits(select_table, schema):
     with open("select_row_count.bin", "wb") as row_count:
         row_count.write(encode_word(0, len(schema)))
 
-    with open("select_column_count.bin", "wb") as column_count:
+    with open("select_row_table.bin", "wb") as row_table:
         for row in schema:
-            column_count.write(encode_word(0, row[1]))
+            row_table.write(encode_word(0, row[1]))
 
     with open("select_row_name.bin", "wb") as row_name:
         for row in schema:

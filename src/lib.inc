@@ -80,7 +80,7 @@ dma_to_vram:
     sta A1B0 ; set bank of source address
     stx A1T0L ; set loword of source address
     sty VMADDL ; set VRAM base address
-    ldy <W0 ; get size from zero page word
+    ldy .loword(W0) ; get size from zero page word
     sty DAS0L ; set DMA byte counter
 
     lda #<VMDATAL
@@ -148,7 +148,7 @@ load_tilemap_to_vram:
     sty <W0
     lda #^CURRENT_TILE_MAP
     ldx #.loword(CURRENT_TILE_MAP)
-    ldy #VRAM_MAP_BG2_BASE
+    ldy #VRAM_MAP_BG_GAME_BASE
     jsr dma_to_vram
     rts
 
