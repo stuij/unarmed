@@ -104,7 +104,7 @@ dma_to_palette:
     stx A1T0L ; set loword of source address
     tya ; CGADD is a byte
     sta CGADD ; set palette base address
-    ldy <W0 ; get size from zero page word
+    ldy .loword(W0) ; get size from zero page word
     sty DAS0L ; set DMA byte counter
 
     lda #<CGDATA
@@ -125,10 +125,10 @@ dma_to_palette:
 dma_to_wram:
     sta A1B0 ; set bank of source address
     stx A1T0L ; set loword of source address
-    lda <B1L
+    lda .loword(B1L)
     sta WMADDH ; set bank of wram dest addr
     sty WMADDL ; set loword of wram dest addr
-    ldy <W0 ; get size from zero page word reg 1
+    ldy .loword(W0) ; get size from zero page word reg 1
     sty DAS0L ; set DMA byte counter
 
     lda #<WMDATA
@@ -145,7 +145,7 @@ dma_to_wram:
 load_tilemap_to_vram:
     ; load tile map from wram to vram
     ldy #GAME_MAP_SIZE
-    sty <W0
+    sty .loword(W0)
     lda #^CURRENT_TILE_MAP
     ldx #.loword(CURRENT_TILE_MAP)
     ldy #VRAM_MAP_BG_GAME_BASE
