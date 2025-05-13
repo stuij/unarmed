@@ -952,6 +952,18 @@ bullets_to_oam_loop:
 ;; -----------
 ;; select menu
 
+init_caret:
+    lda #SELECT_CARET_SPRITE_OFFSET
+    sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
+    lda #$30                ; no flip, prio 3, palette 0
+    sta OAM_MENU_CARET_OFFSET + oam_entry::attrs
+
+    ;; set sprite to 16x16px
+    lda #$2
+    sta OAM_MENU_CARET_XTRA_PROPS
+    rts
+
+
 draw_tile_menu_callback:
     rts
 
@@ -1016,24 +1028,6 @@ init_select_menu:
 
     lda #.loword(select_row_name)
     sta select_tile_menu::tile_type_names
-
-    jsr set_menu_caret_position
-
-    lda #SELECT_CARET_SPRITE_OFFSET
-    sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
-    lda #$30                ; no flip, prio 3, palette 0
-    sta OAM_MENU_CARET_OFFSET + oam_entry::attrs
-
-    ;; set sprite to 16x16px
-    ;; I think some macrology is needed to set the right bits
-    ;; given attributes and tile nr. Hope the in-assembler
-    ;; language is expressive enough for that.
-    lda #$2
-    sta OAM_MIRROR + $209
-
-    ;; for now by default use player 1 (for who's in control)
-    lda player_table
-    sta menu::player
 
     lda #$0
     tcd
@@ -1172,6 +1166,7 @@ init_game_data:
     jsr init_bullets
     jsr init_select_menu
     jsr init_draw_menu
+    jsr init_caret
 
     ;; lda #.loword(handle_current_menu)
     lda #.loword(handle_fight)
@@ -2259,6 +2254,16 @@ handle_fight:
 ;; ----
 ;; menu
 
+.a8
+.i16
+hide_menu_caret:
+    lda #$F0
+    sta OAM_MENU_CARET_OFFSET + oam_entry::y_pos
+    rts
+
+
+.a16
+.i16
 set_menu_caret_position:
     A8
     lda menu::cursor_x_pos
@@ -2424,12 +2429,15 @@ switch_to_select_tile_menu:
 
     jsr draw_select_screen
     A16
+
     rts
 
 
 switch_to_fight_mode:
     ;; set map x/y coords back
     A8
+    jsr hide_menu_caret
+
     lda #$0
     sta BG1HOFS
     stz BG1HOFS
@@ -2444,6 +2452,11 @@ switch_to_fight_mode:
     ;; lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
     ;; sta BG2SC ; set bg 2 tile map
 
+    lda #1
+    sta .loword(game_data) + game_data::fight_p
+    lda #.loword(handle_fight)
+    sta game_data + game_data::game_handler
+
     rts
 
 
@@ -2456,10 +2469,6 @@ switch_game_mode:
     bne switch_to_menu_mode
     ;; we're switching to fight_mode
     jsr switch_to_fight_mode
-    lda #1
-    sta .loword(game_data) + game_data::fight_p
-    lda #.loword(handle_fight)
-    sta game_data + game_data::game_handler
     bra set_game_mode_return
 switch_to_menu_mode:
     lda .loword(W0)
