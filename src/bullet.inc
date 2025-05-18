@@ -1,0 +1,373 @@
+.ifndef BULLET_INC
+BULLET_INC = 1
+
+.code
+
+;; bullet
+;; ------
+bullet_table:
+.addr .loword(b0)
+.addr .loword(b1)
+.addr .loword(b2)
+.addr .loword(b3)
+.addr .loword(b4)
+.addr .loword(b5)
+.addr .loword(b6)
+.addr .loword(b7)
+.addr .loword(b8)
+.addr .loword(b9)
+.addr .loword(b10)
+.addr .loword(b11)
+.addr .loword(b12)
+.addr .loword(b13)
+.addr .loword(b14)
+.addr .loword(b15)
+.addr .loword(b16)
+.addr .loword(b17)
+.addr .loword(b18)
+.addr .loword(b19)
+.addr .loword(b20)
+.addr .loword(b21)
+.addr .loword(b22)
+.addr .loword(b23)
+.addr .loword(b24)
+.addr .loword(b25)
+.addr .loword(b26)
+.addr .loword(b27)
+.addr .loword(b28)
+.addr .loword(b29)
+.addr .loword(b30)
+.addr .loword(b31)
+
+
+bullet_sprite_vtable:
+.addr .loword(bullet_coll_end_callback)
+.addr .loword(bullet_point_no_coll_callback)
+
+
+bullet_bbox_default:
+.word $1  ;; y
+.word $1  ;; x
+
+bullet_bbox_default_fine:
+.word $10 ;; y
+.word $10 ;; x
+
+.a16
+.i16
+;; game specific
+init_bullets:
+    ldx #BULLET_X_POS_INIT
+    stx .loword(W0)
+    ldx #$0
+    ldy #(BULLET_OAM_OFFSET + $2)
+init_bullets_loop:
+    lda .loword(bullet_table), x
+    tcd
+
+    lda #BULLET_SPRITE_OFFSET
+    sta OAM_MIRROR, y
+    iny
+    lda #$10                ; no flip, prio 2, palette 0
+    sta OAM_MIRROR, y
+    iny
+    iny
+    iny
+
+    lda #$0
+    sta sprite::h_velo
+    sta sprite::v_velo
+
+    lda .loword(W0)
+    sta sprite::x_pos
+    sta sprite::x_new
+
+    lda #BULLET_Y_POS_INIT
+    sta sprite::y_pos
+    sta sprite::y_new
+
+    lda #bullet_state::rest
+    sta sprite::move_state
+    lda #$0
+    sta sprite::anim_tick
+
+    lda #face_dir::right
+    sta sprite::face_dir
+
+    lda #.loword(bullet_bbox_default)
+    sta sprite::bbox
+
+    lda #.loword(bullet_bbox_default_fine)
+    sta sprite::bbox_fine
+
+    lda #.sizeof(bullet_bbox)
+    sta sprite::bbox_size
+
+    lda #.loword(bullet_sprite_vtable)
+    sta sprite::vptr
+
+    lda #$0
+    sta sprite::anim_tick
+
+    lda .loword(W0)
+    clc
+    adc #$60
+    sta .loword(W0)
+    inx
+    inx
+    cpx #BULLET_TABLE_I
+    bne init_bullets_loop
+
+    lda #0
+    tcd
+
+    ;; handle this blasted table separately
+    lda #BULLET_OAM_DEFAULT
+    sta OAM_MIRROR + $201
+    lda #BULLET_OAM_DEFAULT
+    sta OAM_MIRROR + $202
+    lda #BULLET_OAM_DEFAULT
+    sta OAM_MIRROR + $203
+    lda #BULLET_OAM_DEFAULT
+    sta OAM_MIRROR + $204
+    lda #BULLET_OAM_DEFAULT
+    sta OAM_MIRROR + $205
+    lda #BULLET_OAM_DEFAULT
+    sta OAM_MIRROR + $206
+    lda #BULLET_OAM_DEFAULT
+    sta OAM_MIRROR + $207
+    lda #BULLET_OAM_DEFAULT
+    sta OAM_MIRROR + $208
+
+    rts
+
+
+.a16
+.i16
+handle_bullet_movement:
+    ldx #$0
+    phx
+handle_bullet_loop:
+    lda .loword(bullet_table), x
+    tcd
+    lda sprite::x_pos
+    clc
+    adc sprite::h_velo
+    sta sprite::x_new
+
+    lda sprite::y_pos
+    clc
+    adc sprite::v_velo
+    sta sprite::y_new
+
+    jsr check_collisions
+    plx
+    inx
+    inx
+    phx
+    cpx #BULLET_TABLE_I
+    bne handle_bullet_loop
+    plx
+    lda #$0
+    tcd
+    rts
+
+
+bullet_point_no_coll_callback:
+    rts
+
+
+bullet_coll_end_callback:
+bullet_coll_end_flip_h:
+    lda COLL_STACK_Y_NEW_TMP + 2, s
+    bmi bullet_coll_end_flip_v
+    ;; x collision occured, save new x.
+    sta sprite::y_new
+    ;; we flip x speed
+    lda sprite::v_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::v_velo
+bullet_coll_end_flip_v:
+    lda COLL_STACK_X_NEW_TMP + 2, s
+    bmi bullet_coll_end_callback_end
+    ;; x collision occured, save new y
+    sta sprite::x_new
+    ;; we flip y speed
+    lda sprite::h_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::h_velo
+bullet_coll_end_callback_end:
+    rts
+
+
+.a16
+.i16
+finalize_bullets:
+    ;; bullets
+    ldx #$0
+    ldy #BULLET_OAM_OFFSET
+bullets_to_oam_loop:
+    lda .loword(bullet_table), x
+    tcd
+    lda sprite::x_new
+    sta sprite::x_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR, y
+    iny
+    A16
+    lda sprite::y_new
+    sta sprite::y_pos
+    rshift 4
+    A8
+    sta OAM_MIRROR, y
+    A16
+    iny
+    iny
+    iny
+
+    inx
+    inx
+    cpx #BULLET_TABLE_I
+    bne bullets_to_oam_loop
+    lda #$0
+    tcd
+    rts
+
+
+bullet_fire_direction_table:
+.addr bullet_fire_top_left
+.addr bullet_fire_bottom_left
+.addr bullet_fire_top_right
+.addr bullet_fire_bottom_right
+.addr bullet_fire_left
+.addr bullet_fire_top
+.addr bullet_fire_bottom
+.addr bullet_fire_right
+
+.a16
+.i16
+bullet_fire_top_left:
+    lda #(BULLET_V_VELO)
+    eor #$ffff
+    inc
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    eor #$ffff
+    inc
+    sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sta sprite::y_new
+    rts
+
+
+.a16
+.i16
+bullet_fire_bottom_left:
+    lda #(BULLET_V_VELO)
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    eor #$ffff
+    inc
+    sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sec
+    sbc #BULLET_SHOOT_DOWN_Y_ADJUST
+    sta sprite::y_new
+    rts
+
+bullet_fire_top_right:
+    lda #(BULLET_V_VELO)
+    eor #$ffff
+    inc
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sta sprite::y_new
+    rts
+
+bullet_fire_bottom_right:
+    lda #(BULLET_V_VELO)
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sec
+    sbc #BULLET_SHOOT_DOWN_Y_ADJUST
+    sta sprite::y_new
+    rts
+
+bullet_fire_left:
+    lda #$0
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    eor #$ffff
+    inc
+    sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sec
+    sbc #BULLET_SHOOT_SIDE_Y_ADJUST
+    sta sprite::y_new
+    rts
+
+bullet_fire_top:
+    lda #(BULLET_V_VELO)
+    eor #$ffff
+    inc
+    sta sprite::v_velo
+    lda #$0
+    sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sta sprite::y_new
+    rts
+
+bullet_fire_bottom:
+    lda #(BULLET_V_VELO)
+    sta sprite::v_velo
+    lda #$0
+    sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sta sprite::y_new
+    rts
+
+bullet_fire_right:
+    lda #$0
+    sta sprite::v_velo
+    lda #(BULLET_H_VELO)
+    sta sprite::h_velo
+    ;; bullet position adjustments
+    lda .loword(W0)
+    sta sprite::x_new
+    lda .loword(W1)
+    sec
+    sbc #BULLET_SHOOT_SIDE_Y_ADJUST
+    sta sprite::y_new
+    rts
+
+.endif ; BULLET_INC
