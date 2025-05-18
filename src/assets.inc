@@ -43,6 +43,11 @@ select_row_table:
 .incbin "assets/select_row_table.bin"
 select_row_table_end:
 
+select_row_table_cumul:
+.incbin "assets/select_row_table_cumulative.bin"
+select_row_table_cumul_end:
+
+
 select_row_name:
 .incbin "assets/select_row_name.bin"
 select_row_name_end:

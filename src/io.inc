@@ -1414,7 +1414,7 @@ JOY_X      = $0040
 JOY_L      = $0020
 JOY_R      = $0010
 
-JOY_B_SH      = $8000
+JOY_B_SH      = 15
 JOY_Y_SH      = 14
 JOY_SELECT_SH = 13
 JOY_START_SH  = 12

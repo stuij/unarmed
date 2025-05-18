@@ -972,9 +972,12 @@ init_draw_menu:
     tcd
     lda #DRAW_CARET_X_OFFSET
     sta menu::cursor_x_pos
+    lda #DRAW_CARET_X_ORIGIN
     sta menu::cursor_x_pos_origin
+
     lda #DRAW_CARET_Y_OFFSET
     sta menu::cursor_y_pos
+    lda #DRAW_CARET_Y_ORIGIN
     sta menu::cursor_y_pos_origin
 
     lda draw_tile_row_count
@@ -997,9 +1000,37 @@ init_draw_menu:
     rts
 
 
+; A - chosen tile ID
+; X - current player
+activate_draw_menu:
+    ;; We might just want to store the actual tile here.
+    ;; At 2 bytes it's big enough.
+    sta tile_canvas + canvas_menu::chosen_tile
+    stx tile_canvas + menu::player
+    jsr level_screen_to_fore
+    rts
 
 select_menu_callback:
+    ;; if we're pressing A, we've selected a tile,
+    ;; and we need to move on to the canvas menu/mode
+    ldy #player::joy_trigger
+    lda (menu::player), y
+    and #JOY_A
+    beq select_menu_callback_end
+    lda #.loword(tile_canvas)
+    sta game_data + game_data::curr_menu
+    ;; we need to pass tile canvas the tile id of our selection
+    lda menu::curr_row
+    asl
+    tax
+    lda select_row_table_cumul, x
+    clc
+    adc menu::curr_column
+    ldx menu::player
+    jsr activate_draw_menu
+select_menu_callback_end:
     rts
+
 
 init_select_menu:
     lda #select_tile_menu
@@ -2433,7 +2464,11 @@ switch_to_select_tile_menu:
     rts
 
 
-switch_to_fight_mode:
+switch_to_canvas_menu:
+    rts
+
+
+level_screen_to_fore:
     ;; set map x/y coords back
     A8
     jsr hide_menu_caret
@@ -2452,11 +2487,6 @@ switch_to_fight_mode:
     ;; lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
     ;; sta BG2SC ; set bg 2 tile map
 
-    lda #1
-    sta .loword(game_data) + game_data::fight_p
-    lda #.loword(handle_fight)
-    sta game_data + game_data::game_handler
-
     rts
 
 
@@ -2468,7 +2498,11 @@ switch_game_mode:
     lda .loword(game_data) + game_data::fight_p
     bne switch_to_menu_mode
     ;; we're switching to fight_mode
-    jsr switch_to_fight_mode
+    jsr level_screen_to_fore
+    lda #1
+    sta .loword(game_data) + game_data::fight_p
+    lda #.loword(handle_fight)
+    sta game_data + game_data::game_handler
     bra set_game_mode_return
 switch_to_menu_mode:
     lda .loword(W0)
@@ -2478,6 +2512,8 @@ switch_to_menu_mode:
     ;; we switch the game_handler to the menu handler
     lda #.loword(handle_current_menu)
     sta game_data + game_data::game_handler
+    lda #.loword(select_tile_menu)
+    sta game_data + game_data::curr_menu
     lda #0
     sta .loword(game_data) + game_data::fight_p
 set_game_mode_return:

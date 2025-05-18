@@ -317,8 +317,13 @@ def encode_tile_select_bits(select_table, schema):
         row_count.write(encode_word(0, len(schema)))
 
     with open("select_row_table.bin", "wb") as row_table:
-        for row in schema:
-            row_table.write(encode_word(0, row[1]))
+        with open("select_row_table_cumulative.bin", "wb") as row_table_cumul:
+            cumul = 0
+            for row in schema:
+                row_tiles = row[1]
+                row_table.write(encode_word(0, row_tiles))
+                row_table_cumul.write(encode_word(0, cumul))
+                cumul += row_tiles
 
     with open("select_row_name.bin", "wb") as row_name:
         for row in schema:

@@ -195,22 +195,23 @@ MENU_MOVE_TIMEOUT = 8
 .endenum
 
 .struct menu
-    cursor_x_pos_origin .word
-    cursor_y_pos_origin .word
-    cursor_x_pos        .word
-    cursor_y_pos        .word
-    no_rows             .word
-    row_table           .addr
-    curr_row            .word
-    curr_column         .word
-    player              .addr
-    callback            .addr
-    timeout_tick        .word
-    just_moved          .word
+    cursor_x_pos_origin .word ; 0
+    cursor_y_pos_origin .word ; 2
+    cursor_x_pos        .word ; 4
+    cursor_y_pos        .word ; 6
+    no_rows             .word ; 8
+    row_table           .addr ; a
+    curr_row            .word ; c
+    curr_column         .word ; e
+    player              .addr ; 10
+    callback            .addr ; 12
+    timeout_tick        .word ; 14
+    just_moved          .word ; 16
 .endstruct
 
 
-;; tile menu
+;; tile select menu
+
 .struct select_tile_menu
     menu  .tag menu
     tile_type_names .addr
@@ -224,6 +225,16 @@ SELECT_SCREEN_X_TABLE_OFFSET = $27
 SELECT_SCREEN_Y_COORDS = $ce
 SELECT_SCREEN_Y_TABLE_OFFSET = $38
 
+
+;; canvas draw menu
+
+.struct canvas_menu
+    menu  .tag menu
+    chosen_tile .addr ; 18
+.endstruct
+
+DRAW_CARET_X_ORIGIN = $0
+DRAW_CARET_Y_ORIGIN = $0
 
 DRAW_CARET_Y_OFFSET = $0
 DRAW_CARET_X_OFFSET = $0

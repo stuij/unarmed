@@ -39,11 +39,11 @@ p2: .tag player
 p3: .tag player
 p4: .tag player
 
-select_tile_menu: .tag select_tile_menu
-
 tile_canvas: .tag menu
 
 game_data: .tag game_data
+
+select_tile_menu: .tag select_tile_menu
 
 ;; bullet data
 ;; start at 0 because we're not insane. player start kinda forced by
@@ -92,7 +92,7 @@ CURRENT_TILE_MAP: .res GAME_MAP_SIZE
 .segment "RODATA"
 
 draw_tile_row_count:
-.word $20
+.word $1c
 
 ;; So this seems like it is taking the soul a bit out of
 ;; the programmers mind, but this is the price I'm willing
