@@ -3,8 +3,9 @@ PLAYER_INC = 1
 
 .code
 
+;; -----------
 ;; player data
-;; ------
+
 
 player_table:
 .addr .loword(p1)

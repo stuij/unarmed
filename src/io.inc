@@ -324,6 +324,7 @@ VMAIN = $2115
 ; The VRAM can only be read during vertical-blank or force-blank. If the PPU is in
 ; horizontal-blank or active-display then the VRAM will not be read and vram_latch
 ; will contain invalid data.
+VMADD = $2116
 VMADDL = $2116
 VMADDH = $2117
 
@@ -347,6 +348,7 @@ VMADDH = $2117
 ; writes during horizontal-blank or active-display will be ignored.  VMADD will
 ; always increment, depending on the state of VMAIN, even if the VRAM write is
 ; ignored.
+VMDATA  = $2118
 VMDATAL = $2118
 VMDATAH = $2119
 

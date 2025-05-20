@@ -47,12 +47,6 @@ init_binary_data:
     jsr dma_to_wram
 
     jsr load_tilemap_to_vram
-    ; ldy #GAME_MAP_SIZE
-    ; sty <W0
-    ; lda #^CURRENT_TILE_MAP
-    ; ldx #.loword(CURRENT_TILE_MAP)
-    ; ldy #VRAM_MAP_BG2_BASE
-    ; jsr dma_to_vram
 
     ;; sprites
     ; set sprite base

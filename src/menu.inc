@@ -3,26 +3,61 @@ MENU_INC = 1
 
 .code
 
-;; select menu
+;; ---------
+;; draw menu
+
 .a16
 .i16
-init_caret:
-    lda #SELECT_CARET_SPRITE_OFFSET
-    sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
-    lda #$30                ; no flip, prio 3, palette 0
-    sta OAM_MENU_CARET_OFFSET + oam_entry::attrs
-
-    ;; set sprite to 16x16px
-    lda #$2
-    A8
-    sta OAM_MENU_CARET_XTRA_PROPS
-    A16
+canvas_calc_tile_under_cursor:
+    lda menu::curr_row
+    ;; row x 32
+    asl
+    asl
+    asl
+    asl
+    asl
+    sta .loword(W0)
+    lda menu::curr_column
+    clc
+    adc .loword(W0)
     rts
+
+
+canvas_set_tile:
+    ldy #player::joy_trigger_held
+    lda (menu::player), y
+    and #JOY_A
+    beq canvas_set_tile_end
+    jsr canvas_calc_tile_under_cursor
+    asl
+    tax
+    lda canvas_menu::chosen_tile
+    sta CURRENT_TILE_MAP, x
+canvas_set_tile_end:
+    rts
+
+
+;; patch tile map in vram where cursor currently is hovering
+canvas_patch_chosen_tile:
+    jsr canvas_calc_tile_under_cursor
+    clc
+    adc #VRAM_MAP_BG_GAME_BASE
+    sta VMADD
+    lda canvas_menu::chosen_tile
+    sta VMDATA
+    rts
+
 
 .a16
 .i16
 draw_tile_menu_callback:
+    jsr canvas_set_tile
+    A8
+    jsr load_tilemap_to_vram
+    A16
+    jsr canvas_patch_chosen_tile
     rts
+
 
 init_draw_menu:
     lda #tile_canvas
@@ -47,6 +82,7 @@ init_draw_menu:
     sta menu::curr_row
     sta menu::curr_column
     sta menu::timeout_tick
+    sta menu::dirty_p
     sta menu::just_moved
 
     lda #.loword(draw_tile_menu_callback)
@@ -57,15 +93,31 @@ init_draw_menu:
     rts
 
 
+;; initialize chosen tile map entry with idx selected in select menu
+; A - tile idx of chosen tile
+draw_init_chosen_tile:
+    ;; as it happens the idx is essentially already the selected
+    ;; tile map entry, as currently we're using bank 1, horizontal
+    ;; and vertical flip aren't set yet, and it's an 8px tile.
+    ;; but adjust for tile map entries being 16-bit
+    sta tile_canvas + canvas_menu::chosen_tile
+    rts
+
+
 ; A - chosen tile ID
 ; X - current player
 activate_draw_menu:
     ;; We might just want to store the actual tile here.
     ;; At 2 bytes it's big enough.
-    sta tile_canvas + canvas_menu::chosen_tile
     stx tile_canvas + menu::player
+    jsr draw_init_chosen_tile
     jsr level_screen_to_fore
+    inc tile_canvas + menu::just_moved
     rts
+
+
+;; -----------
+;; select menu
 
 select_menu_callback:
     ;; if we're pressing A, we've selected a tile,
@@ -109,6 +161,7 @@ init_select_menu:
     sta menu::curr_row
     sta menu::curr_column
     sta menu::timeout_tick
+    sta menu::dirty_p
     sta menu::just_moved
 
     lda #.loword(select_menu_callback)
@@ -149,6 +202,21 @@ draw_select_screen:
 
 ;; ------------
 ;; general menu
+.a16
+.i16
+init_caret:
+    lda #SELECT_CARET_SPRITE_OFFSET
+    sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
+    lda #$30                ; no flip, prio 3, palette 0
+    sta OAM_MENU_CARET_OFFSET + oam_entry::attrs
+
+    ;; set sprite to 16x16px
+    lda #$2
+    A8
+    sta OAM_MENU_CARET_XTRA_PROPS
+    A16
+    rts
+
 
 .a8
 .i16
@@ -210,7 +278,7 @@ menu_handle_row:
     clc
     adc #$8
     sta menu::cursor_x_pos
-    inc menu::just_moved
+    inc menu::dirty_p
     stz menu::timeout_tick
     bra menu_handle_row_done
 menu_handle_row_left:
@@ -223,7 +291,7 @@ menu_handle_row_left:
     sec
     sbc #$8
     sta menu::cursor_x_pos
-    inc menu::just_moved
+    inc menu::dirty_p
     stz menu::timeout_tick
 menu_handle_row_done:
     rts
@@ -244,7 +312,7 @@ menu_handle_column:
     clc
     adc #$8
     sta menu::cursor_y_pos
-    inc menu::just_moved
+    inc menu::dirty_p
     stz menu::timeout_tick
     bra menu_handle_column_clamp_column
 menu_handle_column_up:
@@ -257,7 +325,7 @@ menu_handle_column_up:
     sec
     sbc #$8
     sta menu::cursor_y_pos
-    inc menu::just_moved
+    inc menu::dirty_p
     stz menu::timeout_tick
 menu_handle_column_clamp_column:
     ;; for the new row we're now on, we need to check if we are past
@@ -291,6 +359,7 @@ handle_menu:
 
     jsr menu_handle_row
     jsr menu_handle_column
+
     jsr set_menu_caret_position
 
     ;; no direct page indirect jumping, so we need to
@@ -302,6 +371,11 @@ handle_menu:
     adc #menu::callback
     tax
     jsr (0, x)
+
+    lda menu::dirty_p
+    beq handle_menu_done
+    inc menu::just_moved
+    stz menu::dirty_p
 
 handle_menu_done:
     lda #0
@@ -349,9 +423,11 @@ level_screen_to_fore:
     lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
     sta BG1SC ; set bg 1 tile map
 
+    A8
+    jsr load_tilemap_to_vram
+    A16
     ;; lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
     ;; sta BG2SC ; set bg 2 tile map
-
     rts
 
 .endif ; MENU_INC

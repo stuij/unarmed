@@ -206,7 +206,8 @@ MENU_MOVE_TIMEOUT = 8
     player              .addr ; 10
     callback            .addr ; 12
     timeout_tick        .word ; 14
-    just_moved          .word ; 16
+    dirty_p             .word ; 16
+    just_moved          .word ; 18
 .endstruct
 
 
@@ -230,7 +231,8 @@ SELECT_SCREEN_Y_TABLE_OFFSET = $38
 
 .struct canvas_menu
     menu  .tag menu
-    chosen_tile .addr ; 18
+    chosen_tile         .word ; 18
+    tile_under_cursor   .word ; 1a
 .endstruct
 
 DRAW_CARET_X_ORIGIN = $0
@@ -238,6 +240,7 @@ DRAW_CARET_Y_ORIGIN = $0
 
 DRAW_CARET_Y_OFFSET = $0
 DRAW_CARET_X_OFFSET = $0
+
 
 
 ;; ----------------
