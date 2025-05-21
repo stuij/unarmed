@@ -66,10 +66,10 @@ init_bullets_loop:
     tcd
 
     lda #BULLET_SPRITE_OFFSET
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     iny
     lda #$10                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     iny
     iny
     iny
@@ -123,21 +123,21 @@ init_bullets_loop:
 
     ;; handle this blasted table separately
     lda #BULLET_OAM_DEFAULT
-    sta OAM_MIRROR + $201
+    sta OAM_mirror + $201
     lda #BULLET_OAM_DEFAULT
-    sta OAM_MIRROR + $202
+    sta OAM_mirror + $202
     lda #BULLET_OAM_DEFAULT
-    sta OAM_MIRROR + $203
+    sta OAM_mirror + $203
     lda #BULLET_OAM_DEFAULT
-    sta OAM_MIRROR + $204
+    sta OAM_mirror + $204
     lda #BULLET_OAM_DEFAULT
-    sta OAM_MIRROR + $205
+    sta OAM_mirror + $205
     lda #BULLET_OAM_DEFAULT
-    sta OAM_MIRROR + $206
+    sta OAM_mirror + $206
     lda #BULLET_OAM_DEFAULT
-    sta OAM_MIRROR + $207
+    sta OAM_mirror + $207
     lda #BULLET_OAM_DEFAULT
-    sta OAM_MIRROR + $208
+    sta OAM_mirror + $208
 
     rts
 
@@ -217,14 +217,14 @@ bullets_to_oam_loop:
     sta sprite::x_pos
     rshift 4
     A8
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     iny
     A16
     lda sprite::y_new
     sta sprite::y_pos
     rshift 4
     A8
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     A16
     iny
     iny

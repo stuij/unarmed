@@ -16,13 +16,13 @@ init_binary_data:
     jsr dma_to_palette
 
     ; load collision map to wram
-    lda #^CURRENT_COLL_MAP
+    lda #^current_coll_map
     sta <B1L
     ldy #COLL_MAP_SIZE
     sty <W0
     lda #^town_coll
     ldx #.loword(town_coll)
-    ldy #.loword(CURRENT_COLL_MAP)
+    ldy #.loword(current_coll_map)
     jsr dma_to_wram
 
     ; load tiles
@@ -37,13 +37,13 @@ init_binary_data:
     ;; this should soon be handled somewhere else
 
     ; load tile map to wram
-    lda #^CURRENT_TILE_MAP
+    lda #^current_tile_map
     sta <B1L
     ldy #GAME_MAP_SIZE
     sty <W0
     lda #^town_map
     ldx #.loword(town_map)
-    ldy #.loword(CURRENT_TILE_MAP)
+    ldy #.loword(current_tile_map)
     jsr dma_to_wram
 
     jsr load_tilemap_to_vram

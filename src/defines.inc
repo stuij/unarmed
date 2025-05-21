@@ -26,7 +26,7 @@ OAM_PLAYER_SIZE     = (4 * 4)
 OAM_BULLET_SIZE     = (4 * 32)
 OAM_MENU_CARET_SIZE = (1 * 32)
 
-OAM_MENU_CARET_OFFSET = (OAM_MIRROR + OAM_PLAYER_SIZE + OAM_BULLET_SIZE)
+OAM_MENU_CARET_OFFSET = (OAM_mirror + OAM_PLAYER_SIZE + OAM_BULLET_SIZE)
 
 ;;------------
 ;; sprite base struct
@@ -219,7 +219,7 @@ MENU_MOVE_TIMEOUT = 8
 .endstruct
 
 
-OAM_MENU_CARET_XTRA_PROPS = OAM_MIRROR + $209
+OAM_MENU_CARET_XTRA_PROPS = OAM_mirror + $209
 
 SELECT_SCREEN_X_COORDS = $E0
 SELECT_SCREEN_X_TABLE_OFFSET = $27
@@ -231,8 +231,8 @@ SELECT_SCREEN_Y_TABLE_OFFSET = $38
 
 .struct canvas_menu
     menu  .tag menu
-    chosen_tile         .word ; 18
-    tile_under_cursor   .word ; 1a
+    chosen_tile         .word ; 1a
+    tile_type           .word ; 1c
 .endstruct
 
 DRAW_CARET_X_ORIGIN = $0

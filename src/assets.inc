@@ -52,4 +52,8 @@ select_row_name:
 .incbin "assets/select_row_name.bin"
 select_row_name_end:
 
+select_row_tile_types:
+.incbin "assets/select_row_tile_types.bin"
+select_row_tile_types_end:
+
 .endif ; ASSETS_INC

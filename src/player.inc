@@ -110,34 +110,34 @@ player_bbox_default_ledge_lookup:
 init_players:
     ;; p1
     lda #$10                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $3
+    sta OAM_mirror + $3
     lda #$10                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $7
+    sta OAM_mirror + $7
 
     ;; p2
     lda #$10                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $b
+    sta OAM_mirror + $b
     lda #$10                ; tile offset of third sprite
-    sta OAM_MIRROR + $e
+    sta OAM_mirror + $e
 
     ;; p3
     lda #$10                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $13
+    sta OAM_mirror + $13
     lda #$10                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $17
+    sta OAM_mirror + $17
 
     ;; p4
     lda #$10                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $1b
+    sta OAM_mirror + $1b
     lda #$10                ; no flip, prio 2, palette 0
-    sta OAM_MIRROR + $1e
+    sta OAM_mirror + $1e
 
 
     ; set top bit of x pos for all 4 sprites to 0 so we show them on
     ; screen, and set 8x8 tile.
     ; so a nibble, representing two sprites becomes b0000, aka 0.
     lda #$00
-    sta OAM_MIRROR + $200
+    sta OAM_mirror + $200
 
 
     ldx #$0
@@ -451,7 +451,7 @@ player_point_no_call_ledge_check:
     adc #$20 ;; set to tile under point
     tax
     A8
-    lda CURRENT_COLL_MAP, x
+    lda current_coll_map, x
     A16
     beq player_point_no_call_end ; not a collision, so we move on
     ;; it's a collision, so we register it
@@ -527,7 +527,7 @@ animate_player_shoot_dir:
     clc
     adc #PLAYER_OAM_SHOOT_DIR_BASE
     A8
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     A16
     rts
 
@@ -563,7 +563,7 @@ animate_player_movement_set_sprite:
     clc
     adc #PLAYER_OAM_RUN_ANIM_BASE
     A8
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     A16
     rts
 
@@ -587,7 +587,7 @@ finalize_player_loop:
     rshift 4
     sta .loword(W0)
     A8
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     A16
     iny
     lda sprite::y_new
@@ -595,7 +595,7 @@ finalize_player_loop:
     rshift 4
     sta .loword(W1)
     A8
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     A16
     ;; sprite animation logic here
     ;; which will deal with the two remaining OAM bytes
@@ -606,14 +606,14 @@ finalize_player_loop:
     ;; now bottom sprite - movement
     lda .loword(W0)
     A8
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     A16
     iny
     lda .loword(W1)
     clc
     adc #$8
     A8
-    sta OAM_MIRROR, y
+    sta OAM_mirror, y
     A16
     iny
     jsr animate_player_movement

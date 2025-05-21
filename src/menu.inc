@@ -16,10 +16,7 @@ canvas_calc_tile_under_cursor:
     asl
     asl
     asl
-    sta .loword(W0)
-    lda menu::curr_column
-    clc
-    adc .loword(W0)
+    adc menu::curr_column
     rts
 
 
@@ -29,10 +26,18 @@ canvas_set_tile:
     and #JOY_A
     beq canvas_set_tile_end
     jsr canvas_calc_tile_under_cursor
+    tay
+    tax
+    lda canvas_menu::tile_type
+    A8
+    sta current_coll_map, x
+    A16
+    tya
     asl
     tax
     lda canvas_menu::chosen_tile
-    sta CURRENT_TILE_MAP, x
+    sta current_tile_map, x
+
 canvas_set_tile_end:
     rts
 
@@ -106,10 +111,12 @@ draw_init_chosen_tile:
 
 ; A - chosen tile ID
 ; X - current player
+; Y - chosen tile type
 activate_draw_menu:
     ;; We might just want to store the actual tile here.
     ;; At 2 bytes it's big enough.
     stx tile_canvas + menu::player
+    sty tile_canvas + canvas_menu::tile_type
     jsr draw_init_chosen_tile
     jsr level_screen_to_fore
     inc tile_canvas + menu::just_moved
@@ -128,7 +135,13 @@ select_menu_callback:
     beq select_menu_callback_end
     lda #.loword(tile_canvas)
     sta game_data + game_data::curr_menu
-    ;; we need to pass tile canvas the tile id of our selection
+    ;; we need to pass tile canvas the current player
+    ;; plus the tile id and tile type of our selection
+    lda menu::curr_row
+    asl
+    tax
+    lda select_row_tile_types, x
+    tay
     lda menu::curr_row
     asl
     tax

@@ -83,10 +83,10 @@ b31: .tag bullet
 
 
 
-OAM_MIRROR: .res $220
+OAM_mirror: .res $220
 
-CURRENT_COLL_MAP: .res COLL_MAP_SIZE
-CURRENT_TILE_MAP: .res GAME_MAP_SIZE
+current_coll_map: .res COLL_MAP_SIZE
+current_tile_map: .res GAME_MAP_SIZE
 
 
 .segment "RODATA"

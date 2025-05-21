@@ -150,7 +150,7 @@ point_x_calc:
     sta COLL_STACK_POINT_TILE_OFF, s
     tax
     A8
-    lda CURRENT_COLL_MAP, x           ; check collision map for point
+    lda current_coll_map, x           ; check collision map for point
     A16
     bne collision              ; if not zero, collision
     jmp coll_no_coll_for_point ; otherwise, do no collision things
@@ -289,7 +289,7 @@ coll_left_up:
     adc #$1
     tax
     A8
-    lda CURRENT_COLL_MAP, x
+    lda current_coll_map, x
     A16
     bne :+
     jmp coll_snap_to_right
@@ -298,7 +298,7 @@ coll_left_up:
     adc #$20
     tax
     A8
-    lda CURRENT_COLL_MAP, x
+    lda current_coll_map, x
     A16
     bne :+
     jmp coll_snap_to_bottom
@@ -312,7 +312,7 @@ coll_left_down:
     adc #$1
     tax
     A8
-    lda CURRENT_COLL_MAP, x
+    lda current_coll_map, x
     A16
     beq coll_snap_to_right
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -320,7 +320,7 @@ coll_left_down:
     sbc #$20
     tax
     A8
-    lda CURRENT_COLL_MAP, x
+    lda current_coll_map, x
     A16
     beq coll_snap_to_top
     jsr snap_to_right
@@ -333,7 +333,7 @@ coll_right_up:
     sbc #$1
     tax
     A8
-    lda CURRENT_COLL_MAP, x
+    lda current_coll_map, x
     A16
     beq coll_snap_to_left
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -341,7 +341,7 @@ coll_right_up:
     adc #$20
     tax
     A8
-    lda CURRENT_COLL_MAP, x
+    lda current_coll_map, x
     A16
     beq coll_snap_to_bottom
     jsr snap_to_left
@@ -362,7 +362,7 @@ coll_right_down:
     sbc #$1
     tax
     A8
-    lda CURRENT_COLL_MAP, x
+    lda current_coll_map, x
     A16
     beq coll_snap_to_left
     ;; check top
@@ -371,7 +371,7 @@ coll_right_down:
     sbc #$20
     tax
     A8
-    lda CURRENT_COLL_MAP, x
+    lda current_coll_map, x
     A16
     beq coll_snap_to_top
     ; no space at left or up

@@ -146,8 +146,8 @@ load_tilemap_to_vram:
     ; load tile map from wram to vram
     ldy #GAME_MAP_SIZE
     sty .loword(W0)
-    lda #^CURRENT_TILE_MAP
-    ldx #.loword(CURRENT_TILE_MAP)
+    lda #^current_tile_map
+    ldx #.loword(current_tile_map)
     ldy #VRAM_MAP_BG_GAME_BASE
     jsr dma_to_vram
     rts
@@ -167,7 +167,7 @@ clear_OAM_mirror:
 ;fills the buffer with 224 for low table
 ;and $00 for high table
 	php
-	ldx #.loword(OAM_MIRROR)
+	ldx #.loword(OAM_mirror)
 	stx WMADDL ;WRAM_ADDR_L
 	stz WMADDH ;WRAM_ADDR_H
 
@@ -203,9 +203,9 @@ dma_OAM:
 
 	lda #$0400 ;1 reg 1 write, 2104 oam data
 	sta DMAP0
-	lda #.loword(OAM_MIRROR)
+	lda #.loword(OAM_mirror)
 	sta A1T0L ; source
-	ldx #^OAM_MIRROR
+	ldx #^OAM_mirror
 	stx A1B0 ; bank
 	lda #$220
 	sta DAS0L ; length
