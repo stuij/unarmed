@@ -10,7 +10,7 @@ set(BGS town)
 foreach(BG ${BGS})
   add_custom_command(
     OUTPUT ${BG}.map ${BG}.palette ${BG}.tiles
-    COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-bg.sh ${CMAKE_CURRENT_SOURCE_DIR}/backgrounds/${BG}.png ${BG}
+    COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-bg.sh ${CMAKE_CURRENT_SOURCE_DIR}/backgrounds/${BG}.png ${BG} 4
     )
 
   # build a list of all the results
@@ -54,4 +54,11 @@ add_custom_command(
     COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-sound.sh ../../terrific-audio-driver/examples/example-project.terrificaudio ${TAD_OUT_FILES}
     )
 
-add_custom_target(ASSETS ALL DEPENDS ${BG_BINS} ${SPRITE_BINS} ${MAP_BINS} ${TAD_OUT_FILES})
+    set(FONT_OUTPUT font.map font.palette font.tiles)
+
+add_custom_command(
+  OUTPUT ${FONT_OUTPUT}
+  COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-bg.sh ${CMAKE_CURRENT_SOURCE_DIR}/fonts/boxy_bold.png font 2 --no-discard
+  )
+
+add_custom_target(ASSETS ALL DEPENDS ${BG_BINS} ${SPRITE_BINS} ${MAP_BINS} ${TAD_OUT_FILES} ${FONT_OUTPUT})

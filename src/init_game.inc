@@ -33,10 +33,25 @@ init_binary_data:
     ldy #VRAM_CHR_BASE
     jsr dma_to_vram
 
+    ldy #(font_tiles_end - font_tiles) ; size of transfer
+    sty <W0
+    lda #^font_tiles
+    ldx #.loword(font_tiles)
+    ldy #VRAM_FONT_CHR_BASE
+    jsr dma_to_vram
+
 
     ;; this should soon be handled somewhere else
 
-    ; load tile map to wram
+    ; load tile maps to wram
+    ldy #(font_map_end - font_map) ; size of transfer
+    sty <W0
+    lda #^font_map
+    ldx #.loword(font_map)
+    ldy #VRAM_MAP_FONT_BASE
+    jsr dma_to_vram
+
+
     lda #^current_tile_map
     sta <B1L
     ldy #GAME_MAP_SIZE
@@ -116,7 +131,7 @@ init_game_data:
 
     A8
     ;; set up bg registers
-    lda #1 ; mode 1
+    lda #$9 ; mode 1, BG3 prio high
     sta BGMODE
 
     ; set bg 1 and bg 2 char vram base addr. both the same for now.
@@ -125,6 +140,13 @@ init_game_data:
 
     lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
     sta BG1SC ; set bg 1 tile map
+
+    ; set bg 3 and bg4 vram base addr. both the same for now.
+    lda #(VRAM_FONT_CHR_BASE >> 12)
+    sta BG34NBA
+
+    lda #((VRAM_MAP_FONT_BASE >> 10) << 2)
+    sta BG3SC ; set bg 1 tile map
 
     lda #$80
     sta VMAIN

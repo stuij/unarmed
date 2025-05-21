@@ -176,8 +176,8 @@ main:
     jsr load_song
 
 
-    ; turn on BG1, BG2 and sprites
-    lda #$13
+    ; turn on BG1, BG2, BG3 and sprites
+    lda #$17
     sta TM
 
     ; Maximum screen brightness

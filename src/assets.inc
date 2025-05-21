@@ -21,6 +21,15 @@ town_coll:
 .incbin "assets/town-map.coll"
 town_coll_end:
 
+;; font
+font_tiles:
+.incbin "assets/font.tiles"
+font_tiles_end:
+
+font_map:
+.incbin "assets/font.map"
+font_map_end:
+
 ;; sprites
 demo_sprite_tiles:
 .incbin "assets/demo-sprites.tiles"
