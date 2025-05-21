@@ -44,10 +44,10 @@ init_binary_data:
     ;; this should soon be handled somewhere else
 
     ; load tile maps to wram
-    ldy #(font_map_end - font_map) ; size of transfer
+    ldy #(fox_map_end - fox_map) ; size of transfer
     sty <W0
-    lda #^font_map
-    ldx #.loword(font_map)
+    lda #^fox_map
+    ldx #.loword(fox_map)
     ldy #VRAM_MAP_FONT_BASE
     jsr dma_to_vram
 
@@ -163,6 +163,8 @@ init_game_data:
     stz BG1HOFS
     sta BG2HOFS
     stz BG2HOFS
+
+    lda #$FC
     sta BG3HOFS
     stz BG3HOFS
 
@@ -172,6 +174,8 @@ init_game_data:
     stz BG1VOFS
     sta BG2VOFS
     stz BG2VOFS
+
+    lda #$FB
     sta BG3VOFS
     stz BG3VOFS
 

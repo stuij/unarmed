@@ -289,23 +289,38 @@ def schema_sanity_check(schema):
         print("{}, {}, {}, {}".format(i.choose_idx, i.tile_idx, i.props,  i.ty_name))
 
 
-def encode_string(string, max_len, file):
-    str_len = len(string)
-    if str_len > max_len:
-        raise ValueError("string length {} higher than max {}"
-                           .format(str_len, length))
-    for char in string:
-        file.write(encode_byte(ord(char)))
-
-    for pad in range(max_len - str_len):
-        file.write(encode_byte(0))
-
-
 def tile_flags_to_byte(flip_h, flip_v):
     h_bit = 0 if not flip_h else 1 << 6
     v_bit = 0 if not flip_v else 1 << 7
 
     return h_bit | v_bit
+
+
+def encode_string_map(string, max_len, file):
+    str_len = len(string)
+    if str_len > max_len:
+        raise ValueError("string length {} higher than max {}"
+                           .format(str_len, length))
+    for char in string:
+        file.write(encode_word(1 << 5, ord(char) - 32))
+
+    for pad in range(max_len - str_len):
+        file.write(encode_word(0, 0))
+
+
+# this one is for programatically in asm copying these tiles
+# char by char when constructing a string of words
+def encode_font_ascii_table():
+    with open("font_prio.map", "wb") as tile_map:
+        for i in range(0x60):
+            tile_map.write(encode_word(1 << 5, i))
+
+
+# this one is for converting strings to a tile map at compile time
+def encode_font_map(string, length, file_name):
+    with open(file_name, "wb") as string_map:
+        encode_string_map(string, length, string_map)
+
 
 def encode_tile_select_bits(select_table, schema):
     with open("select_tiles.map", "wb") as tile_map:
@@ -329,7 +344,7 @@ def encode_tile_select_bits(select_table, schema):
 
     with open("select_row_name.bin", "wb") as row_name:
         for row in schema:
-            encode_string(row[0], 16, row_name)
+            encode_string_map(row[0], 16, row_name)
 
 def main(tmj_in, spec_in):
     tmj = read_file(tmj_in)
@@ -341,6 +356,10 @@ def main(tmj_in, spec_in):
         encode_map(layer, choose_table)
 
     encode_tile_select_bits(select_table, schema)
+
+    encode_font_ascii_table()
+    test_string = "   The quick brown fox jumps"
+    encode_font_map(test_string, 28, "fox.map")
 
 
 if __name__ == "__main__":

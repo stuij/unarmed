@@ -27,8 +27,13 @@ font_tiles:
 font_tiles_end:
 
 font_map:
-.incbin "assets/font.map"
+.incbin "assets/font_prio.map"
 font_map_end:
+
+fox_map:
+.incbin "assets/fox.map"
+fox_map_end:
+
 
 ;; sprites
 demo_sprite_tiles:
