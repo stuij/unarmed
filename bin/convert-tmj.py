@@ -121,6 +121,9 @@ def prop_list_to_nr(prop_list):
                 nr |= 1 << 1
             case "c": # climb
                 nr |= 1 << 2
+            case "k": # kill
+                nr |= 1 << 3
+
             case _:
                 raise ValueError("unknown propery: {}".format(prop))
     return nr

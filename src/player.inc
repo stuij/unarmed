@@ -465,6 +465,9 @@ player_point_no_call_end:
 
 
 player_coll_end_callback:
+    lda COLL_STACK_TILE_PROPS + 2, s
+    and #$8 ;; is equal to kill (should add vars for these)
+    bne player_handle_kill ;; if so handle kill
     lda sprite::move_state ;; only execute
     cmp #move_state::idle
     beq player_coll_ledge_fall
@@ -505,6 +508,12 @@ player_coll_store_x_new:
     lda #0
     sta sprite::h_velo
 player_coll_end_callback_end:
+    rts
+
+;; This is another exit out of the fn. My first one in this project.
+;; The compiler engineer in me feels dirty.
+player_handle_kill:
+    jmp spinloop_handler
     rts
 
 

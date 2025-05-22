@@ -4,24 +4,16 @@ COLL_BG_INC = 1
 ;; -------------------
 ;; collision detection
 
-;; my current thinking is:
-;; - first handle all movement to see what new coordinate
-;;   our sprite would end up
-;; - then do collision tests, for now only with terrain
-;; - if collision, this will mean a new state, and we need to process the
-;; aftermath
-;;
-;; - sprites have a bounding box that we need to check for collisions.
-;;   depending on which direction we move in, we can check different points
-;;   of this box. So say we go left, we check left up and left down,
-;;   we fall left, we check left up, left down and right down
-;;   we might want to check 6 points so we don't allow impaling ourselves horizontally on
-;;   8x8 blocks
+;; todo: sprites have a bounding box that we need to check for collisions.
+;; Depending on which direction we move in, we can constrain checking the
+;; different points of this box to only the ones that we care about. So say
+;; we go left, we check left up and left down, we fall left, we check left up,
+;; left down and right down, plus the intermediate points so we don't allow
+;; impaling ourselves horizontally on 8x8 blocks
 
-
-
-COLL_STACK_ROOM = $21
-COLL_STACK_TMP = $1d
+COLL_STACK_ROOM = $23
+COLL_STACK_TMP = $1f
+COLL_STACK_TILE_PROPS = $1d
 COLL_STACK_POINT_HIT_GROUND = $1b
 COLL_STACK_POINT_SPRITE_CALLBACK_TMP = $19
 COLL_STACK_Y_NEW_TMP = $17
@@ -77,25 +69,16 @@ check_collisions:
     lda #0
     sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP, s ; set to 0
     sta COLL_STACK_POINT_HIT_GROUND, s
-    ;; So now we have our base
-    ;; Our stack, growing down looks like:
-    ;; - top-left corner y offset into 8x8 tile
-    ;; - top-left corner x offset into 8x8 tile
-    ;; - top-left corner offset into collision map <- SP
-    ;;
-    ;; below the stack is augmented with:
-    ;; - running offset in collision map for individual point
-    ;; - y offset for point into sprite + top-left corner y offset into 8x8 tile
-    ;; - x offset for point into sprite + top-left corner x offset into 8x8 tile
+    sta COLL_STACK_TILE_PROPS, s
+    ;; So now we have our base info calculated.
     ;;
     ;; From here on it becomes a game of iterating over the points of our
     ;; bounding box and figuring out if they cause a collision. If so, by how
     ;; much should we move backwards from our point of travel to snap to the
     ;; grid.
     ;;
-    ;; We should also check if one pixel beyond our bounding box is a surface we
-    ;; want to walk on/cling to. Once we get there I guess we will chop this fn
-    ;; up for some code reusability.
+    ;; We also check if one pixel beyond our bounding box is a surface we
+    ;; want to walk on/cling to.
     ;;
     ;; First up, see if we need to move the offset into the collision map for y
     ;;
@@ -103,6 +86,13 @@ check_collisions:
     ;; for duration of this loop, bbox offset stays in Y
     ldy #0 ;; bbox point offset
 coll_point_loop:
+    ;; first we check if we're out of bounds for this point. If so, we can
+    ;; skip everything and declare player/anything else dead.
+    lda sprite::y_new
+    clc
+    adc (sprite::bbox), y
+    bmi collision_out_of_bounds
+    ;; otherwise we now do proper bounds checking on this point
     lda COLL_STACK_Y_OFF_NEW, s
     clc
     adc (sprite::bbox), y
@@ -110,7 +100,7 @@ coll_point_loop:
     a_rshift 3 ;; truncate to see if we're spilling over into another tile
     beq y_no_spill                      ; we're not spilling over
     lshift 5                            ; muliply by $20
-    clc                                 ; 2 cycles
+    clc
     adc COLL_STACK_TILE_OFF, s
     sta COLL_STACK_POINT_TILE_OFF, s   ; push collision map tile for this point (we need other tile later)
     bra point_x_calc
@@ -119,13 +109,18 @@ y_no_spill: ;; y didn't spill. to keep symmetry with above basic block, push unm
     lda COLL_STACK_TILE_OFF, s
     sta COLL_STACK_POINT_TILE_OFF, s
 point_x_calc:
+    iny ;; move y to x offset in point
+    iny
+    ;; also for X we first check if we're out of bounds
+    lda sprite::x_new
+    clc
+    adc (sprite::bbox), y
+    bmi collision_out_of_bounds
     ;; calc possible x collision tile, and check collision before we start
     ;; thinking about calculating possible sprite pushback to grid coords
     lda COLL_STACK_X_OFF_NEW, s
-    iny ;; move y to x offset in point
-    iny
     clc
-    adc (sprite::bbox), y ; again, do x in the meantime
+    adc (sprite::bbox), y
     sta COLL_STACK_POINT_X_OFF_NEW, s
     a_rshift 3
     clc
@@ -134,9 +129,19 @@ point_x_calc:
     tax
     A8
     lda current_coll_map, x           ; check collision map for point
+    ;; save the tile props only if the tile props aren't nil
+    ;; otherwise they'll get overwritten by the props of points that
+    ;; don't actually touch anything
     A16
+    beq collision_after_prop_save
+    sta COLL_STACK_TILE_PROPS, s
+collision_after_prop_save:
     bne collision              ; if not zero, collision
     jmp coll_no_coll_for_point ; otherwise, do no collision things
+collision_out_of_bounds:
+    lda #$8
+    sta COLL_STACK_TILE_PROPS, s
+    jmp collision_cleanup
 collision:
     ;; Once we know x and y direction,
     ;; we can make sensible decision on snapping.
@@ -256,7 +261,7 @@ coll_snap_y:
     and #$FF80 ; not z flag set, so bigger than 8 + subpixels
                ; tells us we moved out of the block
     bne coll_snap_y_cont
-    jmp collision_player_end ;; assuming we got here from x also not out of bounds
+    jmp collision_point_end ;; assuming we got here from x also not out of bounds
 coll_snap_y_cont:
     ;; if n flag set, we moved from upper block, so downwards
     bpl coll_snap_y_end
@@ -278,7 +283,7 @@ coll_left_up:
     jmp coll_snap_to_right
   : lda COLL_STACK_POINT_TILE_OFF, s
     clc
-    adc #$20
+    adc #$10
     tax
     A8
     lda current_coll_map, x
@@ -287,7 +292,7 @@ coll_left_up:
     jmp coll_snap_to_bottom
   : jsr snap_to_right
     jsr snap_to_bottom
-    jmp collision_player_end
+    jmp collision_point_end
 
 coll_left_down:
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -308,7 +313,7 @@ coll_left_down:
     beq coll_snap_to_top
     jsr snap_to_right
     jsr snap_to_top
-    bra collision_player_end
+    bra collision_point_end
 
 coll_right_up:
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -329,7 +334,7 @@ coll_right_up:
     beq coll_snap_to_bottom
     jsr snap_to_left
     jsr snap_to_bottom
-    bra collision_player_end
+    bra collision_point_end
 
 
 ; we're moving in right/down direction
@@ -363,26 +368,26 @@ coll_right_down:
     ; of current tile
     jsr snap_to_left
     jsr snap_to_top
-    bra collision_player_end
+    bra collision_point_end
 
 
 ;; snapping to what?
 coll_snap_to_top:
     jsr snap_to_top
-    jmp collision_player_end
+    jmp collision_point_end
 
 coll_snap_to_bottom:
     jsr snap_to_bottom
-    bra collision_player_end
+    bra collision_point_end
 
 
 coll_snap_to_left:
     jsr snap_to_left
-    bra collision_player_end
+    bra collision_point_end
 
 coll_snap_to_right:
     jsr snap_to_right
-    bra collision_player_end
+    bra collision_point_end
 
 ;; put code here, if you want to do something specific if no
 ;; collision has happened
@@ -393,7 +398,7 @@ coll_no_coll_for_point:
     tax
     jsr (0,x)
 
-collision_player_end:
+collision_point_end:
     iny
     iny
     cpy sprite::bbox_size
