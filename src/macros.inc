@@ -33,6 +33,14 @@ MACROS_INC = 1
 	.endif
 .endmacro
 
+
+.macro lshift n
+	.if (n > 0)
+		asl
+		lshift (n - 1)
+	.endif
+.endmacro
+
 ;; arithmetic rshift
 .macro a_rshift n
 	.if (n > 0)
