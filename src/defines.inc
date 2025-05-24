@@ -76,9 +76,9 @@ OAM_MENU_CARET_OFFSET = (OAM_mirror + OAM_PLAYER_SIZE + OAM_BULLET_SIZE)
     bbox_size           .word ; 14 - how many points in the bbox
     move_state          .word ; 16
     face_dir            .word ; 18
-    anim_tick           .word ; 20 - keep track of where we should
+    anim_tick           .word ; 1a - keep track of where we should
                               ;      be in our sprite animation
-    vptr                .word ; 22 - pointer to the sprite vtable
+    vptr                .word ; 1c - pointer to the sprite vtable
 .endstruct
 
 
@@ -138,16 +138,17 @@ V_VELO_DOWN_MAX = $40
 
 .struct player
     sprite              .tag sprite
-    bbox_ledge_lookup   .word ; 24
-    joy                 .word ; 26 - last frame buttons
-    joy_trigger         .word ; 28 - only buttons that weren't pressed last frame
-    joy_held            .word ; 2a - buttons pressed this frame and last frame
-    joy_trigger_held    .word ; 2c - both new and held buttons
-    h_tribool           .word ; 2e
-    v_tribool           .word ; 30
-    bullets             .word ; 32
-    stance_dir          .word ; 34
-;   crouch              .word ; 36
+    bbox_ledge_lookup   .word ; 1e
+    joy                 .word ; 20 - last frame buttons
+    joy_trigger         .word ; 22 - only buttons that weren't pressed last frame
+    joy_held            .word ; 24 - buttons pressed this frame and last frame
+    joy_trigger_held    .word ; 26 - both new and held buttons
+    h_tribool           .word ; 28
+    v_tribool           .word ; 2a
+    bullets             .word ; 2c
+    stance_dir          .word ; 2e
+    nr                  .word ; 30
+;   crouch              .word ; 32
 .endstruct
 
 

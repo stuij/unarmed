@@ -145,6 +145,10 @@ player_init_loop:
     lda .loword(player_table), x ; player struct under x offset
     tcd ; set dp to it
 
+    txa
+    lsr
+    sta player::nr
+
     lda #$0
     sta sprite::h_velo
     sta sprite::v_velo
@@ -513,7 +517,17 @@ player_coll_end_callback_end:
 ;; This is another exit out of the fn. My first one in this project.
 ;; The compiler engineer in me feels dirty.
 player_handle_kill:
-    jmp spinloop_handler
+    lda player::nr
+    asl
+    asl
+    tax
+    lda player_start_coords, x
+    sta sprite::x_new
+    inx
+    inx
+    lda player_start_coords, x
+    sta sprite::y_new
+
     rts
 
 
