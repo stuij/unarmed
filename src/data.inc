@@ -86,6 +86,7 @@ b31: .tag bullet
 OAM_mirror: .res $220
 
 current_coll_map: .res COLL_MAP_SIZE
+current_coll_map_bottom: .res COLL_MAP_BOTTOM_SIZE
 current_tile_map: .res GAME_MAP_SIZE
 
 
@@ -98,33 +99,12 @@ draw_tile_row_count:
 ;; the programmers mind, but this is the price I'm willing
 ;; to pay for a uniform menu system.
 draw_tile_row_table:
+.repeat 28
 .word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
-.word $20
+.endrep
+
+;; we're pasting three extra rows to the collision map, so
+;; players have the feeling they fall down, instead of just going out
+;; of bounds on the ground
 
 .endif ; DATA_INC

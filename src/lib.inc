@@ -163,6 +163,30 @@ SpriteEmptyVal:
 
 .a8
 .i16
+clear_coll_map_bottom:
+;fills the buffer with 224 for low table
+;and $00 for high table
+	php
+	ldx #.loword(current_coll_map_bottom)
+	stx WMADDL ;WRAM_ADDR_L
+	stz WMADDH ;WRAM_ADDR_H
+
+	ldx #$8008 ;fixed transfer to WRAM data 2180
+	stx DMAP0
+	ldx	#.loword(DMAZero)
+	stx A1T0L ; and 4303
+	lda #^SpriteEmptyVal ;bank #
+	sta A1B0
+	ldx #COLL_MAP_BOTTOM_SIZE
+	stx DAS0L ;and 4306
+	lda #1
+	sta MDMAEN ; DMA_ENABLE start dma, channel 0
+    plp
+    rts
+
+
+.a8
+.i16
 clear_OAM_mirror:
 ;fills the buffer with 224 for low table
 ;and $00 for high table

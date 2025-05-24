@@ -13,6 +13,7 @@ VRAM_MAP_BG_GAME_BASE = $9800
 
 GAME_MAP_SIZE = $700
 COLL_MAP_SIZE = $380
+COLL_MAP_BOTTOM_SIZE = $60
 
 
 
@@ -34,6 +35,11 @@ OAM_MENU_CARET_OFFSET = (OAM_mirror + OAM_PLAYER_SIZE + OAM_BULLET_SIZE)
 
 ;;------------
 ;; sprite base struct
+
+;; when doing collision checking, if we move past these consts,
+;; we are out of bounds of the playing field, and we incur a penalty
+OUT_OF_BOUNDS_X = $fa0
+OUT_OF_BOUNDS_Y = $ed0
 
 .struct sprite_vtable
     collision_end_callback       .addr

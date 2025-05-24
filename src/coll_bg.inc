@@ -92,6 +92,8 @@ coll_point_loop:
     clc
     adc (sprite::bbox), y
     bmi collision_out_of_bounds
+    cmp #OUT_OF_BOUNDS_Y
+    bcs collision_out_of_bounds
     ;; otherwise we now do proper bounds checking on this point
     lda COLL_STACK_Y_OFF_NEW, s
     clc
@@ -116,6 +118,8 @@ point_x_calc:
     clc
     adc (sprite::bbox), y
     bmi collision_out_of_bounds
+    cmp #OUT_OF_BOUNDS_X
+    bcs collision_out_of_bounds
     ;; calc possible x collision tile, and check collision before we start
     ;; thinking about calculating possible sprite pushback to grid coords
     lda COLL_STACK_X_OFF_NEW, s

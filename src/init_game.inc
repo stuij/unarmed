@@ -25,6 +25,8 @@ init_binary_data:
     ldy #.loword(current_coll_map)
     jsr dma_to_wram
 
+    jsr clear_coll_map_bottom
+
     ; load tiles
     ldy #(town_tiles_end - town_tiles) ; size of transfer
     sty <W0
