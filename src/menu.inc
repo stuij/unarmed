@@ -200,6 +200,33 @@ draw_select_screen:
     ldy #VRAM_MAP_BG_TILE_SELECT_BASE
     jsr dma_to_vram
 
+    ;; set background to tiles to transparent, as
+    ;; otherwise the transparent parts of the tiles would show
+    ;; whatever is occupying the background
+    A16
+    stz .loword(W0) ;; first tile, aka transparent
+    lda #($7 * $20 + $5)
+    clc
+    adc #VRAM_MAP_BG_GAME_BASE
+    sta .loword(W1)
+    tay
+    clc
+    adc #($6 * $20)
+    sta .loword(W2)
+draw_select_clear_bg_behind_tiles_loop:
+    ldx #$30
+    A8
+    jsr dma_fixed_to_vram
+    A16
+    lda .loword(W1)
+    clc
+    adc #$20
+    tay
+    sta .loword(W1)
+    cmp .loword(W2)
+    bmi draw_select_clear_bg_behind_tiles_loop
+    A8
+
     lda #SELECT_SCREEN_X_COORDS
     ;; this is one of those latching regs
     sta BG1HOFS

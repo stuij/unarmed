@@ -184,6 +184,30 @@ clear_coll_map_bottom:
     plp
     rts
 
+.a8
+.i16
+; Copy a fixed val in W0 to VRAM. So repeat same val in consequetive
+; memory locations.
+;
+; arguments:
+;   - y: dst VRAM address
+;   - x: size
+;   - W0: value
+dma_fixed_to_vram:
+    stx DAS0L ; set DMA byte counter
+    stz A1B0 ; set bank of W0, aka 0
+    ldx .loword(W0)
+    stx A1T0L ; set loword of source address
+    sty VMADDL ; set vram base addr
+
+    lda #<VMDATA
+    sta BBAD0 ; so set DMA destination to WMDATA
+    lda #09
+    sta DMAP0 ; transfer mode, 2 register, 1 write, fixed
+    lda #1
+    sta MDMAEN ; start dma, channel 0
+    rts
+
 
 .a8
 .i16
