@@ -67,12 +67,12 @@ draw_tile_menu_callback:
 init_draw_menu:
     lda #tile_canvas
     tcd
-    lda #DRAW_CARET_X_OFFSET
+    lda #DRAW_CARET_X_INIT_OFFSET
     sta menu::cursor_x_pos
     lda #DRAW_CARET_X_ORIGIN
     sta menu::cursor_x_pos_origin
 
-    lda #DRAW_CARET_Y_OFFSET
+    lda #DRAW_CARET_Y_INIT_OFFSET
     sta menu::cursor_y_pos
     lda #DRAW_CARET_Y_ORIGIN
     sta menu::cursor_y_pos_origin
@@ -83,12 +83,14 @@ init_draw_menu:
     lda #.loword(draw_tile_row_table)
     sta menu::row_table
 
-    lda #$0
+    lda #DRAW_CARET_INIT_ROW
     sta menu::curr_row
+    lda #DRAW_CARET_INIT_COLUMN
     sta menu::curr_column
-    sta menu::timeout_tick
-    sta menu::dirty_p
-    sta menu::just_moved
+
+    stz menu::timeout_tick
+    stz menu::dirty_p
+    stz menu::just_moved
 
     lda #.loword(draw_tile_menu_callback)
     sta menu::callback
@@ -242,9 +244,20 @@ hide_menu_caret:
 .a16
 .i16
 set_menu_caret_position:
-    A8
     lda menu::cursor_x_pos
+    A8
     sta OAM_MENU_CARET_OFFSET + oam_entry::x_pos
+    bmi caret_pos_set_x_neg ;; x pos is negative, so set x pos top bit
+    ;; otherwise we clear the x pos top bit
+    lda #$fe
+    and OAM_MENU_CARET_XTRA_PROPS
+    sta OAM_MENU_CARET_XTRA_PROPS
+    bra caret_pos_set_y
+caret_pos_set_x_neg:
+    lda #$1
+    ora OAM_MENU_CARET_XTRA_PROPS
+    sta OAM_MENU_CARET_XTRA_PROPS
+caret_pos_set_y:
     lda menu::cursor_y_pos
     sta OAM_MENU_CARET_OFFSET + oam_entry::y_pos
     A16
