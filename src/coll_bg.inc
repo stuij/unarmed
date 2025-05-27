@@ -90,10 +90,10 @@ coll_point_loop:
     ;; skip everything and declare player/anything else dead.
     lda sprite::y_new
     clc
-    adc (sprite::bbox), y
+    adc (sprite::bbox_fine), y
     bmi collision_out_of_bounds
     cmp #OUT_OF_BOUNDS_Y
-    bcs collision_out_of_bounds
+    bpl collision_out_of_bounds
     ;; otherwise we now do proper bounds checking on this point
     lda COLL_STACK_Y_OFF_NEW, s
     clc
@@ -116,10 +116,10 @@ point_x_calc:
     ;; also for X we first check if we're out of bounds
     lda sprite::x_new
     clc
-    adc (sprite::bbox), y
+    adc (sprite::bbox_fine), y
     bmi collision_out_of_bounds
     cmp #OUT_OF_BOUNDS_X
-    bcs collision_out_of_bounds
+    bpl collision_out_of_bounds
     ;; calc possible x collision tile, and check collision before we start
     ;; thinking about calculating possible sprite pushback to grid coords
     lda COLL_STACK_X_OFF_NEW, s

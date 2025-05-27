@@ -38,8 +38,8 @@ OAM_MENU_CARET_OFFSET = (OAM_mirror + OAM_PLAYER_SIZE + OAM_BULLET_SIZE)
 
 ;; when doing collision checking, if we move past these consts,
 ;; we are out of bounds of the playing field, and we incur a penalty
-OUT_OF_BOUNDS_X = $fa0
-OUT_OF_BOUNDS_Y = $ed0
+OUT_OF_BOUNDS_X = $fff
+OUT_OF_BOUNDS_Y = $f7f
 
 .struct sprite_vtable
     collision_end_callback       .addr

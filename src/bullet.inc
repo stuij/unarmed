@@ -178,7 +178,10 @@ bullet_point_no_coll_callback:
 
 
 bullet_coll_end_callback:
-bullet_coll_end_flip_h:
+    lda COLL_STACK_TILE_PROPS + 2, s
+    and #$8 ;; is equal to kill (should add vars for these)
+    bne bullet_handle_kill ;; if so handle kill
+
     lda COLL_STACK_Y_NEW_TMP + 2, s
     bmi bullet_coll_end_flip_v
     ;; x collision occured, save new x.
@@ -201,6 +204,11 @@ bullet_coll_end_flip_v:
     adc #$1
     sta sprite::h_velo
 bullet_coll_end_callback_end:
+    rts
+
+bullet_handle_kill:
+    stz sprite::h_velo
+    stz sprite::v_velo
     rts
 
 
