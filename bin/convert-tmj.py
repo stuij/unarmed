@@ -292,11 +292,12 @@ def schema_sanity_check(schema):
         print("{}, {}, {}, {}".format(i.choose_idx, i.tile_idx, i.props,  i.ty_name))
 
 
-def tile_flags_to_byte(flip_h, flip_v):
+def tile_flags_to_byte(flip_h, flip_v, priority):
     h_bit = 0 if not flip_h else 1 << 6
     v_bit = 0 if not flip_v else 1 << 7
+    prio  = 0 if not priority else 1 << 5
 
-    return h_bit | v_bit
+    return h_bit | v_bit | prio
 
 
 def encode_string_map(string, max_len, file):
@@ -328,7 +329,7 @@ def encode_font_map(string, length, file_name):
 def encode_tile_select_bits(select_table, schema):
     with open("select_tiles.map", "wb") as tile_map:
         for item in select_table:
-            tile_top_bits = tile_flags_to_byte(item.flip_h, item.flip_v)
+            tile_top_bits = tile_flags_to_byte(item.flip_h, item.flip_v, 1)
             tile_map.write(encode_tile(tile_top_bits, item.tile_idx if item.valid else 0))
 
     with open("select_row_count.bin", "wb") as row_count:

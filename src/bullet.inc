@@ -68,7 +68,7 @@ init_bullets_loop:
     lda #BULLET_SPRITE_OFFSET
     sta OAM_mirror, y
     iny
-    lda #$10                ; no flip, prio 2, palette 0
+    lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror, y
     iny
     iny

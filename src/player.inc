@@ -109,27 +109,27 @@ player_bbox_default_ledge_lookup:
 .i16
 init_players:
     ;; p1
-    lda #$10                ; no flip, prio 2, palette 0
+    lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $3
-    lda #$10                ; no flip, prio 2, palette 0
+    lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $7
 
     ;; p2
-    lda #$10                ; no flip, prio 2, palette 0
+    lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $b
-    lda #$10                ; tile offset of third sprite
+    lda #$20                ; tile offset of third sprite
     sta OAM_mirror + $e
 
     ;; p3
-    lda #$10                ; no flip, prio 2, palette 0
+    lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $13
-    lda #$10                ; no flip, prio 2, palette 0
+    lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $17
 
     ;; p4
-    lda #$10                ; no flip, prio 2, palette 0
+    lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $1b
-    lda #$10                ; no flip, prio 2, palette 0
+    lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $1e
 
 
