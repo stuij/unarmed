@@ -24,7 +24,7 @@ canvas_set_tile:
     ldy #player::joy_trigger_held
     lda (menu::player), y
     and #JOY_A
-    beq canvas_set_tile_end
+    beq canvas_set_tile_flip_h
     jsr canvas_calc_tile_under_cursor
     tay
     tax
@@ -37,7 +37,29 @@ canvas_set_tile:
     tax
     lda canvas_menu::chosen_tile
     sta current_tile_map, x
-
+canvas_set_tile_flip_h:
+    ldy #player::joy_trigger
+    lda (menu::player), y
+    sta .loword(W0)
+    and #JOY_X
+    beq canvas_set_tile_flip_v
+    lda canvas_menu::chosen_tile
+    eor #$4000
+    sta canvas_menu::chosen_tile
+canvas_set_tile_flip_v:
+    lda .loword(W0)
+    and #JOY_Y
+    beq canvas_set_tile_prio
+    lda canvas_menu::chosen_tile
+    eor #$8000
+    sta canvas_menu::chosen_tile
+canvas_set_tile_prio:
+    lda .loword(W0)
+    and #JOY_L
+    beq canvas_set_tile_end
+    lda canvas_menu::chosen_tile
+    eor #$2000
+    sta canvas_menu::chosen_tile
 canvas_set_tile_end:
     rts
 
@@ -115,8 +137,6 @@ draw_init_chosen_tile:
 ; X - current player
 ; Y - chosen tile type
 activate_draw_menu:
-    ;; We might just want to store the actual tile here.
-    ;; At 2 bytes it's big enough.
     stx tile_canvas + menu::player
     sty tile_canvas + canvas_menu::tile_type
     jsr draw_init_chosen_tile
