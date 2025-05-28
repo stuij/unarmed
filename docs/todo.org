@@ -1,0 +1,76 @@
+
+* Can do before game jam starts
+** DONE properly initialize SNES
+** DONE getting bg/sprite on screen
+** DONE make python script to convert Tiled tilemap data into snes backgrounds
+** DONE include audio
+** game engine
+*** DONE movement: jumping, running, idling
+*** DONE fall when idling if blocks are taken away
+*** DONE player background collisions
+*** DONE multiple players
+*** DONE use serial controller method for forth player
+*** DONE some kind of projectiles to stress test bg collisions, engine in general
+*** DONE sprite animations using a simple per-sprite timer
+*** DONE sprite collisions
+** DONE simple menu framework
+** DONE tools to edit map on the SNES itself for quicker development
+*** DONE select tile menu
+*** DONE with selected tile, draw straight on the map
+*** DONE caret in menu mode off by one on x and y axis as that would make
+  caret negative. allow for negative offset as we do want to do the right thing
+  for first row of x and y
+** DONE Make some kind of simple text system
+** DONE wall type differentiation in code
+** DONE add font, and some way to put it up on the screen
+** projectile list implementation to keep track of which projectile next per player
+** add extra background layer
+** do some music experiments to learn the sound engine
+* do during game jam
+** minimal actual game loop
+*** shoot people and health bar goes down. winner is player who still has health
+*** timer
+*** can shoot yourself by bullet wall bounce?
+** code to restart level cleanly
+** when you die, what to do?
+*** dying from bullet
+*** dying from hazard, like a kill block or out of bounds
+*** should be some kind of lively animation, as immediately respawning
+   looks robotic and boring
+** menu/pause screen
+*** select from premade maps
+*** select player count
+*** reset
+*** edit custom map
+*** single map/random maps mode?
+** clean flow between different menus and game
+** 
+** multiple projectiles
+** implement different wall types
+*** ice
+*** non-deflecting
+*** allow climbing
+*** kill block
+** At game start, we start in idle mode.
+When we then move we move to run state. But we're actually falling, which should be interpreted as jumping state. This might bite us at some point.
+** start to think about movement while jumping.
+We're currently very floaty, and we're not doing anything special, like jumping higher after accelleration. What might be gbetter.
+** make music
+** make actual acceptable graphic art
+** title screen
+** more sophisticated loop/game loop enhancements
+*** as in the core game loop should ideally have some kind of rock paper scissers thing going on. So the goal here is to add some features that make the competition aspect more intricate and combinatorial, so players need to start anticipating on more than one level, aka the meta needs to be strong, and game play needs to get more frentic.
+*** allow for deflection of projectiles
+*** bombs (so slower/different projectiles)
+*** should we be allowed to kick
+*** portals
+*** power ups
+** implement wall climbing
+
+* after game jam
+** script to parse save file and output say Tiled tmj file
+** web-based save file exchange
+** save custom map
+*** figure out saving to sram
+*** save file layout/spec
+*** select save game
