@@ -287,7 +287,7 @@ coll_left_up:
     jmp coll_snap_to_right
   : lda COLL_STACK_POINT_TILE_OFF, s
     clc
-    adc #$10
+    adc #$20
     tax
     A8
     lda current_coll_map, x
