@@ -105,6 +105,56 @@ player_bbox_default_ledge_lookup:
 .word 0 ; middle right
 
 
+;; X - current player offset times 2
+;; D - current player mem loc
+.a16
+.i16
+set_player_bullet_queue:
+    ;; calc first bullet offset from bullet table
+    ;; and then copy over the addresses of all the bullets
+    ;; that have been assigned to the player
+    ;; Then save the player address in all the bullet
+    ;; instances assigned to the player.
+    txa
+    A8
+    sta M7A
+    stz M7A
+    lda #BULLETS_PER_PLAYER
+    lsr
+    sta M7B
+    A16
+    lda MPYL
+    clc
+    adc #.loword(bullet_table)
+    ;; so now we have the address of the bullet table entry of
+    ;; first bullet for this player in A
+    tax
+    tdc
+    clc
+    adc #player::bullet_queue
+    tay
+    lda #BULLETS_PER_PLAYER
+    dec
+    mvn $80, $00
+    lda #BULLETS_PER_PLAYER
+    sta player::bullets_left
+    ;; load player in bullets
+    sta .loword(W0)
+    ldx #0
+    ldy #bullet::player
+    phx ;; we just need a stack slot here
+set_player_bullet_queue_loop:
+    lda player::bullet_queue, x
+    sta 1, s
+    tdc
+    sta (1, s), y
+    inx
+    inx
+    cpx .loword(W0)
+    bne set_player_bullet_queue_loop
+    pla
+    rts
+
 .a16
 .i16
 init_players:
@@ -155,11 +205,9 @@ player_init_loop:
     sta player::joy
     sta sprite::anim_tick
 
-    ;; nice and hacky right now
-    ;; at some point this will hold some sensible structure
-    ;; say a list of bullets
-    lda .loword(bullet_table), x
-    sta player::bullets
+    phx
+    jsr set_player_bullet_queue
+    plx
 
     ; p1 start position
     ; $80 pixel offset and $0 subpixels
@@ -727,6 +775,30 @@ set_player_direction_done:
 ;; -------
 ;; actions
 
+;; in:
+;; W3 - start address of queue
+;; X - pivot
+;; queue items are 16-bit
+;;
+;; out:
+;; X - new pivot
+;; A - item pulled from the queue
+.a16
+.i16
+queue_get_active_item:
+    cpx #$0
+    bne queue_active_item
+    lda #$0
+    bra queue_get_active_items_end
+queue_active_item:
+    dex
+    dex
+    lda player::bullet_queue, x
+queue_get_active_items_end:
+    rts
+
+
+
 .a16
 .i16
 handle_player_actions:
@@ -740,7 +812,7 @@ actions_player_loop:
     ;; are we instructed to shoot?
     lda player::joy_trigger
     and #JOY_A
-    beq :+
+    beq actions_player_end
     ;; we are shooting something!
     ;; save left x and y
     ;; x
@@ -764,10 +836,13 @@ actions_player_loop:
     ;; this one is already in x, but we'll rewrite this
     ;; and I'll have forgotten about this then
     ldx sprite::face_dir
-    stx .loword(W3)
+    stx .loword(W2)
 
     ;; switch dp to bullet
-    lda player::bullets
+    ldx player::bullets_left
+    jsr queue_get_active_item
+    beq actions_player_end
+    stx player::bullets_left
     tcd
 
     lda .loword(W0)
@@ -784,15 +859,15 @@ actions_player_loop:
     sbc (sprite::bbox_fine)
     sta .loword(W1)
 
-    ldx .loword(W3)
+    ldx .loword(W2)
     jsr (.loword(bullet_fire_direction_table), x)
 
     lda #bullet_state::fly
     sta sprite::move_state
     lda #$0
     sta sprite::anim_tick
-
-  : plx
+actions_player_end:
+    plx
     inx
     inx
     phx

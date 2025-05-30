@@ -22,6 +22,11 @@ B3L:
 .res 1
 B3H:
 .res 1
+W4:
+B4L:
+.res 1
+B4H:
+.res 1
 
 in_nmi:
 .res 2
@@ -38,12 +43,6 @@ p1: .tag player
 p2: .tag player
 p3: .tag player
 p4: .tag player
-
-tile_canvas: .tag menu
-
-game_data: .tag game_data
-
-select_tile_menu: .tag select_tile_menu
 
 ;; bullet data
 ;; start at 0 because we're not insane. player start kinda forced by
@@ -81,6 +80,12 @@ b29: .tag bullet
 b30: .tag bullet
 b31: .tag bullet
 
+
+tile_canvas: .tag menu
+
+game_data: .tag game_data
+
+select_tile_menu: .tag select_tile_menu
 
 
 OAM_mirror: .res $220

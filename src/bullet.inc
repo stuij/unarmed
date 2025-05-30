@@ -57,8 +57,6 @@ bullet_bbox_default_fine:
 .i16
 ;; game specific
 init_bullets:
-    ldx #BULLET_X_POS_INIT
-    stx .loword(W0)
     ldx #$0
     ldy #(BULLET_OAM_OFFSET + $2)
 init_bullets_loop:
@@ -78,7 +76,7 @@ init_bullets_loop:
     sta sprite::h_velo
     sta sprite::v_velo
 
-    lda .loword(W0)
+    lda #BULLET_X_POS_INIT
     sta sprite::x_pos
     sta sprite::x_new
 
@@ -109,10 +107,6 @@ init_bullets_loop:
     lda #$0
     sta sprite::anim_tick
 
-    lda .loword(W0)
-    clc
-    adc #$60
-    sta .loword(W0)
     inx
     inx
     cpx #BULLET_TABLE_I
@@ -138,6 +132,9 @@ init_bullets_loop:
     sta OAM_mirror + $207
     lda #BULLET_OAM_DEFAULT
     sta OAM_mirror + $208
+
+
+
 
     rts
 

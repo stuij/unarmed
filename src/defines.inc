@@ -94,7 +94,7 @@ OUT_OF_BOUNDS_Y = $f7f
 ;; for iterating over the player table
 ;; double the amount of actual players, as we're iterating over words
 ;; pointing to the player structs
-PLAYER_TABLE_I = $8
+PLAYER_TABLE_I = $8 ;; times two because it's easier to code with
 PLAYER_OAM_OFFSET = $0
 PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
 PLAYER_OAM_RUN_ANIM_BASE = ($0 + ($1 * $10))
@@ -108,6 +108,8 @@ H_VELO_INC_RELAX = $2
 V_VELO_INIT = $ffd7 ;; -29
 V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
 V_VELO_DOWN_MAX = $40
+
+BULLETS_PER_PLAYER = $A ;; times 2, because it's easier to code with
 
 .enum move_state
     idle
@@ -144,16 +146,20 @@ V_VELO_DOWN_MAX = $40
 
 .struct player
     sprite              .tag sprite
-    bbox_ledge_lookup   .word ; 1e
-    joy                 .word ; 20 - last frame buttons
-    joy_trigger         .word ; 22 - only buttons that weren't pressed last frame
-    joy_held            .word ; 24 - buttons pressed this frame and last frame
-    joy_trigger_held    .word ; 26 - both new and held buttons
-    h_tribool           .word ; 28
-    v_tribool           .word ; 2a
-    bullets             .word ; 2c
-    stance_dir          .word ; 2e
-    nr                  .word ; 30
+    bbox_ledge_lookup   .word   ; 1e
+    joy                 .word   ; 20 - last frame buttons
+    joy_trigger         .word   ; 22 - only buttons that weren't pressed last frame
+    joy_held            .word   ; 24 - buttons pressed this frame and last frame
+    joy_trigger_held    .word   ; 26 - both new and held buttons
+    h_tribool           .word   ; 28
+    v_tribool           .word   ; 2a
+    stance_dir          .word   ; 2c
+    bullets_left       .word   ; 2e
+    bullet_queue        .res $a ; 30
+    nr                  .word   ; 3a
+    ;; fills so we have nice round nrs
+    tmp1                .word   ; 3c
+    tmp2                .word   ; 3c
 ;   crouch              .word ; 32
 .endstruct
 
@@ -163,7 +169,7 @@ V_VELO_DOWN_MAX = $40
 
 BULLET_OAM_DEFAULT = $00
 BULLET_X_POS_INIT = $150
-BULLET_Y_POS_INIT = $10
+BULLET_Y_POS_INIT = $F00
 
 BULLET_SHOOT_DOWN_Y_ADJUST = $60
 BULLET_SHOOT_SIDE_Y_ADJUST = $40
@@ -171,7 +177,8 @@ BULLET_SHOOT_SIDE_Y_ADJUST = $40
 BULLET_H_VELO = $77
 BULLET_V_VELO = $77
 
-BULLET_TABLE_I = $8
+;; also times 2 (both BULLETS_PER_PLAYER and PLAYER_TABLE_I are times 2)
+BULLET_TABLE_I = ((BULLETS_PER_PLAYER / 2) * PLAYER_TABLE_I)
 
 BULLET_OAM_OFFSET = $20
 
@@ -181,8 +188,8 @@ BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
 
 .enum bullet_state
-    fly
     rest
+    fly
 .endenum
 
 
@@ -193,6 +200,7 @@ BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
 .struct bullet
     sprite .tag sprite
+    player      .word
 .endstruct
 
 
