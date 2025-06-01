@@ -188,7 +188,7 @@ BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
 
 .enum bullet_state
-    rest
+    idle
     fly
 .endenum
 

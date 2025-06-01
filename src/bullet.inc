@@ -84,7 +84,7 @@ init_bullets_loop:
     sta sprite::y_pos
     sta sprite::y_new
 
-    lda #bullet_state::rest
+    lda #bullet_state::idle
     sta sprite::move_state
     lda #$0
     sta sprite::anim_tick
@@ -133,9 +133,6 @@ init_bullets_loop:
     lda #BULLET_OAM_DEFAULT
     sta OAM_mirror + $208
 
-
-
-
     rts
 
 
@@ -147,6 +144,8 @@ handle_bullet_movement:
 handle_bullet_loop:
     lda .loword(bullet_table), x
     tcd
+    lda sprite::move_state
+    beq handle_bullet_loop_end
     lda sprite::x_pos
     clc
     adc sprite::h_velo
@@ -158,6 +157,8 @@ handle_bullet_loop:
     sta sprite::y_new
 
     jsr check_collisions
+handle_bullet_loop_end:
+    ;; loop epilogue
     plx
     inx
     inx
@@ -204,13 +205,32 @@ bullet_coll_end_callback_end:
     rts
 
 bullet_handle_kill:
+    jsr bullet_retire
+    rts
+
+
+bullet_retire:
+    ;; set speed to 0
     stz sprite::h_velo
     stz sprite::v_velo
+    ;; set sprite offscreen
+    lda #$f0
+    sta sprite::y_new
+    ;; set bullet as inactive in queue
     ldx bullet::queue_offset
     ldy bullet::player
     jsr set_player_queue_item_inactive
+    ;; set move state to idle
+    lda #bullet_state::idle
+    sta sprite::move_state
     rts
 
+
+;       2
+;      piv  bull
+;       |    |
+; |  |  |  |  |
+;  1  2   3  4
 ;; in:
 ;; X - queue offset of bullet
 ;; Y - player bullet belongs to

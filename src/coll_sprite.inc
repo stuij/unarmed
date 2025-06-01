@@ -46,6 +46,9 @@ sprite_bumps_bullet_loop:
     lda .loword(bullet_table), x
     tcd
 
+    ;; don't process if bullet isn't active
+    lda sprite::move_state
+    beq sprite_bumps_bullet_end
     ;; take Y coord of our bullet
     lda (sprite::bbox_fine) ;; y
     clc
@@ -94,7 +97,9 @@ sprite_bumps_bullet_end:
     inx
     phx
     cpx #PLAYER_TABLE_I
-    bne sprite_bumps_player_loop
+    beq sprite_bumps_player_loop_cont
+    jmp sprite_bumps_player_loop
+sprite_bumps_player_loop_cont:
     plx ; clear the stack
 
     lda #$0
