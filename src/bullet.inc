@@ -206,6 +206,56 @@ bullet_coll_end_callback_end:
 bullet_handle_kill:
     stz sprite::h_velo
     stz sprite::v_velo
+    ldx bullet::queue_offset
+    ldy bullet::player
+    jsr set_player_queue_item_inactive
+    rts
+
+;; in:
+;; X - queue offset of bullet
+;; Y - player bullet belongs to
+set_player_queue_item_inactive:
+    tdc
+    pha
+    tya
+    tcd ;; set DP to player
+    ;; we check if the bullet is already in place,
+    ;; and if so, we're done
+    cpx player::bullets_left
+    bcc set_queue_inactive_done ;; this item already is inactive
+    beq set_queue_inactive_in_position
+    ;; otherwise, we will need to put the pointer to the bullet currently
+    ;; residing at the new pivot position at the current position of our
+    ;; target bullet, and update it with its new position. And of course
+    ;; we put a pointer to our target bullet at the pivot position,
+    ;; and update its position as well. As we already have the latter in
+    ;; A, we do that one first.
+    lda player::bullets_left
+    ldy #bullet::queue_offset
+    sta ($1, s), y ; write target bullet new queue_offset
+    txy
+    tax
+    lda player::bullet_queue, x
+    tyx
+    sta player::bullet_queue, x ; write pivot bullet to target bullet spot
+    pha
+    txa
+    ldy #bullet::queue_offset
+    sta ($1, s), y ; write it's new queue_offset
+    pla
+    lda $1, s
+    ldx player::bullets_left
+    sta player::bullet_queue, x ;; write target bullet to pivot pos
+set_queue_inactive_in_position:
+    ;; regardless of where our bullet currently is,
+    ;; we always move the bullets_left pivot one to the right
+    lda player::bullets_left
+    inc
+    inc
+    sta player::bullets_left
+set_queue_inactive_done:
+    pla
+    tcd
     rts
 
 

@@ -200,7 +200,8 @@ BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
 .struct bullet
     sprite .tag sprite
-    player      .word
+    player          .word
+    queue_offset    .word
 .endstruct
 
 

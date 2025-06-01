@@ -141,12 +141,19 @@ set_player_bullet_queue:
     ;; load player in bullets
     sta .loword(W0)
     ldx #0
-    ldy #bullet::player
     phx ;; we just need a stack slot here
 set_player_bullet_queue_loop:
+    ;; save current bullet address on stack
+    ;; so we can use indirect access on one of its members
     lda player::bullet_queue, x
     sta 1, s
+    ;; save current player in bullet
+    ldy #bullet::player
     tdc
+    sta (1, s), y
+    ;; save bullet queue  offset in bullet
+    ldy #bullet::queue_offset
+    txa
     sta (1, s), y
     inx
     inx
