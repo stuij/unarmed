@@ -869,10 +869,8 @@ actions_player_loop:
     ldx .loword(W2)
     jsr (.loword(bullet_fire_direction_table), x)
 
-    lda #bullet_state::fly
-    sta sprite::move_state
-    lda #$0
-    sta sprite::anim_tick
+    jsr bullet_set_for_flight
+
 actions_player_end:
     plx
     inx

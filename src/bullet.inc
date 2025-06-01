@@ -72,22 +72,11 @@ init_bullets_loop:
     iny
     iny
 
-    lda #$0
-    sta sprite::h_velo
-    sta sprite::v_velo
+    jsr bullet_reset
 
     lda #BULLET_X_POS_INIT
     sta sprite::x_pos
     sta sprite::x_new
-
-    lda #BULLET_Y_POS_INIT
-    sta sprite::y_pos
-    sta sprite::y_new
-
-    lda #bullet_state::idle
-    sta sprite::move_state
-    lda #$0
-    sta sprite::anim_tick
 
     lda #face_dir::right
     sta sprite::face_dir
@@ -144,8 +133,17 @@ handle_bullet_movement:
 handle_bullet_loop:
     lda .loword(bullet_table), x
     tcd
+    ;; if bullet is inactive, ignore
     lda sprite::move_state
     beq handle_bullet_loop_end
+
+    ;; check if we've overstayed our welcome
+    lda bullet::flight_timer
+    cmp #BULLET_MAX_FLIGHT
+    bcs handle_bullet_retire
+
+    inc bullet::flight_timer
+
     lda sprite::x_pos
     clc
     adc sprite::h_velo
@@ -157,6 +155,9 @@ handle_bullet_loop:
     sta sprite::y_new
 
     jsr check_collisions
+    bra handle_bullet_loop_end
+handle_bullet_retire:
+    jsr bullet_retire
 handle_bullet_loop_end:
     ;; loop epilogue
     plx
@@ -204,25 +205,42 @@ bullet_coll_end_flip_v:
 bullet_coll_end_callback_end:
     rts
 
+
 bullet_handle_kill:
     jsr bullet_retire
     rts
 
 
-bullet_retire:
+bullet_set_for_flight:
+    lda #bullet_state::fly
+    sta sprite::move_state
+    rts
+
+
+bullet_reset:
     ;; set speed to 0
     stz sprite::h_velo
     stz sprite::v_velo
-    ;; set sprite offscreen
-    lda #$f0
+    stz bullet::flight_timer
+    stz sprite::anim_tick
+
+    ;; set move state to idle
+    lda #bullet_state::idle
+    sta sprite::move_state
+
+    lda #BULLET_Y_POS_INIT
+    sta sprite::y_pos
     sta sprite::y_new
+
+    rts
+
+
+bullet_retire:
+    jsr bullet_reset
     ;; set bullet as inactive in queue
     ldx bullet::queue_offset
     ldy bullet::player
     jsr set_player_queue_item_inactive
-    ;; set move state to idle
-    lda #bullet_state::idle
-    sta sprite::move_state
     rts
 
 

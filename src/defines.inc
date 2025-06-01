@@ -154,13 +154,12 @@ BULLETS_PER_PLAYER = $A ;; times 2, because it's easier to code with
     h_tribool           .word   ; 28
     v_tribool           .word   ; 2a
     stance_dir          .word   ; 2c
-    bullets_left       .word   ; 2e
+    bullets_left        .word   ; 2e
     bullet_queue        .res $a ; 30
     nr                  .word   ; 3a
+    shot_delay_timer    .word   ; 3c
     ;; fills so we have nice round nrs
-    tmp1                .word   ; 3c
-    tmp2                .word   ; 3c
-;   crouch              .word ; 32
+    tmp2                .word   ; 3e
 .endstruct
 
 
@@ -186,6 +185,8 @@ BULLET_OAM_OFFSET = $20
 ; and on 7th row of y axis (rows are $10 wide)
 BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
+BULLET_MAX_FLIGHT = 60 ;; 3
+
 
 .enum bullet_state
     idle
@@ -202,6 +203,7 @@ BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
     sprite .tag sprite
     player          .word
     queue_offset    .word
+    flight_timer    .word
 .endstruct
 
 
