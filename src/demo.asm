@@ -28,6 +28,40 @@
 
 .code
 
+;; ---------
+;; score-keeping
+
+.i16
+.a16
+reset_hp:
+    lda #PLAYER_HP_START
+    sta hp
+    sta hp + 2
+    sta hp + 4
+    sta hp + 6
+    rts
+
+.i16
+.a16
+reset_wins:
+    stz wins
+    stz wins + 2
+    stz wins + 4
+    stz wins + 6
+    rts
+
+
+;; X - player offset
+player_dec_hp:
+    lda hp, x
+    cmp #1
+    bcc player_dec_hp_zero
+    dec hp, x
+    rts
+player_dec_hp_zero:
+;;    jsr spinloop_handler ;; should be this bc we shouldn't get here, but for now we do nothing
+    rts
+
 
 ;; ---------
 ;; game loop

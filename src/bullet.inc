@@ -234,6 +234,21 @@ bullet_reset:
 
     rts
 
+bounce_bullet:
+    lda sprite::v_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::v_velo
+
+    lda sprite::h_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::h_velo
+
+    rts
+
 
 bullet_retire:
     jsr bullet_reset

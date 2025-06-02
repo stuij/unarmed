@@ -121,6 +121,9 @@ init_game_data:
     jsr init_draw_menu
     jsr init_caret
 
+    jsr reset_hp
+    jsr reset_wins
+
     ;; lda #.loword(handle_current_menu)
     lda #.loword(handle_main_loop)
     sta game_data + game_data::game_handler

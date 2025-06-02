@@ -13,6 +13,7 @@ handle_sprite_bumps:
 sprite_bumps_player_loop:
     lda .loword(player_table), x
     tcd
+    stx .loword(W4)
 
     ldy #square_bbox::top_left + point::x_off
     lda (sprite::bbox_fine), y
@@ -74,17 +75,12 @@ sprite_bumps_bullet_loop:
     bpl sprite_bumps_bullet_end
 
     ;; it's a hit!!
-    lda sprite::v_velo
-    eor #$FFFF
-    clc
-    adc #$1
-    sta sprite::v_velo
+    jsr bullet_retire
+    phx
+    ldx .loword(W4)
+    jsr player_dec_hp
+    plx
 
-    lda sprite::h_velo
-    eor #$FFFF
-    clc
-    adc #$1
-    sta sprite::h_velo
 sprite_bumps_bullet_end:
     inx
     inx

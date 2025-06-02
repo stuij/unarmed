@@ -99,6 +99,8 @@ PLAYER_OAM_OFFSET = $0
 PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
 PLAYER_OAM_RUN_ANIM_BASE = ($0 + ($1 * $10))
 
+PLAYER_HP_START = 1
+
 ;; move state of player, potential other things
 H_VELO_INC = $1 ; 1 subpixel
 H_VELO_MAX = $20
@@ -279,5 +281,20 @@ SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
     game_handler    .word
     curr_menu       .word
 .endstruct
+
+.struct hp
+    p1_hp           .word
+    p2_hp           .word
+    p3_hp           .word
+    p4_hp           .word
+.endstruct
+
+.struct wins
+    p1_wins         .word
+    p2_wins         .word
+    p3_wins         .word
+    p4_wins         .word
+.endstruct
+
 
 .endif ; DEFINES_INC

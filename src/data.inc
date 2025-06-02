@@ -44,9 +44,22 @@ p2: .tag player
 p3: .tag player
 p4: .tag player
 
+
+.align 16
+
+wins: .tag wins
+hp: .tag hp
+game_data: .tag game_data
+tile_canvas: .tag menu
+select_tile_menu: .tag select_tile_menu
+
+
 ;; bullet data
 ;; start at 0 because we're not insane. player start kinda forced by
 ;; snes naming
+
+.align 16
+
 b0: .tag bullet
 b1: .tag bullet
 b2: .tag bullet
@@ -79,13 +92,6 @@ b28: .tag bullet
 b29: .tag bullet
 b30: .tag bullet
 b31: .tag bullet
-
-
-tile_canvas: .tag menu
-
-game_data: .tag game_data
-
-select_tile_menu: .tag select_tile_menu
 
 
 OAM_mirror: .res $220
