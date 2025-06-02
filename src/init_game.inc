@@ -46,12 +46,12 @@ init_binary_data:
     ;; this should soon be handled somewhere else
 
     ; load tile maps to wram
-    ldy #(fox_map_end - fox_map) ; size of transfer
-    sty <W0
-    lda #^fox_map
-    ldx #.loword(fox_map)
-    ldy #VRAM_MAP_FONT_BASE
-    jsr dma_to_vram
+    ; ldy #(fox_map_end - fox_map) ; size of transfer
+    ; sty <W0
+    ; lda #^fox_map
+    ; ldx #.loword(fox_map)
+    ; ldy #VRAM_MAP_FONT_BASE
+    ; jsr dma_to_vram
 
 
     lda #^current_tile_map
@@ -123,6 +123,8 @@ init_game_data:
 
     jsr reset_hp
     jsr reset_wins
+
+    jsr init_score_graphics
 
     ;; lda #.loword(handle_current_menu)
     lda #.loword(handle_main_loop)

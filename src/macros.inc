@@ -25,6 +25,22 @@ MACROS_INC = 1
 	rep #$10
 .endmacro
 
+.macro print_char c
+	lda #(c - 32)
+    ora #$2000
+    sta VMDATA
+
+.endmacro
+
+.macro print_pad n
+	.if (n > 0)
+	    lda #(' ' - 32)
+    	ora #$2000 ; set priority bit on tile
+	    sta VMDATA
+		print_pad (n - 1)
+	.endif
+.endmacro
+
 
 .macro rshift n
 	.if (n > 0)

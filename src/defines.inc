@@ -99,7 +99,7 @@ PLAYER_OAM_OFFSET = $0
 PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
 PLAYER_OAM_RUN_ANIM_BASE = ($0 + ($1 * $10))
 
-PLAYER_HP_START = 1
+PLAYER_HP_START = 5
 
 ;; move state of player, potential other things
 H_VELO_INC = $1 ; 1 subpixel
@@ -295,6 +295,16 @@ SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
     p3_wins         .word
     p4_wins         .word
 .endstruct
+
+
+; ---
+; hud
+
+ASCII_NR_BASE_OFFSET = 48 - 32  ; 48 is ascii position of 0,
+                                ; and our tiles start from ascii nr 32
+
+SCORE_NR_BASE = 8
+SCORE_NR_SKIP = 6
 
 
 .endif ; DEFINES_INC

@@ -24,6 +24,7 @@
 .include "coll_bg.inc"
 .include "coll_sprite.inc"
 .include "main_loop.inc"
+.include "hud.inc"
 
 
 .code
@@ -171,6 +172,7 @@ update_bgs:
 update_vram:
     ;; jsr update_bgs
     A16
+    jsr update_score_graphics
     I8
     jsr dma_OAM
     A8
