@@ -31,7 +31,7 @@ COLL_STACK_POINT_X_OFF_NEW = $1
 
 .a16
 .i16
-check_collisions:
+.proc check_collisions
     ;; set up stack pointer
     tsc ;; pull current stack pointer to A
     pha ;; push to stack, so we can easily reset later
@@ -91,9 +91,9 @@ coll_point_loop:
     lda sprite::y_new
     clc
     adc (sprite::bbox_fine), y
-    bmi collision_out_of_bounds
+    bmi out_of_bounds
     cmp #OUT_OF_BOUNDS_Y
-    bpl collision_out_of_bounds
+    bpl out_of_bounds
     ;; otherwise we now do proper bounds checking on this point
     lda COLL_STACK_Y_OFF_NEW, s
     clc
@@ -117,9 +117,9 @@ point_x_calc:
     lda sprite::x_new
     clc
     adc (sprite::bbox_fine), y
-    bmi collision_out_of_bounds
+    bmi out_of_bounds
     cmp #OUT_OF_BOUNDS_X
-    bpl collision_out_of_bounds
+    bpl out_of_bounds
     ;; calc possible x collision tile, and check collision before we start
     ;; thinking about calculating possible sprite pushback to grid coords
     lda COLL_STACK_X_OFF_NEW, s
@@ -137,15 +137,15 @@ point_x_calc:
     ;; otherwise they'll get overwritten by the props of points that
     ;; don't actually touch anything
     A16
-    beq collision_after_prop_save
+    beq after_prop_save
     sta COLL_STACK_TILE_PROPS, s
-collision_after_prop_save:
+after_prop_save:
     bne collision              ; if not zero, collision
-    jmp coll_no_coll_for_point ; otherwise, do no collision things
-collision_out_of_bounds:
+    jmp no_coll_for_point ; otherwise, do no collision things
+out_of_bounds:
     lda #$8
     sta COLL_STACK_TILE_PROPS, s
-    jmp collision_cleanup
+    jmp cleanup
 collision:
     ;; Once we know x and y direction,
     ;; we can make sensible decision on snapping.
@@ -182,10 +182,7 @@ collision:
     dey ;; move back to y within current bbox
     dey
     lda (sprite::bbox), y
-    asl
-    asl
-    asl
-    asl
+    lshift 4
     clc
     adc sprite::y_new
     sta COLL_STACK_POINT_Y_COORD, s
@@ -195,10 +192,7 @@ collision:
     iny ;; and increment again to get to x
     iny
     lda (sprite::bbox), y
-    asl
-    asl
-    asl
-    asl
+    lshift 4
     clc
     adc sprite::x_new
     sta COLL_STACK_POINT_X_COORD, s
@@ -265,7 +259,7 @@ coll_snap_y:
     and #$FF80 ; not z flag set, so bigger than 8 + subpixels
                ; tells us we moved out of the block
     bne coll_snap_y_cont
-    jmp collision_point_end ;; assuming we got here from x also not out of bounds
+    jmp point_end ;; assuming we got here from x also not out of bounds
 coll_snap_y_cont:
     ;; if n flag set, we moved from upper block, so downwards
     bpl coll_snap_y_end
@@ -296,7 +290,7 @@ coll_left_up:
     jmp coll_snap_to_bottom
   : jsr snap_to_right
     jsr snap_to_bottom
-    jmp collision_point_end
+    jmp point_end
 
 coll_left_down:
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -317,7 +311,7 @@ coll_left_down:
     beq coll_snap_to_top
     jsr snap_to_right
     jsr snap_to_top
-    bra collision_point_end
+    bra point_end
 
 coll_right_up:
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -338,7 +332,7 @@ coll_right_up:
     beq coll_snap_to_bottom
     jsr snap_to_left
     jsr snap_to_bottom
-    bra collision_point_end
+    bra point_end
 
 
 ; we're moving in right/down direction
@@ -372,58 +366,58 @@ coll_right_down:
     ; of current tile
     jsr snap_to_left
     jsr snap_to_top
-    bra collision_point_end
+    bra point_end
 
 
 ;; snapping to what?
 coll_snap_to_top:
     jsr snap_to_top
-    jmp collision_point_end
+    jmp point_end
 
 coll_snap_to_bottom:
     jsr snap_to_bottom
-    bra collision_point_end
+    bra point_end
 
 
 coll_snap_to_left:
     jsr snap_to_left
-    bra collision_point_end
+    bra point_end
 
 coll_snap_to_right:
     jsr snap_to_right
-    bra collision_point_end
+    bra point_end
 
 ;; put code here, if you want to do something specific if no
 ;; collision has happened
-coll_no_coll_for_point:
+no_coll_for_point:
     lda sprite::vptr
     clc
     adc #sprite_vtable::coll_point_no_coll_callback
     tax
     jsr (0,x)
 
-collision_point_end:
+point_end:
     iny
     iny
     cpy sprite::bbox_size
-    beq collision_cleanup
+    beq cleanup
     jmp coll_point_loop ; not equal so we do another round
-collision_cleanup:
+cleanup:
     lda sprite::vptr
     clc
     adc #sprite_vtable::collision_end_callback
     tax
     jsr (0, x)
-
-collision_unwind_stack:
     ; end of point loop so we're done
     lda COLL_STACK_ROOM - 1, s ; restore stack
     tcs                        ; pointer
     rts
+.endproc
 
 ;; -------- end of mega collision fn
 
-snap_to_top:
+
+.proc snap_to_top
    lda COLL_STACK_POINT_Y_OFF_NEW_SUB + 2, s
     ;; so the bit that sticks out upwards is now in A
     ;; we AND with 7f, so we know how much of it sticks up,
@@ -436,14 +430,14 @@ snap_to_top:
     sbc #$1
     tax
     lda COLL_STACK_Y_NEW_TMP + 2, s      ; did we already save a new temp y?
-    bmi snap_to_top_save_new_y  ; if not we can directly save this one
+    bmi save_new_y  ; if not we can directly save this one
     txa
     cmp COLL_STACK_Y_NEW_TMP + 2, s      ; otherwise we need to see which one is lower
-    bcs snap_to_top_cont; if current y is higher, we don't save
-snap_to_top_save_new_y:
+    bcs cont; if current y is higher, we don't save
+save_new_y:
     txa
     sta COLL_STACK_Y_NEW_TMP + 2, s
-snap_to_top_cont:
+cont:
     ;; this means we just hit the bottom
     lda #1
     ;; this one we should probably make a bit more generic.
@@ -451,9 +445,10 @@ snap_to_top_cont:
     ;; what we hit in one var.
     sta COLL_STACK_POINT_HIT_GROUND + 2, s
     rts
+.endproc
 
 
-snap_to_bottom:
+.proc snap_to_bottom
     lda COLL_STACK_POINT_Y_OFF_NEW_SUB + 2, s
     ;; so the bit that sticks out downwards is now in A
     and #$7f
@@ -466,17 +461,18 @@ snap_to_bottom:
     adc sprite::y_new ; and we want to add that to the new y
     tax
     lda COLL_STACK_Y_NEW_TMP + 2, s      ; did we already save a new temp y?
-    bmi snap_to_bottom_save_new_y  ; if not we can directly save this one
+    bmi save_new_y  ; if not we can directly save this one
     txa
     cmp COLL_STACK_Y_NEW_TMP + 2, s      ; otherwise we need to see which one is lower
     rts ; if current y is lower, we don't save
-snap_to_bottom_save_new_y:
+save_new_y:
     txa
     sta COLL_STACK_Y_NEW_TMP + 2, s
     rts
+.endproc
 
 
-snap_to_left:
+.proc snap_to_left
    lda COLL_STACK_POINT_X_OFF_NEW_SUB +2, s
     ;; so the bit that sticks out right-wards is now in A
     ;; we AND with 7f, so we know how much of it sticks up,
@@ -489,18 +485,19 @@ snap_to_left:
     sbc #$1
     tax
     lda COLL_STACK_X_NEW_TMP + 2, s      ; did we already save a new temp y?
-    bmi coll_snap_to_left_save_new_x  ; if not we can directly save this one
+    bmi save_new_x  ; if not we can directly save this one
     txa
     cmp COLL_STACK_X_NEW_TMP + 2, s      ; otherwise we need to see which one is lower
-    bcs coll_snap_to_left_cont ; if current y is higher, we don't save
-coll_snap_to_left_save_new_x:
+    bcs cont ; if current y is higher, we don't save
+save_new_x:
     txa
     sta COLL_STACK_X_NEW_TMP + 2, s
-coll_snap_to_left_cont:
+cont:
     rts
+.endproc
 
 
-snap_to_right:
+.proc snap_to_right
     lda COLL_STACK_POINT_X_OFF_NEW_SUB + 2, s
     ;; so the bit that sticks out left-wards is now in A
     and #$7f
@@ -513,14 +510,15 @@ snap_to_right:
     adc sprite::x_new ; and we want to add that to the new x
     tax
     lda COLL_STACK_X_NEW_TMP + 2, s      ; did we already save a new temp y?
-    bmi snap_to_right_save_new_x  ; if not we can directly save this one
+    bmi save_new_x  ; if not we can directly save this one
     txa
     cmp COLL_STACK_X_NEW_TMP + 2, s      ; otherwise we need to see which one is lower
-    bcc snap_to_right_cont ; if current y is lower, we don't save
-snap_to_right_save_new_x:
+    bcc cont ; if current y is lower, we don't save
+save_new_x:
     txa
     sta COLL_STACK_X_NEW_TMP + 2, s
-snap_to_right_cont:
+cont:
     rts
+.endproc
 
 .endif ; COLL_BG_INC

@@ -8,7 +8,7 @@ MENU_INC = 1
 
 .a16
 .i16
-canvas_calc_tile_under_cursor:
+.proc canvas_calc_tile_under_cursor
     lda menu::curr_row
     ;; row x 32
     asl
@@ -18,13 +18,14 @@ canvas_calc_tile_under_cursor:
     asl
     adc menu::curr_column
     rts
+.endproc
 
 
-canvas_set_tile:
+.proc canvas_set_tile
     ldy #player::joy_trigger_held
     lda (menu::player), y
     and #JOY_A
-    beq canvas_set_tile_flip_h
+    beq flip_h
     jsr canvas_calc_tile_under_cursor
     tay
     tax
@@ -37,35 +38,36 @@ canvas_set_tile:
     tax
     lda canvas_menu::chosen_tile
     sta current_tile_map, x
-canvas_set_tile_flip_h:
+flip_h:
     ldy #player::joy_trigger
     lda (menu::player), y
     sta .loword(W0)
     and #JOY_X
-    beq canvas_set_tile_flip_v
+    beq flip_v
     lda canvas_menu::chosen_tile
     eor #$4000
     sta canvas_menu::chosen_tile
-canvas_set_tile_flip_v:
+flip_v:
     lda .loword(W0)
     and #JOY_Y
-    beq canvas_set_tile_prio
+    beq prio
     lda canvas_menu::chosen_tile
     eor #$8000
     sta canvas_menu::chosen_tile
-canvas_set_tile_prio:
+prio:
     lda .loword(W0)
     and #JOY_L
-    beq canvas_set_tile_end
+    beq end
     lda canvas_menu::chosen_tile
     eor #$2000
     sta canvas_menu::chosen_tile
-canvas_set_tile_end:
+end:
     rts
+.endproc
 
 
 ;; patch tile map in vram where cursor currently is hovering
-canvas_patch_chosen_tile:
+.proc canvas_patch_chosen_tile
     jsr canvas_calc_tile_under_cursor
     clc
     adc #VRAM_MAP_BG_GAME_BASE
@@ -73,20 +75,22 @@ canvas_patch_chosen_tile:
     lda canvas_menu::chosen_tile
     sta VMDATA
     rts
+.endproc
 
 
 .a16
 .i16
-draw_tile_menu_callback:
+.proc draw_tile_menu_callback
     jsr canvas_set_tile
     A8
     jsr load_tilemap_to_vram
     A16
     jsr canvas_patch_chosen_tile
     rts
+.endproc
 
 
-init_draw_menu:
+.proc init_draw_menu
     lda #tile_canvas
     tcd
     lda #DRAW_CARET_X_INIT_OFFSET
@@ -120,41 +124,44 @@ init_draw_menu:
     lda #$0
     tcd
     rts
+.endproc
 
 
 ;; initialize chosen tile map entry with idx selected in select menu
 ; A - tile idx of chosen tile
-draw_init_chosen_tile:
+.proc draw_init_chosen_tile
     ;; as it happens the idx is essentially already the selected
     ;; tile map entry, as currently we're using bank 1, horizontal
     ;; and vertical flip aren't set yet, and it's an 8px tile.
     ;; but adjust for tile map entries being 16-bit
     sta tile_canvas + canvas_menu::chosen_tile
     rts
+.endproc
 
 
 ; A - chosen tile ID
 ; X - current player
 ; Y - chosen tile type
-activate_draw_menu:
+.proc activate_draw_menu
     stx tile_canvas + menu::player
     sty tile_canvas + canvas_menu::tile_type
     jsr draw_init_chosen_tile
     jsr level_screen_to_fore
     inc tile_canvas + menu::just_moved
     rts
+.endproc
 
 
 ;; -----------
 ;; select menu
 
-select_menu_callback:
+.proc select_menu_callback
     ;; if we're pressing A, we've selected a tile,
     ;; and we need to move on to the canvas menu/mode
     ldy #player::joy_trigger
     lda (menu::player), y
     and #JOY_A
-    beq select_menu_callback_end
+    beq end
     lda #.loword(tile_canvas)
     sta game_data + game_data::curr_menu
     ;; we need to pass tile canvas the current player
@@ -172,11 +179,12 @@ select_menu_callback:
     adc menu::curr_column
     ldx menu::player
     jsr activate_draw_menu
-select_menu_callback_end:
+end:
     rts
+.endproc
 
 
-init_select_menu:
+.proc init_select_menu
     lda #select_tile_menu
     tcd
     lda #SELECT_SCREEN_X_TABLE_OFFSET
@@ -208,11 +216,12 @@ init_select_menu:
     lda #$0
     tcd
     rts
+.endproc
 
 
 .a8
 .i16
-draw_select_screen:
+.proc draw_select_screen
     ldy #(select_tile_map_end - select_tile_map)
     sty .loword(W0)
     lda #^select_tile_map
@@ -233,7 +242,7 @@ draw_select_screen:
     clc
     adc #($6 * $20)
     sta .loword(W2)
-draw_select_clear_bg_behind_tiles_loop:
+clear_bg_behind_tiles_loop:
     ldx #$30
     A8
     jsr dma_fixed_to_vram
@@ -244,7 +253,7 @@ draw_select_clear_bg_behind_tiles_loop:
     tay
     sta .loword(W1)
     cmp .loword(W2)
-    bmi draw_select_clear_bg_behind_tiles_loop
+    bmi clear_bg_behind_tiles_loop
     A8
 
     lda #SELECT_SCREEN_X_COORDS
@@ -258,15 +267,16 @@ draw_select_clear_bg_behind_tiles_loop:
     sta BG1VOFS
     ;; we're effectively lobbing off the top two bits of the offset..
     stz BG1VOFS
-
     rts
+.endproc
+
 
 
 ;; ------------
 ;; general menu
 .a16
 .i16
-init_caret:
+.proc init_caret
     lda #SELECT_CARET_SPRITE_OFFSET
     sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
     lda #$30                ; no flip, prio 3, palette 0
@@ -278,64 +288,68 @@ init_caret:
     sta OAM_MENU_CARET_XTRA_PROPS
     A16
     rts
+.endproc
 
 
 .a8
 .i16
-hide_menu_caret:
+.proc hide_menu_caret
     lda #$F0
     sta OAM_MENU_CARET_OFFSET + oam_entry::y_pos
     rts
+.endproc
 
 
 .a16
 .i16
-set_menu_caret_position:
+.proc set_menu_caret_position
     lda menu::cursor_x_pos
     A8
     sta OAM_MENU_CARET_OFFSET + oam_entry::x_pos
-    bmi caret_pos_set_x_neg ;; x pos is negative, so set x pos top bit
+    bmi set_x_neg ;; x pos is negative, so set x pos top bit
     ;; otherwise we clear the x pos top bit
     lda #$fe
     and OAM_MENU_CARET_XTRA_PROPS
     sta OAM_MENU_CARET_XTRA_PROPS
-    bra caret_pos_set_y
-caret_pos_set_x_neg:
+    bra set_y
+set_x_neg:
     lda #$1
     ora OAM_MENU_CARET_XTRA_PROPS
     sta OAM_MENU_CARET_XTRA_PROPS
-caret_pos_set_y:
+set_y:
     lda menu::cursor_y_pos
     sta OAM_MENU_CARET_OFFSET + oam_entry::y_pos
     A16
     rts
+.endproc
 
 
 ;; both check if we can move cursor, and if not, do internal
 ;; housekeeping on cursor movement
-menu_cursor_just_moved:
+.proc menu_cursor_just_moved
     lda menu::just_moved
-    beq menu_check_move_cursor_ret
+    beq end
 
     lda menu::timeout_tick
     cmp #MENU_MOVE_TIMEOUT
-    bcc menu_move_cursor_still_in_timeout ; tick lower than timeout
+    bcc still_in_timeout ; tick lower than timeout
     stz menu::timeout_tick
     stz menu::just_moved
     rep #$2
-    bra menu_check_move_cursor_ret
-menu_move_cursor_still_in_timeout:
+    bra end
+still_in_timeout:
     inc menu::timeout_tick
     rep #$2
-menu_check_move_cursor_ret:
+end:
     rts
+.endproc
 
 
-menu_handle_row:
+.proc menu_handle_row
     ldy #player::h_tribool
     lda (menu::player), y
-    beq menu_handle_row_done ;; no left/right button pressed
-    bmi menu_handle_row_left
+    beq end ;; no left/right button pressed
+    bmi left
     ;; handling right
     lda menu::curr_row
     asl
@@ -344,7 +358,7 @@ menu_handle_row:
     inc a ;; we're comparing against total columns in this row
           ;; which is counted from 1
     cmp (menu::row_table), y
-    bpl menu_handle_row_done
+    bpl end
     ;; we can move the caret right, so we do
     inc menu::curr_column
     lda menu::cursor_x_pos
@@ -353,11 +367,11 @@ menu_handle_row:
     sta menu::cursor_x_pos
     inc menu::dirty_p
     stz menu::timeout_tick
-    bra menu_handle_row_done
-menu_handle_row_left:
+    bra end
+left:
     ;; handling left
     lda menu::curr_column
-    beq menu_handle_row_done ;; if zero, we can't move further right
+    beq end ;; if zero, we can't move further right
     ;; but else, we move left
     dec menu::curr_column
     lda menu::cursor_x_pos
@@ -366,20 +380,21 @@ menu_handle_row_left:
     sta menu::cursor_x_pos
     inc menu::dirty_p
     stz menu::timeout_tick
-menu_handle_row_done:
+end:
     rts
+.endproc
 
 
-menu_handle_column:
+.proc menu_handle_column
     ldy #player::v_tribool
     lda (menu::player), y
-    beq menu_handle_column_done ;; no left/right button pressed
-    bmi menu_handle_column_up
+    beq end ;; no left/right button pressed
+    bmi up
     ;; handle column down
     lda menu::curr_row
     inc a ;; we're comparing against total no of rows
     cmp menu::no_rows
-    bpl menu_handle_column_done
+    bpl end
     inc menu::curr_row
     lda menu::cursor_y_pos
     clc
@@ -387,11 +402,11 @@ menu_handle_column:
     sta menu::cursor_y_pos
     inc menu::dirty_p
     stz menu::timeout_tick
-    bra menu_handle_column_clamp_column
-menu_handle_column_up:
+    bra clamp_column
+up:
     ;; handling up
     lda menu::curr_row
-    beq menu_handle_row_done ;; if zero, we can't move further up
+    beq end ;; if zero, we can't move further up
     ;; but else, we move up
     dec menu::curr_row
     lda menu::cursor_y_pos
@@ -400,7 +415,7 @@ menu_handle_column_up:
     sta menu::cursor_y_pos
     inc menu::dirty_p
     stz menu::timeout_tick
-menu_handle_column_clamp_column:
+clamp_column:
     ;; for the new row we're now on, we need to check if we are past
     ;; the bounds of the array, and if so, clamp to the lesser of the 2
     lda menu::curr_row
@@ -409,7 +424,7 @@ menu_handle_column_clamp_column:
     lda (menu::row_table), y
     dec ;; compare against 0-based array, so minus 1
     cmp menu::curr_column
-    bpl menu_handle_column_done
+    bpl end
     sta menu::curr_column
     ;; column times 8 + position of first row = new caret x position:
     asl
@@ -418,13 +433,13 @@ menu_handle_column_clamp_column:
     clc
     adc menu::cursor_x_pos_origin
     sta menu::cursor_x_pos
-
-menu_handle_column_done:
+end:
     rts
+.endproc
 
 
 ;; A - map base
-handle_menu:
+.proc handle_menu
     tcd
 
     jsr menu_cursor_just_moved
@@ -454,15 +469,17 @@ handle_menu_done:
     lda #0
     tcd
     rts
+.endproc
 
 
-handle_current_menu:
+.proc handle_current_menu
     lda game_data + game_data::curr_menu
     jsr handle_menu
     rts
+.endproc
 
 
-switch_to_select_tile_menu:
+.proc switch_to_select_tile_menu
     A8
     lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
     sta BG1SC ; set bg 2 tile map
@@ -474,13 +491,15 @@ switch_to_select_tile_menu:
     A16
 
     rts
+.endproc
 
 
-switch_to_canvas_menu:
+.proc switch_to_canvas_menu
     rts
+.endproc
 
 
-level_screen_to_fore:
+.proc level_screen_to_fore
     ;; set map x/y coords back
     A8
     jsr hide_menu_caret
@@ -502,5 +521,7 @@ level_screen_to_fore:
     ;; lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
     ;; sta BG2SC ; set bg 2 tile map
     rts
+.endproc
+
 
 .endif ; MENU_INC

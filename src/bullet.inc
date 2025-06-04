@@ -56,10 +56,10 @@ bullet_bbox_default_fine:
 .a16
 .i16
 ;; game specific
-init_bullets:
+.proc init_bullets
     ldx #$0
     ldy #(BULLET_OAM_OFFSET + $2)
-init_bullets_loop:
+loop:
     lda .loword(bullet_table), x
     tcd
 
@@ -99,7 +99,7 @@ init_bullets_loop:
     inx
     inx
     cpx #BULLET_TABLE_I
-    bne init_bullets_loop
+    bne loop
 
     lda #0
     tcd
@@ -123,24 +123,25 @@ init_bullets_loop:
     sta OAM_mirror + $208
 
     rts
+.endproc
 
 
 .a16
 .i16
-handle_bullet_movement:
+.proc handle_bullet_movement
     ldx #$0
     phx
-handle_bullet_loop:
+loop:
     lda .loword(bullet_table), x
     tcd
     ;; if bullet is inactive, ignore
     lda sprite::move_state
-    beq handle_bullet_loop_end
+    beq loop_end
 
     ;; check if we've overstayed our welcome
     lda bullet::flight_timer
     cmp #BULLET_MAX_FLIGHT
-    bcs handle_bullet_retire
+    bcs retire
 
     inc bullet::flight_timer
 
@@ -155,34 +156,36 @@ handle_bullet_loop:
     sta sprite::y_new
 
     jsr check_collisions
-    bra handle_bullet_loop_end
-handle_bullet_retire:
+    bra loop_end
+retire:
     jsr bullet_retire
-handle_bullet_loop_end:
+loop_end:
     ;; loop epilogue
     plx
     inx
     inx
     phx
     cpx #BULLET_TABLE_I
-    bne handle_bullet_loop
+    bne loop
     plx
     lda #$0
     tcd
     rts
+.endproc
 
 
-bullet_point_no_coll_callback:
+.proc bullet_point_no_coll_callback
     rts
+.endproc
 
 
-bullet_coll_end_callback:
+.proc bullet_coll_end_callback
     lda COLL_STACK_TILE_PROPS + 2, s
     and #$8 ;; is equal to kill (should add vars for these)
     bne bullet_handle_kill ;; if so handle kill
 
     lda COLL_STACK_Y_NEW_TMP + 2, s
-    bmi bullet_coll_end_flip_v
+    bmi flip_v
     ;; x collision occured, save new x.
     sta sprite::y_new
     ;; we flip x speed
@@ -191,9 +194,9 @@ bullet_coll_end_callback:
     clc
     adc #$1
     sta sprite::v_velo
-bullet_coll_end_flip_v:
+flip_v:
     lda COLL_STACK_X_NEW_TMP + 2, s
-    bmi bullet_coll_end_callback_end
+    bmi end
     ;; x collision occured, save new y
     sta sprite::x_new
     ;; we flip y speed
@@ -202,22 +205,25 @@ bullet_coll_end_flip_v:
     clc
     adc #$1
     sta sprite::h_velo
-bullet_coll_end_callback_end:
+end:
     rts
+.endproc
 
 
-bullet_handle_kill:
+.proc bullet_handle_kill
     jsr bullet_retire
     rts
+.endproc
 
 
-bullet_set_for_flight:
+.proc bullet_set_for_flight
     lda #bullet_state::fly
     sta sprite::move_state
     rts
+.endproc
 
 
-bullet_reset:
+.proc bullet_reset
     ;; set speed to 0
     stz sprite::h_velo
     stz sprite::v_velo
@@ -233,8 +239,10 @@ bullet_reset:
     sta sprite::y_new
 
     rts
+.endproc
 
-bounce_bullet:
+
+.proc bounce_bullet
     lda sprite::v_velo
     eor #$FFFF
     clc
@@ -248,16 +256,17 @@ bounce_bullet:
     sta sprite::h_velo
 
     rts
+.endproc
 
 
-bullet_retire:
+.proc bullet_retire
     jsr bullet_reset
     ;; set bullet as inactive in queue
     ldx bullet::queue_offset
     ldy bullet::player
     jsr set_player_queue_item_inactive
     rts
-
+.endproc
 
 ;       2
 ;      piv  bull
@@ -267,7 +276,7 @@ bullet_retire:
 ;; in:
 ;; X - queue offset of bullet
 ;; Y - player bullet belongs to
-set_player_queue_item_inactive:
+.proc set_player_queue_item_inactive
     tdc
     pha
     tya
@@ -275,8 +284,8 @@ set_player_queue_item_inactive:
     ;; we check if the bullet is already in place,
     ;; and if so, we're done
     cpx player::bullets_left
-    bcc set_queue_inactive_done ;; this item already is inactive
-    beq set_queue_inactive_in_position
+    bcc done ;; this item already is inactive
+    beq in_position
     ;; otherwise, we will need to put the pointer to the bullet currently
     ;; residing at the new pivot position at the current position of our
     ;; target bullet, and update it with its new position. And of course
@@ -299,22 +308,23 @@ set_player_queue_item_inactive:
     lda $1, s
     ldx player::bullets_left
     sta player::bullet_queue, x ;; write target bullet to pivot pos
-set_queue_inactive_in_position:
+in_position:
     ;; regardless of where our bullet currently is,
     ;; we always move the bullets_left pivot one to the right
     lda player::bullets_left
     inc
     inc
     sta player::bullets_left
-set_queue_inactive_done:
+done:
     pla
     tcd
     rts
+.endproc
 
 
 .a16
 .i16
-finalize_bullets:
+.proc finalize_bullets
     ;; bullets
     ldx #$0
     ldy #BULLET_OAM_OFFSET
@@ -345,6 +355,7 @@ bullets_to_oam_loop:
     lda #$0
     tcd
     rts
+.endproc
 
 
 bullet_fire_direction_table:
@@ -357,9 +368,10 @@ bullet_fire_direction_table:
 .addr bullet_fire_bottom
 .addr bullet_fire_right
 
+
 .a16
 .i16
-bullet_fire_top_left:
+.proc bullet_fire_top_left
     lda #(BULLET_V_VELO)
     eor #$ffff
     inc
@@ -374,11 +386,10 @@ bullet_fire_top_left:
     lda .loword(W1)
     sta sprite::y_new
     rts
+.endproc
 
 
-.a16
-.i16
-bullet_fire_bottom_left:
+.proc bullet_fire_bottom_left
     lda #(BULLET_V_VELO)
     sta sprite::v_velo
     lda #(BULLET_H_VELO)
@@ -393,8 +404,10 @@ bullet_fire_bottom_left:
     sbc #BULLET_SHOOT_DOWN_Y_ADJUST
     sta sprite::y_new
     rts
+.endproc
 
-bullet_fire_top_right:
+
+.proc bullet_fire_top_right
     lda #(BULLET_V_VELO)
     eor #$ffff
     inc
@@ -407,8 +420,10 @@ bullet_fire_top_right:
     lda .loword(W1)
     sta sprite::y_new
     rts
+.endproc
 
-bullet_fire_bottom_right:
+
+.proc bullet_fire_bottom_right
     lda #(BULLET_V_VELO)
     sta sprite::v_velo
     lda #(BULLET_H_VELO)
@@ -421,8 +436,10 @@ bullet_fire_bottom_right:
     sbc #BULLET_SHOOT_DOWN_Y_ADJUST
     sta sprite::y_new
     rts
+.endproc
 
-bullet_fire_left:
+
+.proc bullet_fire_left
     lda #$0
     sta sprite::v_velo
     lda #(BULLET_H_VELO)
@@ -437,8 +454,10 @@ bullet_fire_left:
     sbc #BULLET_SHOOT_SIDE_Y_ADJUST
     sta sprite::y_new
     rts
+.endproc
 
-bullet_fire_top:
+
+.proc bullet_fire_top
     lda #(BULLET_V_VELO)
     eor #$ffff
     inc
@@ -451,8 +470,10 @@ bullet_fire_top:
     lda .loword(W1)
     sta sprite::y_new
     rts
+.endproc
 
-bullet_fire_bottom:
+
+.proc bullet_fire_bottom
     lda #(BULLET_V_VELO)
     sta sprite::v_velo
     lda #$0
@@ -463,8 +484,10 @@ bullet_fire_bottom:
     lda .loword(W1)
     sta sprite::y_new
     rts
+.endproc
 
-bullet_fire_right:
+
+.proc bullet_fire_right
     lda #$0
     sta sprite::v_velo
     lda #(BULLET_H_VELO)
@@ -477,5 +500,6 @@ bullet_fire_right:
     sbc #BULLET_SHOOT_SIDE_Y_ADJUST
     sta sprite::y_new
     rts
+.endproc
 
 .endif ; BULLET_INC

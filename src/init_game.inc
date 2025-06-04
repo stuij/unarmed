@@ -5,7 +5,7 @@ INIT_GAME_INC = 1
 
 .a8
 .i16
-init_binary_data:
+.proc init_binary_data
     ; let's copy over some binary data
     ;; first the palette
     ldy #(town_palette_end - town_palette) ; # of palette entries
@@ -87,11 +87,12 @@ init_binary_data:
     jsr dma_to_vram
 
     rts
+.endproc
 
 
 .a8
 .i16
-init_sound:
+.proc init_sound
     A8
     I16
     ; init sound
@@ -105,12 +106,13 @@ init_sound:
     plb
     ; DB = $80
     rts
+.endproc
 
 
 .a8
 .i16
 ;; set up data
-init_game_data:
+.proc init_game_data
     jsr init_binary_data
     jsr init_sound
 
@@ -187,5 +189,6 @@ init_game_data:
     stz BG3VOFS
 
     rts
+.endproc
 
 .endif ; INIT_GAME_INC

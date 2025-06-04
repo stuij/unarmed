@@ -34,34 +34,38 @@
 
 .i16
 .a16
-reset_hp:
+.proc reset_hp
     lda #PLAYER_HP_START
     sta hp
     sta hp + 2
     sta hp + 4
     sta hp + 6
     rts
+.endproc 
+
 
 .i16
 .a16
-reset_wins:
+.proc reset_wins
     stz wins
     stz wins + 2
     stz wins + 4
     stz wins + 6
     rts
+.endproc
 
 
 ;; X - player offset
-player_dec_hp:
+.proc player_dec_hp
     lda hp, x
     cmp #1
-    bcc player_dec_hp_zero
+    bcc hp_zero
     dec hp, x
     rts
-player_dec_hp_zero:
+hp_zero:
 ;;    jsr spinloop_handler ;; should be this bc we shouldn't get here, but for now we do nothing
     rts
+.endproc
 
 
 ;; ---------
@@ -69,22 +73,23 @@ player_dec_hp_zero:
 
 .a8
 .i16
-wait_nmi:
+.proc wait_nmi
     ;should work fine regardless of size of A
     lda .loword(in_nmi) ;load A register with previous in_nmi
-@check_again:
+check_again:
 	wai ;wait for an interrupt
     cmp .loword(in_nmi)  ;compare A to current in_nmi
                 ;wait for it to change
                 ;make sure it was an nmi interrupt
-    beq @check_again
+    beq check_again
     rts
+.endproc
 
 
 .a16
 .i16
 ;; A - current player
-switch_game_mode:
+.proc switch_game_mode
     sta .loword(W0)
     lda .loword(game_data) + game_data::fight_p
     bne switch_to_menu_mode
@@ -94,7 +99,7 @@ switch_game_mode:
     sta .loword(game_data) + game_data::fight_p
     lda #.loword(handle_main_loop)
     sta game_data + game_data::game_handler
-    bra set_game_mode_return
+    bra return
 switch_to_menu_mode:
     lda .loword(W0)
     sta .loword(select_tile_menu) + menu::player
@@ -107,8 +112,9 @@ switch_to_menu_mode:
     sta game_data + game_data::curr_menu
     lda #0
     sta .loword(game_data) + game_data::fight_p
-set_game_mode_return:
+return:
     rts
+.endproc
 
 
 ;; Check if a player pressed a button to take us out of
@@ -121,21 +127,21 @@ set_game_mode_return:
 ;; I'd like to do this in `read_input` but it kinda breaks the abstraction.
 .a16
 .i16
-check_game_state_change:
+.proc check_game_state_change
     ldx #0
-game_state_change_loop:
+loop:
     lda .loword(player_table), x
     tcd ;; remapping dp to player x
     lda player::joy_trigger
     and #JOY_START
-    beq game_state_change_continue
+    beq continue
     ;; player pressed start. we drop them in, for now, the select screen.
     ;; first we record the player in the menu, as it's their
     ;; presses we care about
     tdc
     jsr switch_game_mode
-    bra game_state_change_end
-game_state_change_continue:
+    bra end
+continue:
     ;; bit dangerous. we assume the only way we get here is if
     ;; no-one presses a button and so no interesting thing happens
     ;; to disrupt X. Otherwise we should do some register saving
@@ -143,16 +149,17 @@ game_state_change_continue:
     inx
     inx
     cpx #PLAYER_TABLE_I
-    bne game_state_change_loop
-game_state_change_end:
+    bne loop
+end:
     lda #$0
     tcd
     rts
+.endproc
 
 
 .a8
 .i16
-update_bgs:
+.proc update_bgs
     lda map_x
     ;; this is one of those latching regs
     sta BG1HOFS
@@ -165,11 +172,12 @@ update_bgs:
     ;; we're effectively lobbing off the top two bits of the offset..
     stz BG1VOFS
     rts
+.endproc
 
 
 .a8
 .i16
-update_vram:
+.proc update_vram
     ;; jsr update_bgs
     A16
     jsr update_score_graphics
@@ -178,11 +186,12 @@ update_vram:
     A8
     I16
     rts
+.endproc
 
 
 .a8
 .i16
-game_loop:
+.proc game_loop
     jsr wait_nmi ; wait for NMI / V-Blank
     ; we're in vblank, so first update video memory things
     jsr update_vram
@@ -197,14 +206,14 @@ game_loop:
     jsr (game_data + game_data::game_handler, x)
     A8
     jmp game_loop
-
+.endproc
 
 ;; ----
 ;; main
 
 .a8
 .i16
-main:
+.proc main
     jsr init_game_data
 
     ;; play some music
@@ -226,3 +235,4 @@ main:
     sta NMITIMEN
 
     jmp game_loop
+.endproc

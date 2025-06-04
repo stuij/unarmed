@@ -5,7 +5,7 @@ SOUND_INC = 1
 
 .a8
 .i16
-load_song:
+.proc load_song
     pha
     ; Reset TAD State
     ldx     #256
@@ -14,13 +14,13 @@ load_song:
     pla
     jsr     Tad_LoadSong
 
-@loop:
+loop:
     jsr     Tad_IsSongLoaded
-    bcs     @return
+    bcs     return
     jsl     Tad_Process
-    bra     @loop
-@return:
+    bra     loop
+return:
     rts
-
+.endproc
 
 .endif ; SOUND_INC

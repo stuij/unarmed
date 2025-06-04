@@ -109,7 +109,7 @@ player_bbox_default_ledge_lookup:
 ;; D - current player mem loc
 .a16
 .i16
-set_player_bullet_queue:
+.proc set_player_bullet_queue
     ;; calc first bullet offset from bullet table
     ;; and then copy over the addresses of all the bullets
     ;; that have been assigned to the player
@@ -142,7 +142,7 @@ set_player_bullet_queue:
     sta .loword(W0)
     ldx #0
     phx ;; we just need a stack slot here
-set_player_bullet_queue_loop:
+loop:
     ;; save current bullet address on stack
     ;; so we can use indirect access on one of its members
     lda player::bullet_queue, x
@@ -158,13 +158,15 @@ set_player_bullet_queue_loop:
     inx
     inx
     cpx .loword(W0)
-    bne set_player_bullet_queue_loop
+    bne loop
     pla
     rts
+.endproc
+
 
 .a16
 .i16
-init_players:
+.proc init_players
     ;; p1
     lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $3
@@ -198,7 +200,7 @@ init_players:
 
 
     ldx #$0
-player_init_loop:
+loop:
     lda .loword(player_table), x ; player struct under x offset
     tcd ; set dp to it
 
@@ -258,31 +260,32 @@ player_init_loop:
     inc
     tax
     cpx #PLAYER_TABLE_I
-    bne player_init_loop
+    bne loop
 
     lda #0
     tcd
     rts
+.endproc
 
 
 .a16
 .i16
-jump:
+.proc jump
     ;; first do horizontal movement logic shared with running
     jsr h_move
     ;; decrease velocity
     lda sprite::v_velo
     ;; 65816 doesn't suppport signed compare without extra steps, so..
     ;; if velo is negative, we for sure need to increase velo
-    bmi jump_add_velo
+    bmi add_velo
     ;; now we can do unsigned compare
     cmp #V_VELO_DOWN_MAX
-    bcs jump_after_velo_add ;; we're at max down velocity, so skip velo increase
-jump_add_velo:
+    bcs after_velo_add ;; we're at max down velocity, so skip velo increase
+add_velo:
     clc ; carry set means we're not borrowing
     adc sprite::v_velo_dec
     sta sprite::v_velo
-jump_after_velo_add:
+after_velo_add:
     ;; change player pos based on velocity
     lda sprite::y_pos
     clc
@@ -290,9 +293,10 @@ jump_after_velo_add:
                        ; which is excellent as that means we're going down now
     sta sprite::y_new
     rts
+.endproc
 
 
-init_jump:
+.proc init_jump
     lda #V_VELO_INIT
     sta sprite::v_velo
     lda #V_VELO_DEC
@@ -304,106 +308,110 @@ init_jump:
     asl ;; times 2 to get proper fn offset
     tax
     jmp (.loword(move_table), x)
+.endproc
 
-h_move:
+
+.proc h_move
     lda player::h_tribool
-    beq h_move_no_push ;; we've got momentum, but we are not actually pushing a button
-    bmi h_move_push_left ; we're pushing left on direction pad
+    beq no_push ;; we've got momentum, but we are not actually pushing a button
+    bmi push_left ; we're pushing left on direction pad
 
     ;; we're pushing right
     lda #stance_dir::right
     sta player::stance_dir
     lda sprite::h_velo
-    bmi h_move_push_right_move_left
+    bmi push_right_move_left
     ;; we push right and we move right
     cmp #H_VELO_MAX
-    bcs h_move_handle_velo ;; no velo change. velo is bigger, so we hit our max
+    bcs handle_velo ;; no velo change. velo is bigger, so we hit our max
     clc
     adc #H_VELO_INC
     sta sprite::h_velo
-    bra h_move_handle_velo
+    bra handle_velo
 
-h_move_push_right_move_left:
+push_right_move_left:
     clc
     adc #H_VELO_INC_OPPOSITE
     sta sprite::h_velo
-    bra h_move_handle_velo
+    bra handle_velo
 
     ;; cpu doesn't do signed compare, so we need to do some work
     ;; - if velo is positive, we can just decrease. we're not hitting
     ;;   we can't be hitting max velo
     ;; - if velo is negative, we invert, and compare to H_MAX_VELO
-h_move_push_left:
+push_left:
     lda #stance_dir::left
     sta player::stance_dir
     lda sprite::h_velo
-    beq h_move_push_left_move_left
-    bpl h_move_push_left_move_right
-h_move_push_left_move_left:
+    beq push_left_move_left
+    bpl push_left_move_right
+push_left_move_left:
     eor #$FFFF
     clc
     adc #1
     cmp #H_VELO_MAX
-    bcs h_move_handle_velo ;; no velo change. velo is bigger, so we hit our max
+    bcs handle_velo ;; no velo change. velo is bigger, so we hit our max
     ;; otherwise increase velo
     lda sprite::h_velo
     sec
     sbc #H_VELO_INC
     sta sprite::h_velo
-    bra h_move_handle_velo
-h_move_push_left_move_right:
+    bra handle_velo
+push_left_move_right:
     ;; when pushing opposite dir of h_move, we want to decrease velo extra
     sec
     sbc #H_VELO_INC_OPPOSITE
     sta sprite::h_velo
-    bra h_move_handle_velo
-h_move_no_push:
+    bra handle_velo
+no_push:
     lda sprite::h_velo
-    bmi h_move_left_no_push
+    bmi left_no_push
     ;; so we're h_movening right
     sec
     sbc #H_VELO_INC_RELAX
     ;; but if we overshoot, we should snap to 0
-    bmi h_move_snap_to_zero
+    bmi snap_to_zero
     sta sprite::h_velo
-    bra h_move_handle_velo
+    bra handle_velo
 
-h_move_left_no_push:
+left_no_push:
     clc
     adc #H_VELO_INC_RELAX
     ;; but if we overshoot, we should snap to 0
-    bpl h_move_snap_to_zero
+    bpl snap_to_zero
     sta sprite::h_velo
-    bra h_move_handle_velo
+    bra handle_velo
 
-h_move_snap_to_zero:
+snap_to_zero:
     lda #0
     sta sprite::h_velo
 
-h_move_handle_velo:
+handle_velo:
     ;; if velo is 0, we should state-change to idle, otherwise add velo to x_pos
     ldx sprite::h_velo
-    beq h_move_set_to_idle
+    beq set_to_idle
     lda sprite::x_pos
     clc
     adc sprite::h_velo
     sta sprite::x_new
-    bra h_move_end
-h_move_set_to_idle:
+    bra end
+
+set_to_idle:
     ;; when we reach zero we want to set ourself to idle
     ;; state, but only when we are running. not when we're in the air
     lda sprite::move_state
     cmp #move_state::run
-    bne h_move_end
+    bne end
     lda #move_state::idle
     sta sprite::move_state
     lda #$0
     sta sprite::anim_tick
-h_move_end:
+end:
     rts
+.endproc
 
 
-init_run:
+.proc init_run
     lda #$0
     sta sprite::h_velo
     sta sprite::anim_tick
@@ -412,25 +420,27 @@ init_run:
     asl ;; times 2 to get proper fn offset
     tax
     jmp (.loword(move_table), x)
+.endproc
 
 
-run:
+.proc run
     ;; are we instructed to jump?
     lda player::joy_trigger_held
     and #JOY_B
-    beq run_eval_h_move
+    beq :+
     jmp init_jump
-run_eval_h_move:
-    jmp h_move
+  : jmp h_move
+.endproc
 
 
-idle:
+
+.proc idle
     ;; are we instructed to jump?
     lda player::joy_trigger_held
     and #JOY_B
-    beq idle_test_run
+    beq test_run
     jmp init_jump
-idle_test_run:
+test_run:
     ;; are we moving left or right
     lda player::h_tribool
     bne init_run ; we pressed left or right, so we want to run
@@ -443,19 +453,22 @@ still_idle:
     lda sprite::y_pos
     sta sprite::y_new
     rts
+.endproc
 
 
-cling:
+.proc cling
     rts
+.endproc
 
 
-climb:
+.proc climb
     rts
+.endproc
 
 
 .a16
 .i16
-handle_single_player_movement:
+.proc handle_single_player_movement
     jsr set_player_direction
     lda sprite::move_state
     asl
@@ -464,13 +477,14 @@ handle_single_player_movement:
 
     jsr check_collisions
     rts
+.endproc
 
 
-handle_player_movement:
+.proc handle_player_movement
     ;; loop over player movement
     ldx #$0
     phx
-player_movement_loop:
+loop:
     lda .loword(player_table), x
     tcd ;; remapping dp to player x
     jsr handle_single_player_movement
@@ -479,21 +493,22 @@ player_movement_loop:
     inx
     phx
     cpx #PLAYER_TABLE_I
-    bne player_movement_loop
+    bne loop
     plx ; clear the stack
     lda #$0
     tcd
     rts
+.endproc
 
 
-player_point_no_coll_callback:
+.proc player_point_no_coll_callback
     ;; we're ledge checking
     lda sprite::move_state ;; only check when we're idle or running
     cmp #move_state::idle
-    beq player_point_no_call_ledge_check
+    beq ledge_check
     cmp #move_state::run
-    bne player_point_no_call_end
-player_point_no_call_ledge_check:
+    bne end
+ledge_check:
     tyx
     tya
     lsr ; shift point offset to find offset into ledge table
@@ -503,7 +518,7 @@ player_point_no_call_ledge_check:
     lda (player::bbox_ledge_lookup), y
     txy ; restore Y
     cmp #1
-    bne player_point_no_call_end
+    bne end
     ; ok, we are interested in a ledge check
     lda COLL_STACK_POINT_TILE_OFF + 2, s
     clc
@@ -512,29 +527,30 @@ player_point_no_call_ledge_check:
     A8
     lda current_coll_map, x
     A16
-    beq player_point_no_call_end ; not a collision, so we move on
+    beq end ; not a collision, so we move on
     ;; it's a collision, so we register it
     ;; we only need one collision to know that we're standing with at least
     ;; one point on the ledge, so we can just write 1 whenever we find
     ;; something
     lda #1
     sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
-player_point_no_call_end:
+end:
     rts
+.endproc
 
 
-player_coll_end_callback:
+.proc player_coll_end_callback
     lda COLL_STACK_TILE_PROPS + 2, s
     and #$8 ;; is equal to kill (should add vars for these)
     bne player_handle_kill ;; if so handle kill
     lda sprite::move_state ;; only execute
     cmp #move_state::idle
-    beq player_coll_ledge_fall
+    beq ledge_fall
     cmp #move_state::run
-    bne player_coll_store_y_new
-player_coll_ledge_fall:
+    bne store_y_new
+ledge_fall:
     lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
-    bne player_coll_store_y_new ; we didn't fall off the ledge
+    bne store_y_new ; we didn't fall off the ledge
     ; we  did fall off the ledge. we're now fallling
     lda #0
     sta sprite::v_velo
@@ -543,35 +559,36 @@ player_coll_ledge_fall:
     sta sprite::move_state
     lda #V_VELO_DEC
     sta sprite::v_velo_dec
-player_coll_store_y_new:
+store_y_new:
     lda COLL_STACK_Y_NEW_TMP + 2, s
-    bmi player_coll_store_x_new
+    bmi store_x_new
     ;; y collision occured.
     ;; we record new y, and set y velo to 0
     sta sprite::y_new
     lda #0
     sta sprite::v_velo
     lda COLL_STACK_POINT_HIT_GROUND + 2, s
-    beq player_coll_store_x_new
+    beq store_x_new
     lda #move_state::idle
     sta sprite::move_state
     lda #$0
     sta sprite::anim_tick
-
-player_coll_store_x_new:
+store_x_new:
     lda COLL_STACK_X_NEW_TMP + 2, s
-    bmi player_coll_end_callback_end
+    bmi end
     ;; x collision occured.
     ;; we record new x, and set x velo to 0
     sta sprite::x_new
     lda #0
     sta sprite::h_velo
-player_coll_end_callback_end:
+end:
     rts
+.endproc
+
 
 ;; This is another exit out of the fn. My first one in this project.
 ;; The compiler engineer in me feels dirty.
-player_handle_kill:
+.proc player_handle_kill
     lda player::nr
     asl
     asl
@@ -584,6 +601,7 @@ player_handle_kill:
     sta sprite::y_new
 
     rts
+.endproc
 
 
 ;; ----------------
@@ -599,7 +617,7 @@ player_handle_kill:
 .i16
 ;; Y holds OAM shadow mem position of third player byte,
 ;; so the actual sprite address
-animate_player_shoot_dir:
+.proc animate_player_shoot_dir
     lda sprite::face_dir
     lsr
     clc
@@ -608,6 +626,7 @@ animate_player_shoot_dir:
     sta OAM_mirror, y
     A16
     rts
+.endproc
 
 
 .a16
@@ -619,40 +638,41 @@ animate_player_shoot_dir:
 ;; Currently we only have animation for running,
 ;; For the other states we just use the first
 ;; frame of the running state.
-animate_player_movement:
+.proc animate_player_movement
     lda sprite::move_state
     cmp #move_state::run
-    bne animate_player_movement_other
+    bne other
     lda sprite::anim_tick
     rshift 3
     and #$3
     ldx player::stance_dir
-    bne animate_player_movement_set_sprite
+    bne set_sprite
     clc
     adc #$4
-    bra animate_player_movement_set_sprite
-animate_player_movement_other:
+    bra set_sprite
+other:
     lda #$1
     ldx player::stance_dir
-    bne animate_player_movement_set_sprite
+    bne set_sprite
     clc
     adc #$4
-animate_player_movement_set_sprite:
+set_sprite:
     clc
     adc #PLAYER_OAM_RUN_ANIM_BASE
     A8
     sta OAM_mirror, y
     A16
     rts
+.endproc
 
 
 .a16
 .i16
-finalize_players:
+.proc finalize_players
     ldx #$0
     ldy #PLAYER_OAM_OFFSET
     phx
-finalize_player_loop:
+loop:
     lda .loword(player_table), x
     tcd
     ;; we now know x and y won't change anymore, so lock them into x/y_pos
@@ -704,79 +724,81 @@ finalize_player_loop:
     inx
     phx
     cpx #PLAYER_TABLE_I
-    bne finalize_player_loop
+    bne loop
     plx
     lda #$0
     tcd
     rts
+.endproc
 
 
 .a16
 .i16
-set_player_direction:
+.proc set_player_direction
     lda player::joy
     tax
     and #(JOY_UP + JOY_LEFT)
     cmp #(JOY_UP + JOY_LEFT)
-    bne set_player_direction_check_down_left
+    bne check_down_left
     lda #face_dir::top_left
     sta sprite::face_dir
-    bra set_player_direction_done
-set_player_direction_check_down_left:
+    bra done
+check_down_left:
     txa
     and #(JOY_DOWN + JOY_LEFT)
     cmp #(JOY_DOWN + JOY_LEFT)
-    bne set_player_direction_check_up_right
+    bne check_up_right
     lda #face_dir::bottom_left
     sta sprite::face_dir
-    bra set_player_direction_done
-set_player_direction_check_up_right:
+    bra done
+check_up_right:
     txa
     and #(JOY_UP + JOY_RIGHT)
     cmp #(JOY_UP + JOY_RIGHT)
-    bne set_player_direction_check_down_right
+    bne check_down_right
     lda #face_dir::top_right
     sta sprite::face_dir
-    bra set_player_direction_done
-set_player_direction_check_down_right:
+    bra done
+check_down_right:
     txa
     and #(JOY_DOWN + JOY_RIGHT)
     cmp #(JOY_DOWN + JOY_RIGHT)
-    bne set_player_direction_check_left
+    bne check_left
     lda #face_dir::bottom_right
     sta sprite::face_dir
-    bra set_player_direction_done
-set_player_direction_check_left:
+    bra done
+check_left:
     txa
     and #JOY_LEFT
-    beq set_player_direction_check_up
+    beq check_up
     lda #face_dir::left
     sta sprite::face_dir
-    bra set_player_direction_done
-set_player_direction_check_up:
+    bra done
+check_up:
     txa
     and #JOY_UP
-    beq set_player_direction_check_down
+    beq check_down
     lda #face_dir::top
     sta sprite::face_dir
-    bra set_player_direction_done
-set_player_direction_check_down:
+    bra done
+check_down:
     txa
     and #JOY_DOWN
-    beq set_player_direction_check_right
+    beq check_right
     lda #face_dir::bottom
     sta sprite::face_dir
-    bra set_player_direction_done
-set_player_direction_check_right:
+    bra done
+check_right:
     txa
     and #JOY_RIGHT
-    beq set_player_direction_done
+    beq done
     lda #face_dir::right
     sta sprite::face_dir
-set_player_direction_done:
+done:
     ;; no more possible directions pressed, so we're keeping the
     ;; previous direction
     rts
+.endproc
 
 
 ;; -------
@@ -792,34 +814,34 @@ set_player_direction_done:
 ;; A - item pulled from the queue
 .a16
 .i16
-queue_get_active_item:
+.proc queue_get_active_item
     cpx #$0
-    bne queue_active_item
+    bne active_item
     lda #$0
-    bra queue_get_active_items_end
-queue_active_item:
+    bra end
+active_item:
     dex
     dex
     lda player::bullet_queue, x
-queue_get_active_items_end:
+end:
     rts
-
+.endproc
 
 
 .a16
 .i16
-handle_player_actions:
+.proc handle_player_actions
 ;; prologue
     ldx #$0
     phx
-actions_player_loop:
+player_loop:
     lda .loword(player_table), x
     tcd
 ;; meat
     ;; are we instructed to shoot?
     lda player::joy_trigger
     and #JOY_A
-    beq actions_player_end
+    beq end
     ;; we are shooting something!
     ;; save left x and y
     ;; x
@@ -848,7 +870,7 @@ actions_player_loop:
     ;; switch dp to bullet
     ldx player::bullets_left
     jsr queue_get_active_item
-    beq actions_player_end
+    beq end
     stx player::bullets_left
     tcd
 
@@ -870,18 +892,18 @@ actions_player_loop:
     jsr (.loword(bullet_fire_direction_table), x)
 
     jsr bullet_set_for_flight
-
-actions_player_end:
+end:
     plx
     inx
     inx
     phx
     cpx #PLAYER_TABLE_I
-    bne actions_player_loop
+    bne player_loop
 ;; epilogue
     plx ; clear the stack
     lda #$0
     tcd
     rts
+.endproc
 
 .endif ; PLAYER_INC

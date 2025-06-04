@@ -7,10 +7,10 @@ COLL_SPRITE_INC = 1
 
 .a16
 .i16
-handle_sprite_bumps:
+.proc handle_sprite_bumps
     ldx #$0
     phx
-sprite_bumps_player_loop:
+player_loop:
     lda .loword(player_table), x
     tcd
     stx .loword(W4)
@@ -43,13 +43,13 @@ sprite_bumps_player_loop:
     ;; now we can start comparing with our bullet
 
     ldx #$0
-sprite_bumps_bullet_loop:
+bullet_loop:
     lda .loword(bullet_table), x
     tcd
 
     ;; don't process if bullet isn't active
     lda sprite::move_state
-    beq sprite_bumps_bullet_end
+    beq bullet_end
     ;; take Y coord of our bullet
     lda (sprite::bbox_fine) ;; y
     clc
@@ -57,10 +57,10 @@ sprite_bumps_bullet_loop:
 
     ;; is it higer than top y?
     cmp .loword(W1)
-    bmi sprite_bumps_bullet_end ;; yes, so no collision
+    bmi bullet_end ;; yes, so no collision
     ;; is it lower than bottom y?
     cmp .loword(W3)
-    bpl sprite_bumps_bullet_end
+    bpl bullet_end
 
     ;; check x
     ldy #point::x_off
@@ -69,10 +69,10 @@ sprite_bumps_bullet_loop:
     adc sprite::x_new
     ;; is it lefter than left x?
     cmp .loword(W0)
-    bmi sprite_bumps_bullet_end ;; yes, so no collision
+    bmi bullet_end ;; yes, so no collision
     ;; is it righter than right x?
     cmp .loword(W2)
-    bpl sprite_bumps_bullet_end
+    bpl bullet_end
 
     ;; it's a hit!!
     jsr bullet_retire
@@ -81,11 +81,11 @@ sprite_bumps_bullet_loop:
     jsr player_dec_hp
     plx
 
-sprite_bumps_bullet_end:
+bullet_end:
     inx
     inx
     cpx #BULLET_TABLE_I
-    bne sprite_bumps_bullet_loop
+    bne bullet_loop
 
     ;; check for player loop things
     plx
@@ -93,13 +93,13 @@ sprite_bumps_bullet_end:
     inx
     phx
     cpx #PLAYER_TABLE_I
-    beq sprite_bumps_player_loop_cont
-    jmp sprite_bumps_player_loop
-sprite_bumps_player_loop_cont:
-    plx ; clear the stack
-
+    beq :+
+    jmp player_loop
+  : plx ; clear the stack
     lda #$0
     tcd
     rts
+.endproc
+
 
 .endif ; COLL_SPRITE_INC

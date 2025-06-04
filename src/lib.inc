@@ -6,7 +6,7 @@ LIB_INC = 1
 
 .a8     ; A is 8 bits
 .i16    ; X/Y are 16 bits
-reset_handler:
+.proc reset_handler
     jml :+
 :   sei
     clc
@@ -41,30 +41,34 @@ reset_handler:
     A8
 	I16
     jmp main
+.endproc
 
 
-    nmi_handler:
+.proc nmi_handler
     jml :+
 :   bit RDNMI ; it is required to read this register
               ; in the NMI handler
     inc .loword(in_nmi)
     rti
+.endproc
 
-irq_handler:
+
+.proc irq_handler
     jml :+
 :   bit TIMEUP	; it is required to read this register
 				; in the IRQ handler
 @loop:
     jmp @loop
+.endproc
 
 
 ; This shouldn't get called, so if it does we'd like to know more
 ; in a controlled manner, instead of say branching to $00000 and
 ; crashing out violently.
-spinloop_handler:
+.proc spinloop_handler
     jml :+
 :   jmp spinloop_handler
-
+.endproc
 
 ;; setup lib code
 
@@ -76,7 +80,7 @@ spinloop_handler:
 ;   - W0: size
 .a8
 .i16
-dma_to_vram:
+.proc dma_to_vram
     sta A1B0 ; set bank of source address
     stx A1T0L ; set loword of source address
     sty VMADDL ; set VRAM base address
@@ -90,6 +94,7 @@ dma_to_vram:
     lda #1
     sta MDMAEN ; start dma, channel 0
     rts
+.endproc
 
 ; dma_to_palette
 ; arguments:
@@ -99,7 +104,7 @@ dma_to_vram:
 ;   - W0: size
 .a8
 .i16
-dma_to_palette:
+.proc dma_to_palette
     sta A1B0 ; set bank of source address
     stx A1T0L ; set loword of source address
     tya ; CGADD is a byte
@@ -114,6 +119,8 @@ dma_to_palette:
     lda #1
     sta MDMAEN ; start dma, channel 0
     rts
+.endproc
+
 
 ; dma_to_wram
 ; arguments:
@@ -122,7 +129,7 @@ dma_to_palette:
 ;   - B1L: dst WRAM bank address
 ;   - y: dst WRAM loword address
 ;   - W0: size
-dma_to_wram:
+.proc dma_to_wram
     sta A1B0 ; set bank of source address
     stx A1T0L ; set loword of source address
     lda .loword(B1L)
@@ -138,11 +145,12 @@ dma_to_wram:
     lda #1
     sta MDMAEN ; start dma, channel 0
     rts
+.endproc
 
 
 .a8
 .i16
-load_tilemap_to_vram:
+.proc load_tilemap_to_vram
     ; load tile map from wram to vram
     ldy #GAME_MAP_SIZE
     sty .loword(W0)
@@ -151,6 +159,7 @@ load_tilemap_to_vram:
     ldy #VRAM_MAP_BG_GAME_BASE
     jsr dma_to_vram
     rts
+.endproc
 
 
 SpriteUpperEmpty:
@@ -163,7 +172,7 @@ SpriteEmptyVal:
 
 .a8
 .i16
-clear_coll_map_bottom:
+.proc clear_coll_map_bottom
 ;fills the buffer with 224 for low table
 ;and $00 for high table
 	php
@@ -183,6 +192,8 @@ clear_coll_map_bottom:
 	sta MDMAEN ; DMA_ENABLE start dma, channel 0
     plp
     rts
+.endproc
+
 
 .a8
 .i16
@@ -193,7 +204,7 @@ clear_coll_map_bottom:
 ;   - y: dst VRAM address
 ;   - x: size
 ;   - W0: value
-dma_fixed_to_vram:
+.proc dma_fixed_to_vram
     stx DAS0L ; set DMA byte counter
     stz A1B0 ; set bank of W0, aka 0
     ldx .loword(W0)
@@ -207,11 +218,12 @@ dma_fixed_to_vram:
     lda #1
     sta MDMAEN ; start dma, channel 0
     rts
+.endproc
 
 
 .a8
 .i16
-clear_OAM_mirror:
+.proc clear_OAM_mirror
 ;fills the buffer with 224 for low table
 ;and $00 for high table
 	php
@@ -240,11 +252,12 @@ clear_OAM_mirror:
 	sta MDMAEN ; DMA_ENABLE start dma, channel 0
 	plp
 	rts
+.endproc
 
 
 .a16
 .i8
-dma_OAM:
+.proc dma_OAM
 ;copy from OAM_MIRROR to the OAM RAM
 	php
 	stz OAMADDL ;OAM address
@@ -261,5 +274,6 @@ dma_OAM:
 	stx MDMAEN ; DMA_ENABLE start dma, channel 0
 	plp
 	rts
+.endproc
 
-    .endif ; LIB_INC
+.endif ; LIB_INC

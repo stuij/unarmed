@@ -8,7 +8,7 @@ INPUT_INC = 1
 ;; nesdev wiki: https://www.nesdev.org/wiki/Controller_reading_code
 .a16
 .i16
-read_serial:
+.proc read_serial
     lda #$1
     sta .loword(W2)
     A8
@@ -38,11 +38,12 @@ read_serial_loop:
     A16
     lda .loword(W2)
     rts
+.endproc
 
 
 .a8
 .i16
-read_input:
+.proc read_input
 wait_for_joypad:
     lda HVBJOY            ; get joypad status
     lsr a                 ; check whether joypad done reading...
@@ -79,6 +80,8 @@ joy_set_player_vals:
     lda #$0
     tcd
     rts
+.endproc
+
 
 set_player_joy:
     ldy player::joy                  ; get input from last frame

@@ -5,7 +5,7 @@ HUD_INC = 1
 
 .i16
 .a16
-init_score_graphics:
+.proc init_score_graphics
     lda #VRAM_MAP_FONT_BASE
     sta VMADD
     print_pad 5
@@ -13,7 +13,7 @@ init_score_graphics:
     lda #PLAYER_TABLE_I
     lsr
     sta .loword(W0)
-init_score_graphs_loop:
+loop:
     print_char 'p'
     txa
     clc
@@ -24,11 +24,12 @@ init_score_graphs_loop:
     print_pad 3
     cpx .loword(W0)
     inx
-    bcc init_score_graphs_loop
+    bcc loop
     rts
+.endproc
 
 
-update_score_graphics:
+.proc update_score_graphics
     ;; end condition
     lda #PLAYER_TABLE_I
     sta .loword(W0)
@@ -39,7 +40,7 @@ update_score_graphics:
     sta VMADD
     tay
     ldx #$0
-update_score_graphics_loop:
+loop:
     lda hp, x
     clc
     adc #ASCII_NR_BASE_OFFSET
@@ -53,8 +54,8 @@ update_score_graphics_loop:
     inx
     inx
     cpx .loword(W0)
-    bcc update_score_graphics_loop
+    bcc loop
     rts
-
+.endproc
 
 .endif ; HUD_INC
