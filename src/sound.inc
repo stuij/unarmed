@@ -16,11 +16,59 @@ SOUND_INC = 1
 
 loop:
     jsr     Tad_IsSongLoaded
-    bcs     return
+    bcs     set_volume
     jsl     Tad_Process
     bra     loop
-return:
+set_volume:
+    ;; I think the volume is incrementally turned down
+    ;; so that's why it seems like we're not immediately
+    ;; reacting to turning the music down.
+    ;; not totally sure about this though.
+    A8
+    jsr Tad_GlobalVolumesPersist
+
+    lda #TadCommand::SET_GLOBAL_VOLUMES
+    ldx #64
+    ldy #255
+    jsr Tad_QueueCommand
     rts
 .endproc
+
+
+; IN: A = sfx id
+; IN: X = pan
+.a8
+; I unknown
+; DB access lowram
+; KEEP: X, Y
+.proc Tad_QueuePannedSoundEffect_D
+    cmp     .loword(Tad_sfxQueue_sfx)
+    bcs     @EndIf
+        sta     .loword(Tad_sfxQueue_sfx)
+
+        txa
+        sta     .loword(Tad_sfxQueue_pan)
+
+@EndIf:
+    rts
+.endproc
+
+
+; IN: A = sfx_id
+.a8
+; I unknown
+; DB access lowram
+; KEEP: X, Y
+.proc Tad_QueueSoundEffect_D
+    cmp     .loword(Tad_sfxQueue_sfx)
+    bcs     @EndIf
+        sta     .loword(Tad_sfxQueue_sfx)
+
+        lda     #TAD_CENTER_PAN
+        sta     .loword(Tad_sfxQueue_pan)
+@EndIf:
+    rts
+.endproc
+
 
 .endif ; SOUND_INC

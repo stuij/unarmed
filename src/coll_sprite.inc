@@ -76,6 +76,13 @@ bullet_loop:
 
     ;; it's a hit!!
     jsr bullet_retire
+    ;; play player hit sound
+    phx
+    A8
+    lda #SFX::robot_fires_laser
+    jsr Tad_QueueSoundEffect_D
+    A16
+    plx
     phx
     ldx .loword(W4)
     jsr player_dec_hp

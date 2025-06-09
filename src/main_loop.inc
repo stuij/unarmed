@@ -22,6 +22,9 @@ MAIN_LOOP_INC = 1
 .a16
 .i16
 .proc handle_main_loop
+    A8
+    jsl Tad_Process
+    A16
     jsr handle_movement
     jsr handle_sprite_bumps
     jsr handle_player_actions
