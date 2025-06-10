@@ -27,6 +27,11 @@ B4L:
 .res 1
 B4H:
 .res 1
+W5:
+B5L:
+.res 1
+B5H:
+.res 1
 
 in_nmi:
 .res 2
