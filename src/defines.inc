@@ -187,7 +187,7 @@ BULLET_OAM_OFFSET = $20
 ; and on 7th row of y axis (rows are $10 wide)
 BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
-BULLET_MAX_FLIGHT = 60 ;; 3
+BULLET_MAX_FLIGHT = 60 ;; 1 sec
 
 
 .enum bullet_state
@@ -211,6 +211,7 @@ BULLET_MAX_FLIGHT = 60 ;; 3
 
 ;; -----
 ;; menus
+
 MENU_MOVE_TIMEOUT = 8
 
 .enum menus
@@ -298,13 +299,20 @@ SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
 
 
 ; ---
-; hud
+; HUD
 
 ASCII_NR_BASE_OFFSET = 48 - 32  ; 48 is ascii position of 0,
                                 ; and our tiles start from ascii nr 32
 
-SCORE_NR_BASE = 8
-SCORE_NR_SKIP = 6
+HUD_WIN_BASE = 7
+HUD_WIN_SKIP = 5
 
+HUD_SCORE_NR_BASE = 5
+HUD_PLAYER_SKIP = 6
+
+;; BULLET_TABLE_I = 2x amount of bullets, sprites take up 4 bytes,
+;; so the correct calulation for how much OAM space the bullets take up
+;; is (BULLET_TABLE_I / 2 * 4) = (BULLET_TABLE_I * 2)
+HUD_GFX_OAM_OFFSET = BULLET_OAM_OFFSET + (BULLET_TABLE_I * 2)
 
 .endif ; DEFINES_INC

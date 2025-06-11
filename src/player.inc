@@ -167,6 +167,7 @@ loop:
 .a16
 .i16
 .proc init_players
+    A8
     ;; p1
     lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $3
@@ -174,22 +175,22 @@ loop:
     sta OAM_mirror + $7
 
     ;; p2
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$22                ; no flip, prio 2, palette 1
     sta OAM_mirror + $b
-    lda #$20                ; tile offset of third sprite
-    sta OAM_mirror + $e
+    lda #$22                ; no flip, prio 2, palette 1
+    sta OAM_mirror + $f
 
     ;; p3
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$24                ; no flip, prio 2, palette 2
     sta OAM_mirror + $13
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$24                ; no flip, prio 2, palette 2
     sta OAM_mirror + $17
 
     ;; p4
-    lda #$20                ; no flip, prio 2, palette 0
+    lda #$26                ; no flip, prio 2, palette 3
     sta OAM_mirror + $1b
-    lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_mirror + $1e
+    lda #$26                ; no flip, prio 2, palette 3
+    sta OAM_mirror + $1f
 
 
     ; set top bit of x pos for all 4 sprites to 0 so we show them on
@@ -197,7 +198,7 @@ loop:
     ; so a nibble, representing two sprites becomes b0000, aka 0.
     lda #$00
     sta OAM_mirror + $200
-
+    A16
 
     ldx #$0
 loop:

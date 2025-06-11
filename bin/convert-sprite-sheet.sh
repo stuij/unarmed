@@ -6,4 +6,5 @@ superfamiconv -v \
   --in-image ${IN_IMAGE} \
   --out-palette ${NAME}.palette \
   --out-tiles ${NAME}.tiles \
+  --no-remap \
   --out-tiles-image ${NAME}-tiles.png
