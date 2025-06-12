@@ -10,7 +10,7 @@ INPUT_INC = 1
 .i16
 .proc read_serial
     lda #$1
-    sta .loword(W2)
+    sta a:W2
     A8
     lda #$7F
     sta WRIO
@@ -30,13 +30,13 @@ read_serial_loop:
     lda JOYSER1
     A16
     lsr              ; bit 0 -> Carry
-    rol .loword(W2)  ; Carry -> bit 0; bit 15 -> Carry
+    rol a:W2         ; Carry -> bit 0; bit 15 -> Carry
     bcc read_serial_loop
     A8
     lda #$FF
     sta WRIO
     A16
-    lda .loword(W2)
+    lda a:W2
     rts
 .endproc
 
@@ -55,8 +55,8 @@ wait_for_joypad:
            ;; as well as the offset into the joypad info hw regs, as both are
            ;; spaced one word apart.
 joy_loop:
-    stx .loword(W1)
-    lda .loword(player_table), x
+    stx a:W1
+    lda a:player_table, x
     tcd ;; remapping dp to player x
     cpx #$6
     beq joy_read_serial
@@ -72,7 +72,7 @@ joy_read_serial:
 joy_set_player_vals:
     jsr set_player_joy
     ;; and increment x as loop var again
-    ldx .loword(W1)
+    ldx a:W1
     inx
     inx
     cpx #PLAYER_TABLE_I
@@ -83,7 +83,7 @@ joy_set_player_vals:
 .endproc
 
 
-set_player_joy:
+.proc set_player_joy
     ldy player::joy                  ; get input from last frame
     sta player::joy                  ; store new input from this frame
     tya                              ; check for newly pressed buttons...
@@ -99,11 +99,12 @@ set_player_joy:
     sta player::joy_trigger_held
 
     ; set some conveniet things
-    bit_tribool JOY_RIGHT_SH, JOY_LEFT_SH
+    bit_tribool ::JOY_RIGHT_SH, ::JOY_LEFT_SH
     sta player::h_tribool
     lda player::joy_trigger_held
-    bit_tribool JOY_DOWN_SH, JOY_UP_SH
+    bit_tribool ::JOY_DOWN_SH, ::JOY_UP_SH
     sta player::v_tribool
     rts
+.endproc
 
 .endif ; input.inc

@@ -60,7 +60,7 @@ bullet_bbox_default_fine:
     ldx #$0
     ldy #(BULLET_OAM_OFFSET + $2)
 loop:
-    lda .loword(bullet_table), x
+    lda a:bullet_table, x
     tcd
 
     A8
@@ -134,7 +134,7 @@ loop:
     ldx #$0
     phx
 loop:
-    lda .loword(bullet_table), x
+    lda a:bullet_table, x
     tcd
     ;; if bullet is inactive, ignore
     lda sprite::move_state
@@ -331,7 +331,7 @@ done:
     ldx #$0
     ldy #BULLET_OAM_OFFSET
 bullets_to_oam_loop:
-    lda .loword(bullet_table), x
+    lda a:bullet_table, x
     tcd
     lda sprite::x_new
     sta sprite::x_pos
@@ -383,9 +383,9 @@ bullet_fire_direction_table:
     inc
     sta sprite::h_velo
     ;; bullet position adjustments
-    lda .loword(W0)
+    lda a:W0
     sta sprite::x_new
-    lda .loword(W1)
+    lda a:W1
     sta sprite::y_new
     rts
 .endproc
@@ -399,9 +399,9 @@ bullet_fire_direction_table:
     inc
     sta sprite::h_velo
     ;; bullet position adjustments
-    lda .loword(W0)
+    lda a:W0
     sta sprite::x_new
-    lda .loword(W1)
+    lda a:W1
     sec
     sbc #BULLET_SHOOT_DOWN_Y_ADJUST
     sta sprite::y_new
@@ -417,9 +417,9 @@ bullet_fire_direction_table:
     lda #(BULLET_H_VELO)
     sta sprite::h_velo
     ;; bullet position adjustments
-    lda .loword(W0)
+    lda a:W0
     sta sprite::x_new
-    lda .loword(W1)
+    lda a:W1
     sta sprite::y_new
     rts
 .endproc
@@ -431,9 +431,9 @@ bullet_fire_direction_table:
     lda #(BULLET_H_VELO)
     sta sprite::h_velo
     ;; bullet position adjustments
-    lda .loword(W0)
+    lda a:W0
     sta sprite::x_new
-    lda .loword(W1)
+    lda a:W1
     sec
     sbc #BULLET_SHOOT_DOWN_Y_ADJUST
     sta sprite::y_new
@@ -449,9 +449,9 @@ bullet_fire_direction_table:
     inc
     sta sprite::h_velo
     ;; bullet position adjustments
-    lda .loword(W0)
+    lda a:W0
     sta sprite::x_new
-    lda .loword(W1)
+    lda a:W1
     sec
     sbc #BULLET_SHOOT_SIDE_Y_ADJUST
     sta sprite::y_new
@@ -467,9 +467,9 @@ bullet_fire_direction_table:
     lda #$0
     sta sprite::h_velo
     ;; bullet position adjustments
-    lda .loword(W0)
+    lda a:W0
     sta sprite::x_new
-    lda .loword(W1)
+    lda a:W1
     sta sprite::y_new
     rts
 .endproc
@@ -481,9 +481,9 @@ bullet_fire_direction_table:
     lda #$0
     sta sprite::h_velo
     ;; bullet position adjustments
-    lda .loword(W0)
+    lda a:W0
     sta sprite::x_new
-    lda .loword(W1)
+    lda a:W1
     sta sprite::y_new
     rts
 .endproc
@@ -495,9 +495,9 @@ bullet_fire_direction_table:
     lda #(BULLET_H_VELO)
     sta sprite::h_velo
     ;; bullet position adjustments
-    lda .loword(W0)
+    lda a:W0
     sta sprite::x_new
-    lda .loword(W1)
+    lda a:W1
     sec
     sbc #BULLET_SHOOT_SIDE_Y_ADJUST
     sta sprite::y_new

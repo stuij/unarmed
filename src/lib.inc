@@ -48,7 +48,7 @@ LIB_INC = 1
     jml :+
 :   bit RDNMI ; it is required to read this register
               ; in the NMI handler
-    inc .loword(in_nmi)
+    inc a:in_nmi
     rti
 .endproc
 
@@ -84,7 +84,7 @@ LIB_INC = 1
     sta A1B0 ; set bank of source address
     stx A1T0L ; set loword of source address
     sty VMADDL ; set VRAM base address
-    ldy .loword(W0) ; get size from zero page word
+    ldy a:W0 ; get size from zero page word
     sty DAS0L ; set DMA byte counter
 
     lda #<VMDATAL
@@ -109,7 +109,7 @@ LIB_INC = 1
     stx A1T0L ; set loword of source address
     tya ; CGADD is a byte
     sta CGADD ; set palette base address
-    ldy .loword(W0) ; get size from zero page word
+    ldy a:W0 ; get size from zero page word
     sty DAS0L ; set DMA byte counter
 
     lda #<CGDATA
@@ -130,20 +130,20 @@ LIB_INC = 1
 ;   - y: dst WRAM loword address
 ;   - W0: size
 .proc dma_to_wram
-    sta A1B0 ; set bank of source address
-    stx A1T0L ; set loword of source address
-    lda .loword(B1L)
-    sta WMADDH ; set bank of wram dest addr
-    sty WMADDL ; set loword of wram dest addr
-    ldy .loword(W0) ; get size from zero page word reg 1
-    sty DAS0L ; set DMA byte counter
+    sta A1B0    ; set bank of source address
+    stx A1T0L   ; set loword of source address
+    lda a:B1L
+    sta WMADDH  ; set bank of wram dest addr
+    sty WMADDL  ; set loword of wram dest addr
+    ldy a:W0    ; get size from zero page word reg 1
+    sty DAS0L   ; set DMA byte counter
 
     lda #<WMDATA
-    sta BBAD0 ; so set DMA destination to WMDATA
+    sta BBAD0   ; so set DMA destination to WMDATA
     lda #00
-    sta DMAP0 ; transfer mode, 1 register, 1 write
+    sta DMAP0   ; transfer mode, 1 register, 1 write
     lda #1
-    sta MDMAEN ; start dma, channel 0
+    sta MDMAEN  ; start dma, channel 0
     rts
 .endproc
 
@@ -153,7 +153,7 @@ LIB_INC = 1
 .proc load_tilemap_to_vram
     ; load tile map from wram to vram
     ldy #GAME_MAP_SIZE
-    sty .loword(W0)
+    sty a:W0
     lda #^current_tile_map
     ldx #.loword(current_tile_map)
     ldy #VRAM_MAP_BG_GAME_BASE
@@ -207,7 +207,7 @@ SpriteEmptyVal:
 .proc dma_fixed_to_vram
     stx DAS0L ; set DMA byte counter
     stz A1B0 ; set bank of W0, aka 0
-    ldx .loword(W0)
+    ldx a:W0
     stx A1T0L ; set loword of source address
     sty VMADDL ; set vram base addr
 

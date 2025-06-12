@@ -11,10 +11,10 @@ COLL_SPRITE_INC = 1
     ldx #$0
     phx
 player_loop:
-    lda .loword(player_table), x
+    lda a:player_table, x
     tcd
-    sta .loword(W5)
-    stx .loword(W4)
+    sta a:W5
+    stx a:W4
 
     lda sprite::move_state
     cmp #move_state::dead
@@ -25,32 +25,32 @@ player_loop:
     lda (sprite::bbox_fine), y
     clc
     adc sprite::x_new
-    sta .loword(W0)
+    sta a:W0
 
     ldy #square_bbox::top_left + point::y_off
     lda (sprite::bbox_fine), y
     clc
     adc sprite::y_new
-    sta .loword(W1)
+    sta a:W1
 
     ldy #square_bbox::bottom_right + point::x_off
     lda (sprite::bbox_fine), y
     clc
     adc sprite::x_new
-    sta .loword(W2)
+    sta a:W2
 
     ldy #square_bbox::bottom_right + point::y_off
     lda (sprite::bbox_fine), y
     clc
     adc sprite::y_new
-    sta .loword(W3)
+    sta a:W3
 
     ;; ------------------------------------------
     ;; now we can start comparing with our bullet
 
     ldx #$0
 bullet_loop:
-    lda .loword(bullet_table), x
+    lda a:bullet_table, x
     tcd
 
     ;; don't process if bullet isn't active
@@ -60,7 +60,7 @@ bullet_loop:
     :
     ;; you can't get hit by your own bullets
     lda bullet::player
-    cmp .loword(W5)
+    cmp a:W5
     bne :+
     jmp bullet_end
     :
@@ -70,10 +70,10 @@ bullet_loop:
     adc sprite::y_new
 
     ;; is it higer than top y?
-    cmp .loword(W1)
+    cmp a:W1
     bmi check_old_pos ;; yes, so no collision
     ;; is it lower than bottom y?
-    cmp .loword(W3)
+    cmp a:W3
     bpl check_old_pos
 
     ;; check x
@@ -82,10 +82,10 @@ bullet_loop:
     clc
     adc sprite::x_new
     ;; is it lefter than left x?
-    cmp .loword(W0)
+    cmp a:W0
     bmi check_old_pos ;; yes, so no collision
     ;; is it righter than right x?
-    cmp .loword(W2)
+    cmp a:W2
     bmi bullet_hit
 
 check_old_pos:
@@ -95,10 +95,10 @@ check_old_pos:
     adc sprite::y_pos
 
     ;; is it higer than top y?
-    cmp .loword(W1)
+    cmp a:W1
     bmi check_middle_pos ;; yes, so no collision
     ;; is it lower than bottom y?
-    cmp .loword(W3)
+    cmp a:W3
     bpl check_middle_pos
 
     ;; check x
@@ -107,10 +107,10 @@ check_old_pos:
     clc
     adc sprite::x_pos
     ;; is it lefter than left x?
-    cmp .loword(W0)
+    cmp a:W0
     bmi check_middle_pos ;; yes, so no collision
     ;; is it righter than right x?
-    cmp .loword(W2)
+    cmp a:W2
     bmi bullet_hit
 
 
@@ -131,10 +131,10 @@ y_middle_cont:
     adc sprite::y_pos
 
     ;; is it higer than top y?
-    cmp .loword(W1)
+    cmp a:W1
     bmi bullet_end ;; yes, so no collision
     ;; is it lower than bottom y?
-    cmp .loword(W3)
+    cmp a:W3
     bpl bullet_end
 
     ;; x pos
@@ -152,10 +152,10 @@ x_middle_cont:
     adc (sprite::bbox_fine), y ;; x
     adc sprite::x_pos
     ;; is it lefter than left x?
-    cmp .loword(W0)
+    cmp a:W0
     bmi bullet_end ;; yes, so no collision
     ;; is it righter than right x?
-    cmp .loword(W2)
+    cmp a:W2
     bpl bullet_end
 
 
@@ -170,7 +170,7 @@ bullet_hit:
     A16
     plx
     phx
-    ldx .loword(W4)
+    ldx a:W4
     txa
     jsr player_dec_hp
     plx

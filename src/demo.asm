@@ -75,13 +75,13 @@ hp_zero:
 .a8
 .i16
 .proc wait_nmi
-    ;should work fine regardless of size of A
-    lda .loword(in_nmi) ;load A register with previous in_nmi
+    ; should work fine regardless of size of A
+    lda a:in_nmi    ; load A register with previous in_nmi
 check_again:
-	wai ;wait for an interrupt
-    cmp .loword(in_nmi)  ;compare A to current in_nmi
-                ;wait for it to change
-                ;make sure it was an nmi interrupt
+	wai             ; wait for an interrupt
+    cmp a:in_nmi    ; compare A to current in_nmi
+                    ; wait for it to change
+                    ; make sure it was an nmi interrupt
     beq check_again
     rts
 .endproc
@@ -91,19 +91,19 @@ check_again:
 .i16
 ;; A - current player
 .proc switch_game_mode
-    sta .loword(W0)
-    lda .loword(game_data) + game_data::fight_p
+    sta a:W0
+    lda a:game_data + game_data::fight_p
     bne switch_to_menu_mode
     ;; we're switching to fight_mode
     jsr level_screen_to_fore
     lda #1
-    sta .loword(game_data) + game_data::fight_p
+    sta a:game_data + game_data::fight_p
     lda #.loword(handle_main_loop)
     sta game_data + game_data::game_handler
     bra return
 switch_to_menu_mode:
-    lda .loword(W0)
-    sta .loword(select_tile_menu) + menu::player
+    lda a:W0
+    sta a:select_tile_menu + menu::player
     ;; we initialize the select menu
     jsr switch_to_select_tile_menu
     ;; we switch the game_handler to the menu handler
@@ -112,7 +112,7 @@ switch_to_menu_mode:
     lda #.loword(select_tile_menu)
     sta game_data + game_data::curr_menu
     lda #0
-    sta .loword(game_data) + game_data::fight_p
+    sta a:game_data + game_data::fight_p
 return:
     rts
 .endproc
@@ -131,7 +131,7 @@ return:
 .proc check_game_state_change
     ldx #0
 loop:
-    lda .loword(player_table), x
+    lda a:player_table, x
     tcd ;; remapping dp to player x
     lda player::joy_trigger
     and #JOY_START

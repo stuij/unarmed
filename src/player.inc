@@ -139,7 +139,7 @@ player_bbox_default_ledge_lookup:
     lda #BULLETS_PER_PLAYER
     sta player::bullets_left
     ;; load player in bullets
-    sta .loword(W0)
+    sta a:W0
     ldx #0
     phx ;; we just need a stack slot here
 loop:
@@ -157,7 +157,7 @@ loop:
     sta (1, s), y
     inx
     inx
-    cpx .loword(W0)
+    cpx a:W0
     bne loop
     pla
     rts
@@ -202,7 +202,7 @@ loop:
 
     ldx #$0
 loop:
-    lda .loword(player_table), x ; player struct under x offset
+    lda a:player_table, x ; player struct under x offset
     tcd ; set dp to it
 
     txa
@@ -470,9 +470,6 @@ still_idle:
 .a16
 .i16
 .proc handle_single_player_movement
-    lda sprite::move_state
-    cmp #move_state::dead
-    beq end
     jsr set_player_direction
     lda sprite::move_state
     asl
@@ -480,7 +477,6 @@ still_idle:
     jsr (.loword(move_table), x)
 
     jsr check_collisions
-end:
     rts
 .endproc
 
@@ -490,10 +486,13 @@ end:
     ldx #$0
     phx
 loop:
-    lda .loword(player_table), x
+    lda a:player_table, x
     tcd ;; remapping dp to player x
+    lda sprite::move_state
+    cmp #move_state::dead
+    beq :+
     jsr handle_single_player_movement
-    plx
+  : plx
     inx
     inx
     phx
@@ -612,7 +611,7 @@ end:
 ;; in - X: player offset
 .proc player_dead
     phd
-    lda player_table, x
+    lda a:player_table, x
     tcd
 
     lda #move_state::dead
@@ -728,7 +727,7 @@ set_sprite:
     ldx #$0
     phx
 loop:
-    lda .loword(player_table), x
+    lda a:player_table, x
     tcd
     ;; we now know x and y won't change anymore, so lock them into x/y_pos
     ;; also write them to the OAM mirror
@@ -744,7 +743,7 @@ loop:
     lda sprite::x_new
     sta sprite::x_pos
     rshift 4
-    sta .loword(W0)
+    sta a:W0
     A8
     sta OAM_mirror, y
     A16
@@ -752,7 +751,7 @@ loop:
     lda sprite::y_new
     sta sprite::y_pos
     rshift 4
-    sta .loword(W1)
+    sta a:W1
     A8
     sta OAM_mirror, y
     A16
@@ -768,12 +767,12 @@ loop:
     clc
     adc #$10 ;; 4 players hardwired
     tay
-    lda .loword(W0)
+    lda a:W0
     A8
     sta OAM_mirror, y
     A16
     iny
-    lda .loword(W1)
+    lda a:W1
     clc
     adc #$8
     A8
@@ -901,7 +900,7 @@ end:
     ldx #$0
     phx
 player_loop:
-    lda .loword(player_table), x
+    lda a:player_table, x
     tcd
 ;; meat
     ;; are we instructed to shoot?
@@ -920,18 +919,18 @@ player_loop:
     lda (sprite::bbox_fine), y
     clc
     adc sprite::x_new
-    sta .loword(W0)
+    sta a:W0
     ;; y
     txy
     lda (sprite::bbox_fine), y
     clc
     adc sprite::y_new
-    sta .loword(W1)
+    sta a:W1
 
     ;; this one is already in x, but we'll rewrite this
     ;; and I'll have forgotten about this then
     ldx sprite::face_dir
-    stx .loword(W2)
+    stx a:W2
 
     ;; switch dp to bullet
     ldx player::bullets_left
@@ -940,21 +939,21 @@ player_loop:
     stx player::bullets_left
     tcd
 
-    lda .loword(W0)
+    lda a:W0
     ldy #point::x_off
     sec
     sbc (sprite::bbox_fine), y
     ;; adc #$10 ;; do we need to add 1 pixel?
     ;; on one hand this way it can't intersect w us when shooting
     ;; on the other hand, it might mess up wall collisions
-    sta .loword(W0)
+    sta a:W0
 
-    lda .loword(W1)
+    lda a:W1
     sec
     sbc (sprite::bbox_fine)
-    sta .loword(W1)
+    sta a:W1
 
-    ldx .loword(W2)
+    ldx a:W2
     jsr (.loword(bullet_fire_direction_table), x)
 
     jsr bullet_set_for_flight

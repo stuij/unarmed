@@ -41,21 +41,21 @@ MENU_INC = 1
 flip_h:
     ldy #player::joy_trigger
     lda (menu::player), y
-    sta .loword(W0)
+    sta a:W0
     and #JOY_X
     beq flip_v
     lda canvas_menu::chosen_tile
     eor #$4000
     sta canvas_menu::chosen_tile
 flip_v:
-    lda .loword(W0)
+    lda a:W0
     and #JOY_Y
     beq prio
     lda canvas_menu::chosen_tile
     eor #$8000
     sta canvas_menu::chosen_tile
 prio:
-    lda .loword(W0)
+    lda a:W0
     and #JOY_L
     beq end
     lda canvas_menu::chosen_tile
@@ -223,7 +223,7 @@ end:
 .i16
 .proc draw_select_screen
     ldy #(select_tile_map_end - select_tile_map)
-    sty .loword(W0)
+    sty a:W0
     lda #^select_tile_map
     ldx #.loword(select_tile_map)
     ldy #VRAM_MAP_BG_TILE_SELECT_BASE
@@ -233,26 +233,26 @@ end:
     ;; otherwise the transparent parts of the tiles would show
     ;; whatever is occupying the background
     A16
-    stz .loword(W0) ;; first tile, aka transparent
+    stz a:W0 ;; first tile, aka transparent
     lda #($7 * $20 + $5)
     clc
     adc #VRAM_MAP_BG_GAME_BASE
-    sta .loword(W1)
+    sta a:W1
     tay
     clc
     adc #($6 * $20)
-    sta .loword(W2)
+    sta a:W2
 clear_bg_behind_tiles_loop:
     ldx #$30
     A8
     jsr dma_fixed_to_vram
     A16
-    lda .loword(W1)
+    lda a:W1
     clc
     adc #$20
     tay
-    sta .loword(W1)
-    cmp .loword(W2)
+    sta a:W1
+    cmp a:W2
     bmi clear_bg_behind_tiles_loop
     A8
 

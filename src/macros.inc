@@ -76,12 +76,12 @@ MACROS_INC = 1
 	tax
 	rshift minus
 	and #1
-	sta .loword(W0)  ; y = minus: temp W0
-	txa              ; load joy1_held and repeat
+	sta a:W0  		; y = minus: temp W0
+	txa           	; load joy1_held and repeat
 	rshift plus
 	and #1
 	sec
-	sbc .loword(W0)  ; subtract minus from plus
+	sbc a:W0  		; subtract minus from plus
 .endmacro
 
 .endif ;; MACROS_INC

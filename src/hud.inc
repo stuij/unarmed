@@ -12,9 +12,9 @@ HUD_INC = 1
     ldx #$0
     lda #PLAYER_TABLE_I
     lsr
-    sta .loword(W0)
+    sta a:W0
     lda #HUD_SPRITE_X_BASE
-    sta .loword(W1)
+    sta a:W1
     ;; x = current player
     ;; y = sprite OAM offset
     ldx #$0
@@ -30,11 +30,11 @@ loop:
     ;; sprites:
     A8
         ; set x
-        lda .loword(W1)
+        lda a:W1
         sta OAM_mirror, y
         clc
         adc #HUD_SPRITE_X_SKIP
-        sta .loword(W1)
+        sta a:W1
         iny
 
         ; set y
@@ -58,7 +58,7 @@ loop:
     A16
 
     inx
-    cpx .loword(W0)
+    cpx a:W0
     bne loop
 
     ;; set all 4 head sprites to 8x8 and on-screen
@@ -71,7 +71,7 @@ loop:
 .proc update_score_graphics
     ;; end condition
     lda #PLAYER_TABLE_I
-    sta .loword(W0)
+    sta a:W0
     ;; vram start position
     lda #VRAM_MAP_FONT_BASE
     clc
@@ -92,7 +92,7 @@ loop:
     tay
     inx
     inx
-    cpx .loword(W0)
+    cpx a:W0
     bcc loop
     rts
 .endproc

@@ -42,12 +42,12 @@ set_volume:
 ; DB access lowram
 ; KEEP: X, Y
 .proc Tad_QueuePannedSoundEffect_D
-    cmp     .loword(Tad_sfxQueue_sfx)
-    bcs     @EndIf
-        sta     .loword(Tad_sfxQueue_sfx)
+    cmp a:Tad_sfxQueue_sfx
+    bcs @EndIf
+        sta a:Tad_sfxQueue_sfx
 
         txa
-        sta     .loword(Tad_sfxQueue_pan)
+        sta a:Tad_sfxQueue_pan
 
 @EndIf:
     rts
@@ -60,12 +60,12 @@ set_volume:
 ; DB access lowram
 ; KEEP: X, Y
 .proc Tad_QueueSoundEffect_D
-    cmp     .loword(Tad_sfxQueue_sfx)
-    bcs     @EndIf
-        sta     .loword(Tad_sfxQueue_sfx)
+    cmp a:Tad_sfxQueue_sfx
+    bcs @EndIf
+        sta a:Tad_sfxQueue_sfx
 
-        lda     #TAD_CENTER_PAN
-        sta     .loword(Tad_sfxQueue_pan)
+        lda #TAD_CENTER_PAN
+        sta a:Tad_sfxQueue_pan
 @EndIf:
     rts
 .endproc
