@@ -27,31 +27,38 @@
 ** do some music experiments to learn the sound engine
 * do during game jam
 ** bare minimum
-*** bullets should properly manage being active, and if not active
+*** DONE bullets should properly manage being active, and if not active
 no need to process. This includes doing the right thing for move state
-**** when set to inactive, make routine to stop velocity, set offscreen, set move state
-*** bullets are on timer
+**** DONE when set to inactive, make routine to stop velocity, set offscreen, set move state
+*** DONE bullets are on timer
 otherwise we:
 - have bullets that go on indefinately
 - will have no more bullets left if the initial ones fly
 - don't have to deal with awkward you don't have any more bullets left
 *** minimal actual game loop
-**** shoot people and health bar goes down. winner is player who still has health
+**** DONE shoot people and health bar goes down
+**** winner is player who still has health
 **** timer
-**** can shoot yourself by bullet wall bounce?
+**** DONE can shoot yourself by bullet wall bounce?
+no, not for now. for now we exclude player, as you'd hit yourself so quickly near walls and could be fun shooting right at wall as you go there and bullet rebounds and hits player behind you
 *** code to restart level cleanly
+*** bugfix: when you bump into a wall when going right, and you glide down, you can land on killblock and go into idle/running state without triggering killblock ramifications
+*** bugfix: when spawning, mr green hovers one pixel above a block in idle state
 *** when you die, what to do?
-**** dying from bullet
+**** DONE dying from bullet
 **** dying from hazard, like a kill block or out of bounds
 **** should be some kind of lively animation, as immediately respawning
    looks robotic and boring
-*** menu/pause screen
+**** draw player spawn boxes
+*** menu/pause/game-over screen
 **** select from premade maps
 **** select player count
+**** show wins per player
 **** reset
 **** edit custom map
 **** single map/random maps mode?
 *** clean flow between different menus and game
+*** temporary invulnerability on game start and after getting hit/touching kill blocks
 *** add extra background layer
 ** features
 *** implement different wall types
@@ -59,11 +66,12 @@ otherwise we:
 **** non-deflecting
 **** allow climbing
 **** kill block
+*** sound effects
 *** make music
 *** start to think about movement while jumping.
 We're currently very floaty, and we're not doing anything special, like jumping higher after accelleration. What might be gbetter.
 *** title screen
-*** multiple projectiles
+*** multiple projectile types
 *** At game start, we start in idle mode.
 When we then move we move to run state. But we're actually falling, which should be interpreted as jumping state. This might bite us at some point.
 *** make actual acceptable graphic art
