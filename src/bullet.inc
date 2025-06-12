@@ -63,6 +63,7 @@ loop:
     lda .loword(bullet_table), x
     tcd
 
+    A8
     lda #BULLET_SPRITE_OFFSET
     sta OAM_mirror, y
     iny
@@ -71,6 +72,7 @@ loop:
     iny
     iny
     iny
+    A16
 
     jsr bullet_reset
 

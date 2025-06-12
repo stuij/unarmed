@@ -96,6 +96,7 @@ OUT_OF_BOUNDS_Y = $f7f
 ;; pointing to the player structs
 PLAYER_TABLE_I = $8 ;; times two because it's easier to code with
 PLAYER_OAM_OFFSET = $0
+PLAYER_OAM_MUG_SHOT = $7 ;; for HUD
 PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
 PLAYER_OAM_RUN_ANIM_BASE = ($0 + ($1 * $10))
 
@@ -181,7 +182,7 @@ BULLET_V_VELO = $47
 ;; also times 2 (both BULLETS_PER_PLAYER and PLAYER_TABLE_I are times 2)
 BULLET_TABLE_I = ((BULLETS_PER_PLAYER / 2) * PLAYER_TABLE_I)
 
-BULLET_OAM_OFFSET = $20
+BULLET_OAM_OFFSET = $30
 
 ; sprite tile offset of bullet. first slot on x axis,
 ; and on 7th row of y axis (rows are $10 wide)
@@ -304,15 +305,16 @@ SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
 ASCII_NR_BASE_OFFSET = 48 - 32  ; 48 is ascii position of 0,
                                 ; and our tiles start from ascii nr 32
 
-HUD_WIN_BASE = 7
-HUD_WIN_SKIP = 5
+HUD_WIN_BASE = 6
+HUD_WIN_SKIP = 6
 
-HUD_SCORE_NR_BASE = 5
-HUD_PLAYER_SKIP = 6
+HUD_SCORE_NR_BASE = 4
+HUD_PLAYER_SKIP = 7
 
-;; BULLET_TABLE_I = 2x amount of bullets, sprites take up 4 bytes,
-;; so the correct calulation for how much OAM space the bullets take up
-;; is (BULLET_TABLE_I / 2 * 4) = (BULLET_TABLE_I * 2)
-HUD_GFX_OAM_OFFSET = BULLET_OAM_OFFSET + (BULLET_TABLE_I * 2)
+HUD_SPRITE_X_BASE = $1a
+HUD_SPRITE_X_SKIP = $38
+HUD_SPRITE_Y = 3
+
+HUD_GFX_OAM_OFFSET = $20
 
 .endif ; DEFINES_INC

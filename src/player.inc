@@ -196,8 +196,8 @@ loop:
     ; set top bit of x pos for all 4 sprites to 0 so we show them on
     ; screen, and set 8x8 tile.
     ; so a nibble, representing two sprites becomes b0000, aka 0.
-    lda #$00
-    sta OAM_mirror + $200
+    stz OAM_mirror + $200
+    stz OAM_mirror + $201
     A16
 
     ldx #$0
