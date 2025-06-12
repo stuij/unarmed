@@ -59,11 +59,12 @@
 .proc player_dec_hp
     lda hp, x
     cmp #1
-    bcc hp_zero
+    beq hp_zero
     dec hp, x
     rts
 hp_zero:
-;;    jsr spinloop_handler ;; should be this bc we shouldn't get here, but for now we do nothing
+    dec hp, x
+    jsr player_dead
     rts
 .endproc
 

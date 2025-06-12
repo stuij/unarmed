@@ -16,7 +16,12 @@ player_loop:
     sta .loword(W5)
     stx .loword(W4)
 
-    ldy #square_bbox::top_left + point::x_off
+    lda sprite::move_state
+    cmp #move_state::dead
+    bne :+
+    jmp next_player
+
+  : ldy #square_bbox::top_left + point::x_off
     lda (sprite::bbox_fine), y
     clc
     adc sprite::x_new
@@ -133,7 +138,7 @@ y_middle_cont:
     bpl bullet_end
 
     ;; x pos
-   lda sprite::h_velo
+    lda sprite::h_velo
     cmp #0
     bmi x_neg_half
     lsr
@@ -166,6 +171,7 @@ bullet_hit:
     plx
     phx
     ldx .loword(W4)
+    txa
     jsr player_dec_hp
     plx
 
@@ -177,6 +183,7 @@ bullet_end:
     jmp bullet_loop
     :
     ;; check for player loop things
+next_player:
     plx
     inx
     inx

@@ -172,23 +172,23 @@ loop:
     lda #$20                ; no flip, prio 2, palette 0
     sta OAM_mirror + $3
     lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_mirror + $7
+    sta OAM_mirror + $13
 
     ;; p2
     lda #$22                ; no flip, prio 2, palette 1
-    sta OAM_mirror + $b
+    sta OAM_mirror + $7
     lda #$22                ; no flip, prio 2, palette 1
-    sta OAM_mirror + $f
+    sta OAM_mirror + $17
 
     ;; p3
     lda #$24                ; no flip, prio 2, palette 2
-    sta OAM_mirror + $13
+    sta OAM_mirror + $b
     lda #$24                ; no flip, prio 2, palette 2
-    sta OAM_mirror + $17
+    sta OAM_mirror + $1b
 
     ;; p4
     lda #$26                ; no flip, prio 2, palette 3
-    sta OAM_mirror + $1b
+    sta OAM_mirror + $f
     lda #$26                ; no flip, prio 2, palette 3
     sta OAM_mirror + $1f
 
@@ -470,6 +470,9 @@ still_idle:
 .a16
 .i16
 .proc handle_single_player_movement
+    lda sprite::move_state
+    cmp #move_state::dead
+    beq end
     jsr set_player_direction
     lda sprite::move_state
     asl
@@ -477,6 +480,7 @@ still_idle:
     jsr (.loword(move_table), x)
 
     jsr check_collisions
+end:
     rts
 .endproc
 
@@ -605,6 +609,57 @@ end:
 .endproc
 
 
+;; in - X: player offset
+.proc player_dead
+    phd
+    lda player_table, x
+    tcd
+
+    lda #move_state::dead
+    sta sprite::move_state
+    txa
+    lsr
+    lda #$E00
+    sta sprite::y_new
+
+    pld
+    rts
+.endproc
+    
+;; a - player number
+.proc set_OAM_player_top_x
+    ;; upper part of the 4 players are in OAM $200
+    ;; lower part of the 4 players are in OAM $201
+    lda #$F000
+    sta sprite::y_new
+
+    cmp #0
+        bne :+
+        lda #%00000001
+        bra set_bits
+  : cmp #1
+        bne :+
+        lda #%00000100
+        bra set_bits
+  : cmp #2
+        bne :+
+        lda #%00010000
+        bra set_bits
+  ;; so it must be p4
+  :     lda #%01000000
+
+set_bits:
+    A8
+    ora OAM_mirror + $200
+    sta OAM_mirror + $200
+    ora OAM_mirror + $201
+    sta OAM_mirror + $201
+    A16
+    rts 
+.endproc
+
+
+
 ;; ----------------
 ;; sprite animation
 
@@ -671,7 +726,6 @@ set_sprite:
 .i16
 .proc finalize_players
     ldx #$0
-    ldy #PLAYER_OAM_OFFSET
     phx
 loop:
     lda .loword(player_table), x
@@ -681,6 +735,12 @@ loop:
     ;; and we figure out what graphic the sprites should get
     ;;
     ;; first the top sprite - nuzzle direction
+    txa
+    asl
+    clc
+    adc #PLAYER_OAM_OFFSET
+    tay
+
     lda sprite::x_new
     sta sprite::x_pos
     rshift 4
@@ -700,9 +760,14 @@ loop:
     ;; which will deal with the two remaining OAM bytes
     iny
     jsr animate_player_shoot_dir
-    iny
-    iny
+
     ;; now bottom sprite - movement
+    tya
+    dec
+    dec
+    clc
+    adc #$10 ;; 4 players hardwired
+    tay
     lda .loword(W0)
     A8
     sta OAM_mirror, y

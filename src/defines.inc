@@ -120,6 +120,7 @@ BULLETS_PER_PLAYER = $A ;; times 2, because it's easier to code with
     jump
     cling
     climb
+    dead
 .endenum
 
 ; ------------
