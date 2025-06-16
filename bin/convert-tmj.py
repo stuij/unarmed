@@ -216,6 +216,65 @@ def make_diag_row_entries(width, top_p, tile_base):
     return row
 
 
+def make_pad_tile():
+    return IndexEntry(-1, -1, -1, 0, 0, "pad", False, False, True)
+
+
+def make_inner_tile(offset):
+    inner_tile = offset + 3
+    return IndexEntry(-1, -1, -1, inner_tile, 0, "inner", False, False, True)
+
+
+def make_table_border_row_tiles(table_width, top_p, tile_id_offset):
+    row = []
+    pad_tile = make_pad_tile()
+
+    row.extend(make_diag_row_entries(table_width, top_p, tile_id_offset))
+    for _ in range(32 - table_width):
+        row.append(pad_tile)
+
+    return row
+
+
+def get_total_schema_tiles(schema):
+    total_schema_tiles = 0
+    for row in schema:
+        total_schema_tiles += row[1]
+
+    return total_schema_tiles
+
+
+def make_table_row_bg(width, offset, inner_entry):
+    row = []
+    pad_tile = make_pad_tile()
+
+    row.append(make_border_entry(Border.LEFT, offset))
+    for _ in range(width - 2):
+        row.append(inner_entry)
+    row.append(make_border_entry(Border.RIGHT, offset))
+
+    for _ in range(32 - width):
+        row.append(pad_tile)
+
+    return row
+
+
+def make_menu_bg(file, width, height, schema):
+    table = []
+
+    total_schema_tiles = get_total_schema_tiles(schema)
+    inner_entry = make_inner_tile(total_schema_tiles)
+
+    table.extend(make_table_border_row_tiles(width, True, total_schema_tiles))
+
+    for i in range(height - 2):
+        table.extend(make_table_row_bg(width, total_schema_tiles, inner_entry))
+
+    table.extend(make_table_border_row_tiles(width, False, total_schema_tiles))
+
+    write_tile_map(file, table)
+
+
 def tile_spec_to_index_lookup(schema):
     choose_row = 0
     choose_row_idx = 0
@@ -226,21 +285,14 @@ def tile_spec_to_index_lookup(schema):
     choose_table = []
     select_table = []
 
-    total_schema_tiles = 0
-    for row in schema:
-        total_schema_tiles += row[1]
+    total_schema_tiles = get_total_schema_tiles(schema)
+    select_opaque_entry = make_pad_tile()
+    select_inner_entry = make_inner_tile(total_schema_tiles)
 
-    print(total_schema_tiles)
-
-    opaque_tile = 0 # we know the index of these 2
-    inner_tile = total_schema_tiles + 3
-    select_opaque_entry = IndexEntry(-1, -1, -1, opaque_tile, 0, "select_opaque", False, False, True)
-    select_inner_entry = IndexEntry(-1, -1, -1, inner_tile, 0, "select_inner", False, False, True)
     select_table_width = 24
 
-    select_table.extend(make_diag_row_entries(select_table_width, True, total_schema_tiles))
-    for _ in range(32 - select_table_width):
-        select_table.append(select_opaque_entry)
+    select_table.extend(make_table_border_row_tiles(
+        select_table_width, True, total_schema_tiles))
 
     for row in schema:
         ty_name = row[0]
@@ -275,10 +327,8 @@ def tile_spec_to_index_lookup(schema):
         choose_row += 1
         choose_row_idx = 0
 
-    select_table.extend(make_diag_row_entries(select_table_width, False,
-                                              total_schema_tiles))
-    for _ in range(32 - select_table_width):
-        select_table.append(select_opaque_entry)
+    select_table.extend(make_table_border_row_tiles(
+        select_table_width, False, total_schema_tiles))
 
     return index_table, choose_table, select_table
 
@@ -312,6 +362,26 @@ def encode_string_map(string, max_len, file):
         file.write(encode_word(0, 0))
 
 
+# def make_font_entry(char):
+#     return IndexEntry(-1, -1, -1, ord(char) - 32, 0, "char", False, False, True)
+
+
+# def encode_string_map_entries(string, max_len, pad_tile):
+#     entries = []
+
+#     str_len = len(string)
+#     if str_len > max_len:
+#         raise ValueError("string length {} higher than max {}"
+#                            .format(str_len, length))
+#     for char in string:
+#         entries.append(make_font_entry(char))
+
+#     for pad in range(max_len - str_len):
+#         entries.append(pad_tile)
+
+#     return entries
+
+
 # this one is for programatically in asm copying these tiles
 # char by char when constructing a string of words
 def encode_font_ascii_table():
@@ -326,11 +396,15 @@ def encode_font_map(string, length, file_name):
         encode_string_map(string, length, string_map)
 
 
-def encode_tile_select_bits(select_table, schema):
-    with open("select_tiles.map", "wb") as tile_map:
-        for item in select_table:
+def write_tile_map(filename, table):
+    with open(filename, "wb") as file:
+        for item in table:
             tile_top_bits = tile_flags_to_byte(item.flip_h, item.flip_v, 1)
-            tile_map.write(encode_tile(tile_top_bits, item.tile_idx if item.valid else 0))
+            file.write(encode_tile(tile_top_bits, item.tile_idx if item.valid else 0))
+
+
+def encode_tile_select_bits(select_table, schema):
+    write_tile_map("select_tiles.map", select_table)
 
     with open("select_row_count.bin", "wb") as row_count:
         row_count.write(encode_word(0, len(schema)))
@@ -364,6 +438,8 @@ def main(tmj_in, spec_in):
     encode_font_ascii_table()
     test_string = "   The quick brown fox jumps"
     encode_font_map(test_string, 28, "fox.map")
+
+    make_menu_bg("after_game.bin", 24, 20, schema)
 
 
 if __name__ == "__main__":
