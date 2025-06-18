@@ -55,8 +55,9 @@ p4: .tag player
 wins: .tag wins
 hp: .tag hp
 game_data: .tag game_data
-tile_canvas: .tag menu
+tile_canvas: .tag canvas_menu
 select_tile_menu: .tag select_tile_menu
+between_games_menu: .tag between_games_menu
 
 
 ;; bullet data
@@ -118,6 +119,12 @@ draw_tile_row_table:
 .repeat 28
 .word $20
 .endrep
+
+between_menu_row_table:
+.word PLAYER_MAX
+.word 9
+.word 1
+.word 1
 
 ;; we're pasting three extra rows to the collision map, so
 ;; players have the feeling they fall down, instead of just going out

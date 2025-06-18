@@ -30,10 +30,6 @@ font_map:
 .incbin "assets/font_prio.map"
 font_map_end:
 
-fox_map:
-.incbin "assets/fox.map"
-fox_map_end:
-
 
 ;; sprites
 demo_sprite_tiles:
@@ -43,6 +39,20 @@ demo_sprite_tiles_end:
 demo_sprite_palette:
 .incbin "assets/demo-sprites.palette"
 demo_sprite_palette_end:
+
+
+;;; menus
+
+;; after game
+wins_txt:
+.incbin "assets/wins_txt.map"
+wins_txt_end:
+
+after_game_menu_map:
+.incbin "assets/after_game.map"
+after_game_menu_map_end:
+
+
 
 ;; tile select
 select_tile_map:

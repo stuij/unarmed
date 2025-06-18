@@ -114,9 +114,7 @@ end:
     lda #DRAW_CARET_INIT_COLUMN
     sta menu::curr_column
 
-    stz menu::timeout_tick
-    stz menu::dirty_p
-    stz menu::just_moved
+    jsr init_menu_common
 
     lda #.loword(draw_tile_menu_callback)
     sta menu::callback
@@ -200,12 +198,10 @@ end:
     lda #.loword(select_row_table)
     sta menu::row_table
 
-    lda #$0
-    sta menu::curr_row
-    sta menu::curr_column
-    sta menu::timeout_tick
-    sta menu::dirty_p
-    sta menu::just_moved
+    stz menu::curr_row
+    stz menu::curr_column
+
+    jsr init_menu_common
 
     lda #.loword(select_menu_callback)
     sta menu::callback
@@ -271,9 +267,59 @@ clear_bg_behind_tiles_loop:
 .endproc
 
 
+;; ----------------------
+;; init between game menu
+
+.proc between_menu_callback
+    rts
+.endproc
+
+.a16
+.i16
+.proc init_between_games_menu
+    lda #between_games_menu
+    tcd
+    lda #BETWEEN_MENU_X_TABLE_OFFSET
+    sta menu::cursor_x_pos
+    sta menu::cursor_x_pos_origin
+    lda #BETWEEN_MENU_Y_TABLE_OFFSET
+    sta menu::cursor_y_pos
+    sta menu::cursor_y_pos_origin
+
+    lda #BETWEEN_MENU_ROW_COUNT
+    sta menu::no_rows
+
+    lda #.loword(between_menu_row_table)
+    sta menu::row_table
+
+    stz menu::curr_row
+    stz menu::curr_column
+
+    jsr init_menu_common
+
+    lda #.loword(between_menu_callback)
+    sta menu::callback
+
+    lda #$0
+    tcd
+    rts
+.endproc
 
 ;; ------------
 ;; general menu
+
+
+.a16
+.i16
+.proc init_menu_common
+    stz menu::timeout_tick
+    stz menu::dirty_p
+    stz menu::just_moved
+    stz menu::parent_menu
+    rts
+.endproc
+
+
 .a16
 .i16
 .proc init_caret
@@ -479,7 +525,19 @@ handle_menu_done:
 .endproc
 
 
+.a16
+.i16
+;; A - current player
 .proc switch_to_select_tile_menu
+    lda a:W0
+    sta a:select_tile_menu + menu::player
+
+    ;; we switch the game_handler to the menu handler
+    lda #.loword(select_tile_menu)
+    sta game_data + game_data::curr_menu
+
+    stz a:select_tile_menu + menu::parent_menu
+
     A8
     lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
     sta BG1SC ; set bg 2 tile map
@@ -515,11 +573,11 @@ handle_menu_done:
     lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
     sta BG1SC ; set bg 1 tile map
 
+    ;; TODO: set BG2SC to the background of the level
+
     A8
     jsr load_tilemap_to_vram
     A16
-    ;; lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
-    ;; sta BG2SC ; set bg 2 tile map
     rts
 .endproc
 

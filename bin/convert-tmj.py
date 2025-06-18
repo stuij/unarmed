@@ -436,10 +436,11 @@ def main(tmj_in, spec_in):
     encode_tile_select_bits(select_table, schema)
 
     encode_font_ascii_table()
-    test_string = "   The quick brown fox jumps"
-    encode_font_map(test_string, 28, "fox.map")
 
-    make_menu_bg("after_game.bin", 24, 20, schema)
+    test_string = "   wins"
+    encode_font_map(test_string, 28, "wins_txt.map")
+
+    make_menu_bg("after_game.map", 24, 20, schema)
 
 
 if __name__ == "__main__":

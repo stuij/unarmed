@@ -91,10 +91,12 @@ OUT_OF_BOUNDS_Y = $f7f
 ;; -------------
 ;; player things
 
+PLAYER_MAX = 4
+
 ;; for iterating over the player table
 ;; double the amount of actual players, as we're iterating over words
 ;; pointing to the player structs
-PLAYER_TABLE_I = $4 ;; times two because it's easier to code with
+PLAYER_TABLE_I = $8 ;; times two because it's easier to code with
 PLAYER_OAM_OFFSET = $0
 PLAYER_OAM_MUG_SHOT = $7 ;; for HUD
 PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
@@ -235,6 +237,7 @@ MENU_MOVE_TIMEOUT = 8
     timeout_tick        .word ; 14
     dirty_p             .word ; 16
     just_moved          .word ; 18
+    parent_menu         .word ; 1a
 .endstruct
 
 
@@ -269,6 +272,35 @@ DRAW_CARET_INIT_ROW = 13
 DRAW_CARET_INIT_COLUMN = 16
 DRAW_CARET_X_INIT_OFFSET = (DRAW_CARET_INIT_COLUMN * 8) - 1
 DRAW_CARET_Y_INIT_OFFSET = (DRAW_CARET_INIT_ROW * 8) - 1
+
+
+;; between games screen
+
+; - wins section; not parts of games screen proper
+; - player count select
+; - level select
+; - customize level
+; - start game
+
+; TODO:
+; - amount of hitpoints
+; - wins per match
+; - level select type: manual or random
+
+;; for setting BG
+BETWEEN_MENU_X_COORDS = $E0
+BETWEEN_MENU_Y_COORDS = $ce
+
+;; for sprites
+BETWEEN_MENU_X_TABLE_OFFSET = $27
+BETWEEN_MENU_Y_TABLE_OFFSET = $38
+
+BETWEEN_MENU_ROW_COUNT = 4
+
+
+.struct between_games_menu
+    menu .tag menu
+.endstruct
 
 
 ;; ----------------

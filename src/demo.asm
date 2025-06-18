@@ -102,15 +102,11 @@ check_again:
     sta game_data + game_data::game_handler
     bra return
 switch_to_menu_mode:
-    lda a:W0
-    sta a:select_tile_menu + menu::player
     ;; we initialize the select menu
     jsr switch_to_select_tile_menu
-    ;; we switch the game_handler to the menu handler
+
     lda #.loword(handle_current_menu)
     sta game_data + game_data::game_handler
-    lda #.loword(select_tile_menu)
-    sta game_data + game_data::curr_menu
     lda #0
     sta a:game_data + game_data::fight_p
 return:
