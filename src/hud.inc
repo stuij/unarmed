@@ -69,22 +69,17 @@ loop:
 
 
 .proc update_score_graphics
-    ;; end condition
-    lda #PLAYER_TABLE_I
-    sta a:W0
     ;; vram start position
     lda #VRAM_MAP_FONT_BASE
     clc
     adc #HUD_SCORE_NR_BASE
     sta VMADD
-    tay
+    tay ;; unfortunately you can't read VMADD, so we need to keep track
+        ;; of the offset into VRAM manually
     ldx #$0
 loop:
     lda hp, x
-    clc
-    adc #ASCII_NR_BASE_OFFSET
-    ora #$2000 ; set priority bit on tile
-	sta VMDATA
+    print_nr
     tya
     clc
     adc #HUD_PLAYER_SKIP
@@ -92,7 +87,7 @@ loop:
     tay
     inx
     inx
-    cpx a:W0
+    cpx #PLAYER_TABLE_I
     bcc loop
     rts
 .endproc

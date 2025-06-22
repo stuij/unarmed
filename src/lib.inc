@@ -70,6 +70,32 @@ LIB_INC = 1
 :   jmp spinloop_handler
 .endproc
 
+
+;; strings
+
+.a16
+.i16
+;; W0 - string address
+.proc print_string
+    pha
+    ldy #0
+loop:
+    lda #0
+    A8
+    lda (1, S), y
+    A16
+    beq end
+    print_a
+    pla
+    inc
+    pha
+    bra loop
+end:
+    pla
+    rts
+.endproc
+
+
 ;; setup lib code
 
 ; dma_to_vram

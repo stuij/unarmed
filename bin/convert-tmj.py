@@ -437,9 +437,6 @@ def main(tmj_in, spec_in):
 
     encode_font_ascii_table()
 
-    test_string = "   wins"
-    encode_font_map(test_string, 28, "wins_txt.map")
-
     make_menu_bg("between_menu.map", 24, 20, schema)
 
 

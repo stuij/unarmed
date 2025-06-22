@@ -44,10 +44,6 @@ demo_sprite_palette_end:
 ;;; menus
 
 ;; after game
-wins_txt:
-.incbin "assets/wins_txt.map"
-wins_txt_end:
-
 between_menu_map:
 .incbin "assets/between_menu.map"
 between_menu_map_end:

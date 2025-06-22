@@ -29,7 +29,21 @@ MACROS_INC = 1
 	lda #(c - 32)
     ora #$2000
     sta VMDATA
+.endmacro
 
+
+.macro print_a
+    sec
+    sbc #$20
+    ora #$2000 ; set priority bit on tile
+	sta VMDATA
+.endmacro
+
+.macro print_nr
+    clc
+    adc #ASCII_NR_BASE_OFFSET
+    ora #$2000 ; set priority bit on tile
+	sta VMDATA
 .endmacro
 
 .macro print_pad n

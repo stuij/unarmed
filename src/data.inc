@@ -59,7 +59,6 @@ tile_canvas: .tag canvas_menu
 select_tile_menu: .tag select_tile_menu
 between_games_menu: .tag between_games_menu
 
-
 ;; bullet data
 ;; start at 0 because we're not insane. player start kinda forced by
 ;; snes naming
@@ -109,8 +108,9 @@ current_tile_map: .res GAME_MAP_SIZE
 
 .segment "RODATA"
 
-draw_tile_row_count:
-.word $1c
+between_wins: .asciiz "wins"
+
+draw_tile_row_count: .word $1c
 
 ;; So this seems like it is taking the soul a bit out of
 ;; the programmers mind, but this is the price I'm willing

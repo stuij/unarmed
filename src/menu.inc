@@ -328,6 +328,45 @@ clear_bg_behind_tiles_loop:
 .endproc
 
 
+.i16
+.a16
+.proc draw_between_wins
+    lda #VRAM_MAP_FONT_BASE
+    clc
+    adc #BETWEEN_MENU_PLAYER_FONT_MAP_OFFSET
+    sta VMADD
+    sta a:W5
+
+    ldx #$0
+loop:
+    ;; print text
+    print_pad 2
+
+    lda #.loword(between_wins)
+    phy
+    jsr print_string
+    ply
+
+    print_pad 2
+
+    lda wins, x
+    print_nr
+
+    lda a:W5
+    clc
+    adc #$20
+    sta VMADD
+    sta a:W5
+
+    inx
+    inx
+    cpx #PLAYER_TABLE_I
+    bne loop
+
+    rts
+.endproc
+
+
 .a8
 .i16
 .proc draw_between_menu
@@ -345,6 +384,10 @@ clear_bg_behind_tiles_loop:
     lda #BETWEEN_MENU_Y_COORDS
     sta BG1VOFS
     stz BG1VOFS
+
+    A16
+    jsr draw_between_wins
+    A8
 
     rts
 .endproc
