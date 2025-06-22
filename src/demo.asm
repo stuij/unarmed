@@ -102,8 +102,11 @@ check_again:
     sta game_data + game_data::game_handler
     bra return
 switch_to_menu_mode:
+    lda a:W0
+    ldx #.loword(select_tile_menu)
+    ldy #0
     ;; we initialize the select menu
-    jsr switch_to_select_tile_menu
+    jsr switch_to_menu
 
     lda #.loword(handle_current_menu)
     sta game_data + game_data::game_handler

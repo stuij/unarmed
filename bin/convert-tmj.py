@@ -440,7 +440,7 @@ def main(tmj_in, spec_in):
     test_string = "   wins"
     encode_font_map(test_string, 28, "wins_txt.map")
 
-    make_menu_bg("after_game.map", 24, 20, schema)
+    make_menu_bg("between_menu.map", 24, 20, schema)
 
 
 if __name__ == "__main__":

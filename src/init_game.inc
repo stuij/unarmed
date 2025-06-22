@@ -121,6 +121,7 @@ INIT_GAME_INC = 1
     jsr init_bullets
     jsr init_select_menu
     jsr init_draw_menu
+    jsr init_between_games_menu
     jsr init_caret
 
     jsr reset_hp
@@ -128,15 +129,15 @@ INIT_GAME_INC = 1
 
     jsr init_score_graphics
 
-    ;; lda #.loword(handle_current_menu)
-    lda #.loword(handle_main_loop)
+    ;; we start in menu mode
+    lda #.loword(handle_current_menu)
     sta game_data + game_data::game_handler
+    stz game_data + game_data::fight_p
 
-    lda #1
-    sta game_data + game_data::fight_p
-
-    lda #.loword(select_tile_menu)
-    sta game_data + game_data::curr_menu
+    lda a:player_table
+    ldx #.loword(between_games_menu)
+    ldy #0
+    jsr switch_to_menu
 
     A8
     ;; set up bg registers
@@ -146,9 +147,6 @@ INIT_GAME_INC = 1
     ; set bg 1 and bg 2 char vram base addr. both the same for now.
     lda #((VRAM_CHR_BASE >> 12) << 4 | (VRAM_CHR_BASE >> 12))
     sta BG12NBA
-
-    lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
-    sta BG1SC ; set bg 1 tile map
 
     ; set bg 3 and bg4 vram base addr. both the same for now.
     lda #(VRAM_FONT_CHR_BASE >> 12)
@@ -166,11 +164,8 @@ INIT_GAME_INC = 1
     ldx #$0
     stx map_x
 
-    lda #$0
     ;; this is one of those latching regs
-    sta BG1HOFS
-    stz BG1HOFS
-    sta BG2HOFS
+    stz BG2HOFS
     stz BG2HOFS
 
     lda #$FC
@@ -179,8 +174,6 @@ INIT_GAME_INC = 1
 
     ;; put vertical offset one below, because of how SNES works
     lda #$FF
-    sta BG1VOFS
-    stz BG1VOFS
     sta BG2VOFS
     stz BG2VOFS
 

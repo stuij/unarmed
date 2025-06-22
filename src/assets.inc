@@ -48,9 +48,9 @@ wins_txt:
 .incbin "assets/wins_txt.map"
 wins_txt_end:
 
-after_game_menu_map:
-.incbin "assets/after_game.map"
-after_game_menu_map_end:
+between_menu_map:
+.incbin "assets/between_menu.map"
+between_menu_map_end:
 
 
 

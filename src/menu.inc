@@ -119,6 +119,9 @@ end:
     lda #.loword(draw_tile_menu_callback)
     sta menu::callback
 
+    lda #.loword(draw_between_menu)
+    sta menu::draw_fn
+
     lda #$0
     tcd
     rts
@@ -209,6 +212,9 @@ end:
     lda #.loword(select_row_name)
     sta select_tile_menu::tile_type_names
 
+    lda #.loword(draw_select_screen)
+    sta menu::draw_fn
+
     lda #$0
     tcd
     rts
@@ -217,12 +223,25 @@ end:
 
 .a8
 .i16
+.proc clear_menu_map
+    ldy #VRAM_MAP_MENU_BASE
+    ldx #($20 * $18 * 2)
+    stz a:W0
+    jsr dma_fixed_to_vram
+    rts
+.endproc
+
+
+.a8
+.i16
 .proc draw_select_screen
+    jsr clear_menu_map
+
     ldy #(select_tile_map_end - select_tile_map)
     sty a:W0
     lda #^select_tile_map
     ldx #.loword(select_tile_map)
-    ldy #VRAM_MAP_BG_TILE_SELECT_BASE
+    ldy #VRAM_MAP_MENU_BASE
     jsr dma_to_vram
 
     ;; set background to tiles to transparent, as
@@ -274,6 +293,7 @@ clear_bg_behind_tiles_loop:
     rts
 .endproc
 
+
 .a16
 .i16
 .proc init_between_games_menu
@@ -300,14 +320,38 @@ clear_bg_behind_tiles_loop:
     lda #.loword(between_menu_callback)
     sta menu::callback
 
+    lda #.loword(draw_between_menu)
+    sta menu::draw_fn
     lda #$0
     tcd
     rts
 .endproc
 
+
+.a8
+.i16
+.proc draw_between_menu
+    ldy #(between_menu_map_end - between_menu_map)
+    sty a:W0
+    lda #^between_menu_map
+    ldx #.loword(between_menu_map)
+    ldy #VRAM_MAP_MENU_BASE
+    jsr dma_to_vram
+
+    lda #BETWEEN_MENU_X_COORDS
+    sta BG1HOFS
+    stz BG1HOFS
+
+    lda #BETWEEN_MENU_Y_COORDS
+    sta BG1VOFS
+    stz BG1VOFS
+
+    rts
+.endproc
+
+
 ;; ------------
 ;; general menu
-
 
 .a16
 .i16
@@ -524,35 +568,24 @@ handle_menu_done:
     rts
 .endproc
 
-
-.a16
-.i16
 ;; A - current player
-.proc switch_to_select_tile_menu
-    lda a:W0
-    sta a:select_tile_menu + menu::player
-
-    ;; we switch the game_handler to the menu handler
-    lda #.loword(select_tile_menu)
-    sta game_data + game_data::curr_menu
-
-    stz a:select_tile_menu + menu::parent_menu
+;; X - address of menu struct
+;; Y - address of parent menu struct
+.proc switch_to_menu
+    sta a:menu::player, x
+    tya
+    sta a:menu::parent_menu, x
+    stx game_data + game_data::curr_menu
 
     A8
-    lda #((VRAM_MAP_BG_TILE_SELECT_BASE >> 10) << 2)
-    sta BG1SC ; set bg 2 tile map
+        lda #((VRAM_MAP_MENU_BASE >> 10) << 2)
+        sta BG1SC ; set bg 1 tile map
 
-    lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
-    sta BG2SC ; set bg 1 tile map
+        lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
+        sta BG2SC ; set bg 2 tile map
 
-    jsr draw_select_screen
+        jsr (menu::draw_fn, x)
     A16
-
-    rts
-.endproc
-
-
-.proc switch_to_canvas_menu
     rts
 .endproc
 
@@ -562,8 +595,7 @@ handle_menu_done:
     A8
     jsr hide_menu_caret
 
-    lda #$0
-    sta BG1HOFS
+    stz BG1HOFS
     stz BG1HOFS
     lda #$FF
     sta BG1VOFS

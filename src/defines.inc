@@ -8,7 +8,7 @@ VRAM_CHR_BASE = $5000
 VRAM_FONT_CHR_BASE = $6000
 
 VRAM_MAP_FONT_BASE = $8800 ;; $800 alignment == 256x256 pixels,
-VRAM_MAP_BG_TILE_SELECT_BASE = $9000 ;; aka (32x32x2 bytes) map
+VRAM_MAP_MENU_BASE = $9000 ;; aka (32x32x2 bytes) map
 VRAM_MAP_BG_GAME_BASE = $9800
 
 GAME_MAP_SIZE = $700
@@ -238,6 +238,7 @@ MENU_MOVE_TIMEOUT = 8
     dirty_p             .word ; 16
     just_moved          .word ; 18
     parent_menu         .word ; 1a
+    draw_fn             .word ; 1c
 .endstruct
 
 
@@ -292,8 +293,8 @@ BETWEEN_MENU_X_COORDS = $E0
 BETWEEN_MENU_Y_COORDS = $ce
 
 ;; for sprites
-BETWEEN_MENU_X_TABLE_OFFSET = $27
-BETWEEN_MENU_Y_TABLE_OFFSET = $38
+BETWEEN_MENU_X_TABLE_OFFSET = $77
+BETWEEN_MENU_Y_TABLE_OFFSET = $68
 
 BETWEEN_MENU_ROW_COUNT = 4
 
