@@ -30,6 +30,10 @@ font_map:
 .incbin "assets/font_prio.map"
 font_map_end:
 
+font_palette:
+.incbin "assets/font.palette"
+font_palette_end:
+
 
 ;; sprites
 demo_sprite_tiles:

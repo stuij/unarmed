@@ -12,8 +12,16 @@ INIT_GAME_INC = 1
     sty <W0
     lda #^town_palette
     ldx #.loword(town_palette)
-    ldy #00000
+    ldy #$20
     jsr dma_to_palette
+
+    ldy #(font_palette_end - font_palette) ; # of palette entries
+    sty <W0
+    lda #^font_palette
+    ldx #.loword(font_palette)
+    ldy #$00
+    jsr dma_to_palette
+
 
     ; load collision map to wram
     lda #^current_coll_map

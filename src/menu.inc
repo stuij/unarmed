@@ -131,10 +131,7 @@ end:
 ;; initialize chosen tile map entry with idx selected in select menu
 ; A - tile idx of chosen tile
 .proc draw_init_chosen_tile
-    ;; as it happens the idx is essentially already the selected
-    ;; tile map entry, as currently we're using bank 1, horizontal
-    ;; and vertical flip aren't set yet, and it's an 8px tile.
-    ;; but adjust for tile map entries being 16-bit
+    eor #BG_TILE_PALETTE_ENTRY
     sta tile_canvas + canvas_menu::chosen_tile
     rts
 .endproc
@@ -234,6 +231,17 @@ end:
 
 .a8
 .i16
+.proc clear_menu_l3
+    ldy #(VRAM_MAP_FONT_BASE + ($20 * 3 * 2))
+    ldx #($20 * $18 * 2)
+    stz a:W0
+    jsr dma_fixed_to_vram
+    rts
+.endproc
+
+
+.a8
+.i16
 .proc draw_select_screen
     jsr clear_menu_map
 
@@ -248,7 +256,8 @@ end:
     ;; otherwise the transparent parts of the tiles would show
     ;; whatever is occupying the background
     A16
-    stz a:W0 ;; first tile, aka transparent
+    lda #BG_TILE_PALETTE_ENTRY
+    sta a:W0 ;; first tile, aka transparent
     lda #($7 * $20 + $5)
     clc
     adc #VRAM_MAP_BG_GAME_BASE
@@ -361,8 +370,9 @@ loop:
     inx
     inx
     cpx #PLAYER_TABLE_I
-    bne loop
-
+    beq :+
+    jmp loop
+    :
     rts
 .endproc
 
@@ -635,8 +645,10 @@ handle_menu_done:
 
 .proc level_screen_to_fore
     ;; set map x/y coords back
+
     A8
     jsr hide_menu_caret
+    jsr clear_menu_l3
 
     stz BG1HOFS
     stz BG1HOFS

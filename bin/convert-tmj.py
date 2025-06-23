@@ -85,7 +85,8 @@ def choose_nr_to_tile_nr(nr, choose_table):
 def tiled_tile_to_tile(tile_idx, choose_table):
     h_flip = (tile_idx & 0x80000000) >> 25
     v_flip = (tile_idx & 0x40000000) >> 23
-    top_byte = (h_flip | v_flip)
+    palette_nr = 2 << 2 # the first two (4bpp) palettes are reserved for BG3
+    top_byte = (h_flip | v_flip | palette_nr)
     nr = tile_idx & 0x0FFFFFFF
     bottom_byte = choose_nr_to_tile_nr(nr if nr == 0 else nr - 1, choose_table)
     return encode_tile(top_byte, bottom_byte)
@@ -399,7 +400,7 @@ def encode_font_map(string, length, file_name):
 def write_tile_map(filename, table):
     with open(filename, "wb") as file:
         for item in table:
-            tile_top_bits = tile_flags_to_byte(item.flip_h, item.flip_v, 1)
+            tile_top_bits = tile_flags_to_byte(item.flip_h, item.flip_v, 1) | 2 << 2
             file.write(encode_tile(tile_top_bits, item.tile_idx if item.valid else 0))
 
 
