@@ -97,7 +97,7 @@ PLAYER_MAX = 4
 ;; for iterating over the player table
 ;; double the amount of actual players, as we're iterating over words
 ;; pointing to the player structs
-PLAYER_TABLE_I = $8 ;; times two because it's easier to code with
+PLAYER_TABLE_I = $4 ;; times two because it's easier to code with
 PLAYER_OAM_OFFSET = $0
 PLAYER_OAM_MUG_SHOT = $7 ;; for HUD
 PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
@@ -324,6 +324,7 @@ SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
     fight_p         .word
     game_handler    .word
     curr_menu       .word
+    in_game         .word
 .endstruct
 
 .struct hp

@@ -138,14 +138,12 @@ INIT_GAME_INC = 1
     jsr init_score_graphics
 
     ;; we start in menu mode
-    lda #.loword(handle_current_menu)
-    sta game_data + game_data::game_handler
-    stz game_data + game_data::fight_p
-
     lda a:player_table
     ldx #.loword(between_games_menu)
     ldy #0
     jsr switch_to_menu
+
+    stz a:game_data + game_data::in_game
 
     A8
     ;; set up bg registers
@@ -191,5 +189,13 @@ INIT_GAME_INC = 1
 
     rts
 .endproc
+
+
+.proc reset_game
+    jsr reset_hp
+    jsr init_players
+    rts
+.endproc
+
 
 .endif ; INIT_GAME_INC

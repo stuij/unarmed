@@ -95,11 +95,7 @@ check_again:
     lda a:game_data + game_data::fight_p
     bne switch_to_menu_mode
     ;; we're switching to fight_mode
-    jsr level_screen_to_fore
-    lda #1
-    sta a:game_data + game_data::fight_p
-    lda #.loword(handle_main_loop)
-    sta game_data + game_data::game_handler
+    jsr switch_to_fight
     bra return
 switch_to_menu_mode:
     lda a:W0
@@ -107,11 +103,6 @@ switch_to_menu_mode:
     ldy #0
     ;; we initialize the select menu
     jsr switch_to_menu
-
-    lda #.loword(handle_current_menu)
-    sta game_data + game_data::game_handler
-    lda #0
-    sta a:game_data + game_data::fight_p
 return:
     rts
 .endproc
@@ -135,9 +126,11 @@ loop:
     lda player::joy_trigger
     and #JOY_START
     beq continue
-    ;; player pressed start. we drop them in, for now, the select screen.
-    ;; first we record the player in the menu, as it's their
-    ;; presses we care about
+    lda a:game_data + game_data::in_game
+    beq continue
+    ;; player pressed start in-game. we drop them in, for now,
+    ;; the select screen. First we record the player in the menu,
+    ;; as it's their presses we care about
     tdc
     jsr switch_game_mode
     bra end
@@ -198,6 +191,9 @@ end:
 
     ; then do the rest
     jsr read_input
+
+    A8
+    jsl Tad_Process
 
     A16
     jsr check_game_state_change

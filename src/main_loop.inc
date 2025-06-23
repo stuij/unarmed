@@ -19,18 +19,43 @@ MAIN_LOOP_INC = 1
 .endproc
 
 
+.a16
+.i16
+.proc handle_win
+    jsr check_win
+    cmp #0
+    bne end
+    cmp #$ffff
+    beq set_first_player ;; skip player win increment. no-one wins. no celebrations.
+    ;; It was a win. Winner is in Y
+    ;; TODO: check for everyone dead
+    tyx
+    inc wins, x ;; increment wins for player
+    ;; go to win/game over menu state
+    bra end_game
+set_first_player:
+    ;; everyone dead, so we set menu control player to 1st
+    ldy #0
+end_game:
+    lda a:player_table, y
+    ldx #.loword(between_games_menu)
+    ldy #0
+    jsr switch_to_menu
+end:
+    rts
+.endproc
+
+
 ;; out: Y - winning player (x2 bytes)
 ;;          (#$ffff means everyone is dead,
 ;;           the last two players could have died at same time)
-;;      A - game over
-;; side effects: increment wins, if someone one
+;;      A - game over: 0, not game over: 1
 .a16
 .i16
 .proc check_win
-    ldy #$ffff
-    stz W0  ; dead-count
-    ldy #$0 ; last player we saw that is still alive
-    ldx #$0 ; iterator
+    stz W0     ; dead-count
+    ldx #$0    ; iterator
+    ldy #$ffff ; we assume everyone is dead
 loop:
     lda hp, x
     bne player_alive
@@ -52,12 +77,10 @@ loop_check:
     cmp W0
     bcc game_over   ; game is over. Either one player alive or
                     ; everyone dead. See OUT description above.
-    lda #0
+    lda #1
     bra end
 game_over:
-    lda #1
-    tyx
-    inc wins, x
+    lda #0
 end:
     rts
 .endproc
@@ -66,14 +89,11 @@ end:
 .a16
 .i16
 .proc handle_main_loop
-    jsr check_win
+    jsr handle_win
     jsr handle_movement
     jsr handle_sprite_bumps
     jsr handle_player_actions
     jsr finalize_main_loop
-    A8
-    jsl Tad_Process
-    A16
     rts
 .endproc
 

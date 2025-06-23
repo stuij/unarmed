@@ -43,6 +43,7 @@ read_serial_loop:
 
 .a8
 .i16
+; TODO: the way we switch between A8 and A16 is a bit spaghetti. clean up.
 .proc read_input
 wait_for_joypad:
     lda HVBJOY            ; get joypad status

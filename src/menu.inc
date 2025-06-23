@@ -297,8 +297,17 @@ clear_bg_behind_tiles_loop:
 
 ;; ----------------------
 ;; init between game menu
-
+.a16
+.i16
 .proc between_menu_callback
+    ldy #player::joy_trigger
+    lda (menu::player), y
+    and #JOY_A
+    beq end
+    ;; We pressed a button. For now this means we start a new game
+    jsr reset_game
+    jsr switch_to_fight
+end:
     rts
 .endproc
 
@@ -623,6 +632,17 @@ handle_menu_done:
     rts
 .endproc
 
+
+.proc switch_to_fight
+    jsr level_screen_to_fore
+    lda #1
+    sta a:game_data + game_data::fight_p
+    lda #.loword(handle_main_loop)
+    sta game_data + game_data::game_handler
+    rts
+.endproc
+
+
 ;; A - current player
 ;; X - address of menu struct
 ;; Y - address of parent menu struct
@@ -631,6 +651,10 @@ handle_menu_done:
     tya
     sta a:menu::parent_menu, x
     stx game_data + game_data::curr_menu
+
+    lda #.loword(handle_current_menu)
+    sta game_data + game_data::game_handler
+    stz a:game_data + game_data::fight_p
 
     A8
         lda #((VRAM_MAP_MENU_BASE >> 10) << 2)
