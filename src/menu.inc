@@ -345,18 +345,22 @@ clear_bg_behind_tiles_loop:
     adc #BETWEEN_MENU_PLAYER_FONT_MAP_OFFSET
     sta VMADD
     sta a:W5
-
     ldx #$0
+
 loop:
-    ;; print text
-    print_pad 2
+    ;; first set head
+    txa
+    lsr
+    jsr print_head
+
+    print_pad 1
 
     lda #.loword(between_wins)
     phy
     jsr print_string
     ply
 
-    print_pad 2
+    print_pad 1
 
     lda wins, x
     print_nr
@@ -370,9 +374,7 @@ loop:
     inx
     inx
     cpx #PLAYER_TABLE_I
-    beq :+
-    jmp loop
-    :
+    bne loop
     rts
 .endproc
 

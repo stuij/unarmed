@@ -96,6 +96,19 @@ end:
 .endproc
 
 
+.i16
+.a16
+;; A - player idx
+.proc print_head
+    inc
+    lshift 10 ;; set palette
+    ora #BG3_HEAD_CHAR_OFFSET
+    ora #$2000 ; set priority bit on tile
+    sta VMDATA
+    rts
+.endproc
+
+
 ;; setup lib code
 
 ; dma_to_vram

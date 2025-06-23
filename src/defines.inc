@@ -186,7 +186,7 @@ BULLET_V_VELO = $47
 ;; also times 2 (both BULLETS_PER_PLAYER and PLAYER_TABLE_I are times 2)
 BULLET_TABLE_I = ((BULLETS_PER_PLAYER / 2) * PLAYER_TABLE_I)
 
-BULLET_OAM_OFFSET = BETWEEN_MENU_GFX_OAM_OFFSET + $10
+BULLET_OAM_OFFSET = $20
 
 ; sprite tile offset of bullet. first slot on x axis,
 ; and on 7th row of y axis (rows are $10 wide)
@@ -303,10 +303,9 @@ BETWEEN_MENU_ROW_COUNT = 4
 BETWEEN_MENU_PLAYER_SPRITE_X = ($6 * $8)
 BETWEEN_MENU_PLAYER_SPRITE_Y_BASE = ($7 * $8) + $4
 
-BETWEEN_MENU_GFX_OAM_OFFSET = HUD_GFX_OAM_OFFSET + $10
-
 BETWEEN_MENU_PLAYER_FONT_MAP_OFFSET = $e5
 
+BG3_HEAD_CHAR_OFFSET = $60
 
 .struct between_games_menu
     menu .tag menu
@@ -348,16 +347,14 @@ SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
 ASCII_NR_BASE_OFFSET = 48 - 32  ; 48 is ascii position of 0,
                                 ; and our tiles start from ascii nr 32
 
-HUD_WIN_BASE = 6
-HUD_WIN_SKIP = 6
+HUD_WIN_BASE = 4
+HUD_WIN_SKIP = 2
 
-HUD_SCORE_NR_BASE = 4
-HUD_PLAYER_SKIP = 7
+HUD_SCORE_NR_BASE = 5
+HUD_PLAYER_SKIP = 3
 
 HUD_SPRITE_X_BASE = $1a
 HUD_SPRITE_X_SKIP = $38
 HUD_SPRITE_Y = 3
-
-HUD_GFX_OAM_OFFSET = $20
 
 .endif ; DEFINES_INC
