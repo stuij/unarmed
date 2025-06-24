@@ -98,4 +98,16 @@ MACROS_INC = 1
 	sbc a:W0  		; subtract minus from plus
 .endmacro
 
+
+.macro force_vblank
+    lda #$8F
+    sta INIDISP
+.endmacro
+
+.macro unforce_vblank
+    lda #$0F
+    sta INIDISP
+.endmacro
+
+
 .endif ;; MACROS_INC

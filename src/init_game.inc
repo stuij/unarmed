@@ -200,8 +200,19 @@ INIT_GAME_INC = 1
 .proc reset_game
     jsr reset_hp
     jsr init_players
+    jsr init_bullets
     rts
 .endproc
 
+
+.a16
+.i16
+.proc start_new_game
+    jsr reset_game
+    jsr switch_to_fight
+    lda #1
+    sta a:game_data + game_data::in_game
+    rts
+.endproc
 
 .endif ; INIT_GAME_INC

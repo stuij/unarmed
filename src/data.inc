@@ -110,24 +110,29 @@ current_tile_map: .res GAME_MAP_SIZE
 
 between_wins: .asciiz "wins"
 
+between_start_str:     .asciiz  "  start  >"
+between_edit_str:      .asciiz  "   edit  >"
+between_players_str:   .asciiz  "players  1234"
+between_level_str:     .asciiz  "  level  123456789"
+
+between_menu_row_table:
+.word 1
+.word 1
+.word PLAYER_MAX
+.word 9
+
 draw_tile_row_count: .word $1c
 
 ;; So this seems like it is taking the soul a bit out of
 ;; the programmers mind, but this is the price I'm willing
 ;; to pay for a uniform menu system.
-draw_tile_row_table:
-.repeat 28
-.word $20
-.endrep
-
-between_menu_row_table:
-.word PLAYER_MAX
-.word 9
-.word 1
-.word 1
 
 ;; we're pasting three extra rows to the collision map, so
 ;; players have the feeling they fall down, instead of just going out
 ;; of bounds on the ground
+draw_tile_row_table:
+.repeat 28
+.word $20
+.endrep
 
 .endif ; DATA_INC

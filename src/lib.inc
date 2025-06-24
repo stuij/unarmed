@@ -75,12 +75,12 @@ LIB_INC = 1
 
 .a16
 .i16
-;; W0 - string address
+;; A - string address
 .proc print_string
     pha
     ldy #0
 loop:
-    lda #0
+    lda #0 ;; clear upper C byte
     A8
     lda (1, S), y
     A16

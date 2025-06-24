@@ -122,6 +122,9 @@ end:
     lda #.loword(draw_between_menu)
     sta menu::draw_fn
 
+    lda #($4 + ($4 * $10))
+    sta menu::caret_sprite
+
     lda #$0
     tcd
     rts
@@ -211,6 +214,9 @@ end:
 
     lda #.loword(draw_select_screen)
     sta menu::draw_fn
+
+    lda #($4 + ($4 * $10))
+    sta menu::caret_sprite
 
     lda #$0
     tcd
@@ -304,11 +310,9 @@ clear_bg_behind_tiles_loop:
     lda (menu::player), y
     and #JOY_A
     beq end
+
     ;; We pressed a button. For now this means we start a new game
-    jsr reset_game
-    jsr switch_to_fight
-    lda #1
-    sta a:game_data + game_data::in_game
+    jsr start_new_game
 end:
     rts
 .endproc
@@ -339,6 +343,9 @@ end:
 
     lda #.loword(between_menu_callback)
     sta menu::callback
+
+    lda #($0 + ($4 * $10))
+    sta menu::caret_sprite
 
     lda #.loword(draw_between_menu)
     sta menu::draw_fn
@@ -371,7 +378,7 @@ loop:
     jsr print_string
     ply
 
-    print_pad 1
+    print_pad 2
 
     lda wins, x
     print_nr
@@ -386,6 +393,52 @@ loop:
     inx
     cpx a:game_data + game_data::no_players
     bne loop
+    rts
+.endproc
+
+.a16
+.i16
+.proc draw_between_menu_items
+    ;; start
+    lda #VRAM_MAP_FONT_BASE
+    clc
+    adc #BETWEEN_MENU_ITEMS_FONT_MAP_OFFSET
+    sta VMADD
+    tax
+
+    lda #.loword(between_start_str)
+    jsr print_string
+
+    ;; edit
+    txa
+    clc
+    adc #$20
+    sta VMADD
+    tax
+
+    lda #.loword(between_edit_str)
+    jsr print_string
+
+    ;; players
+    txa
+    clc
+    adc #$20
+    sta VMADD
+    tax
+
+    lda #.loword(between_players_str)
+    jsr print_string
+
+    ;; level
+    txa
+    clc
+    adc #$20
+    sta VMADD
+    tax
+
+    lda #.loword(between_level_str)
+    jsr print_string
+
     rts
 .endproc
 
@@ -410,6 +463,7 @@ loop:
 
     A16
     jsr draw_between_wins
+    jsr draw_between_menu_items
     A8
 
     rts
@@ -433,14 +487,12 @@ loop:
 .a16
 .i16
 .proc init_caret
-    lda #SELECT_CARET_SPRITE_OFFSET
-    sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
+    A8
     lda #$30                ; no flip, prio 3, palette 0
     sta OAM_MENU_CARET_OFFSET + oam_entry::attrs
 
     ;; set sprite to 16x16px
     lda #$2
-    A8
     sta OAM_MENU_CARET_XTRA_PROPS
     A16
     rts
@@ -659,13 +711,24 @@ handle_menu_done:
     stz a:game_data + game_data::fight_p
 
     A8
+        lda a:menu::caret_sprite, x
+        sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
+
         lda #((VRAM_MAP_MENU_BASE >> 10) << 2)
         sta BG1SC ; set bg 1 tile map
 
         lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
         sta BG2SC ; set bg 2 tile map
 
+        ;; Oof! Not the prettiest solution.
+        ;; we're wrapping our menu drawing code in a force vblank,
+        ;; as sometimes we're running out of time when calling this.
+        ;; It's not exactly elegant to just call this regardless of where
+        ;; we are in the frame. Let's see how bad this really is in
+        ;; practice.
+        force_vblank
         jsr (menu::draw_fn, x)
+        unforce_vblank
     A16
     rts
 .endproc
@@ -675,8 +738,10 @@ handle_menu_done:
     ;; set map x/y coords back
 
     A8
+    force_vblank
     jsr hide_menu_caret
     jsr clear_menu_l3
+    unforce_vblank
 
     stz BG1HOFS
     stz BG1HOFS

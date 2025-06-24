@@ -192,15 +192,13 @@ end:
     ; then do the rest
     jsr read_input
 
-    A8
-    jsl Tad_Process
-
     A16
     jsr check_game_state_change
 
     ldx #$0
     jsr (game_data + game_data::game_handler, x)
     A8
+    jsl Tad_Process
     jmp game_loop
 .endproc
 

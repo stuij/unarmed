@@ -92,12 +92,11 @@ OUT_OF_BOUNDS_Y = $f7f
 ;; -------------
 ;; player things
 
-PLAYER_MAX = 4
 
 ;; for iterating over the player table
 ;; double the amount of actual players, as we're iterating over words
 ;; pointing to the player structs
-PLAYER_TABLE_MAX = $8 ;; times two because it's easier to code with
+PLAYER_MAX = 4
 PLAYER_OAM_OFFSET = $0
 PLAYER_OAM_MUG_SHOT = $7 ;; for HUD
 PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
@@ -237,6 +236,7 @@ MENU_MOVE_TIMEOUT = 8
     just_moved          .word ; 18
     parent_menu         .word ; 1a
     draw_fn             .word ; 1c
+    caret_sprite        .word ; 1e
 .endstruct
 
 
@@ -276,10 +276,10 @@ DRAW_CARET_Y_INIT_OFFSET = (DRAW_CARET_INIT_ROW * 8) - 1
 ;; between games screen
 
 ; - wins section; not parts of games screen proper
+; - start game
+; - customize level
 ; - player count select
 ; - level select
-; - customize level
-; - start game
 
 ; TODO:
 ; - amount of hitpoints
@@ -287,20 +287,17 @@ DRAW_CARET_Y_INIT_OFFSET = (DRAW_CARET_INIT_ROW * 8) - 1
 ; - level select type: manual or random
 
 ;; for setting BG
-BETWEEN_MENU_X_COORDS = $E0
+BETWEEN_MENU_X_COORDS = $e0
 BETWEEN_MENU_Y_COORDS = $ce
 
-BETWEEN_MENU_X_TABLE_OFFSET = $77
-BETWEEN_MENU_Y_TABLE_OFFSET = ($d * $8)
+BETWEEN_MENU_X_TABLE_OFFSET = $73
+BETWEEN_MENU_Y_TABLE_OFFSET = ($d * $8) + 3
 BETWEEN_PLAYER_SKIP = $18
 
 BETWEEN_MENU_ROW_COUNT = 4
 
-;; for head sprites
-BETWEEN_MENU_PLAYER_SPRITE_X = ($6 * $8)
-BETWEEN_MENU_PLAYER_SPRITE_Y_BASE = ($7 * $8) + $4
-
-BETWEEN_MENU_PLAYER_FONT_MAP_OFFSET = $e5
+BETWEEN_MENU_PLAYER_FONT_MAP_OFFSET = $e6
+BETWEEN_MENU_ITEMS_FONT_MAP_OFFSET = $1a5
 
 BG3_HEAD_CHAR_OFFSET = $60
 
@@ -311,8 +308,6 @@ BG3_HEAD_CHAR_OFFSET = $60
 
 ;; ----------------
 ;; global game data
-
-SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
 
 .struct game_data
     no_players      .word
