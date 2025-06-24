@@ -141,7 +141,7 @@ continue:
     ;; and restoring magic.
     inx
     inx
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     bne loop
 end:
     lda #$0

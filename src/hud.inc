@@ -10,7 +10,7 @@ HUD_INC = 1
     sta VMADD
     print_pad ::HUD_WIN_BASE
     ldx #$0
-    lda #PLAYER_TABLE_I
+    lda a:game_data + game_data::no_players
     lsr
     sta a:W0
     ;; x = current player
@@ -47,7 +47,7 @@ loop:
     tay
     inx
     inx
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     bcc loop
     rts
 .endproc

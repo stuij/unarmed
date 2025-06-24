@@ -76,7 +76,7 @@ joy_set_player_vals:
     ldx a:W1
     inx
     inx
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     bne joy_loop
     lda #$0
     tcd

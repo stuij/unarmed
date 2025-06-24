@@ -41,6 +41,7 @@ end_game:
     ldx #.loword(between_games_menu)
     ldy #0
     jsr switch_to_menu
+    stz a:game_data + game_data::in_game
 end:
     rts
 .endproc
@@ -67,10 +68,10 @@ player_alive:
 loop_check:
     inx
     inx
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     bne loop
 
-    lda #PLAYER_TABLE_I
+    lda a:game_data + game_data::no_players
     lsr
     dec
     dec

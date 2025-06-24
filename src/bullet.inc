@@ -100,7 +100,7 @@ loop:
 
     inx
     inx
-    cpx #BULLET_TABLE_I
+    cpx a:game_data + game_data::bullets_pp
     bne loop
 
     lda #0
@@ -167,7 +167,7 @@ loop_end:
     inx
     inx
     phx
-    cpx #BULLET_TABLE_I
+    cpx a:game_data + game_data::bullets_pp
     bne loop
     plx
     lda #$0
@@ -352,7 +352,7 @@ bullets_to_oam_loop:
 
     inx
     inx
-    cpx #BULLET_TABLE_I
+    cpx a:game_data + game_data::bullets_pp
     bne bullets_to_oam_loop
     lda #$0
     tcd

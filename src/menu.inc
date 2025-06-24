@@ -161,7 +161,7 @@ end:
     and #JOY_A
     beq end
     lda #.loword(tile_canvas)
-    sta game_data + game_data::curr_menu
+    sta a:game_data + game_data::curr_menu
     ;; we need to pass tile canvas the current player
     ;; plus the tile id and tile type of our selection
     lda menu::curr_row
@@ -307,6 +307,8 @@ clear_bg_behind_tiles_loop:
     ;; We pressed a button. For now this means we start a new game
     jsr reset_game
     jsr switch_to_fight
+    lda #1
+    sta a:game_data + game_data::in_game
 end:
     rts
 .endproc
@@ -382,7 +384,7 @@ loop:
 
     inx
     inx
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     bne loop
     rts
 .endproc
@@ -627,7 +629,7 @@ handle_menu_done:
 
 
 .proc handle_current_menu
-    lda game_data + game_data::curr_menu
+    lda a:game_data + game_data::curr_menu
     jsr handle_menu
     rts
 .endproc
@@ -638,7 +640,7 @@ handle_menu_done:
     lda #1
     sta a:game_data + game_data::fight_p
     lda #.loword(handle_main_loop)
-    sta game_data + game_data::game_handler
+    sta a:game_data + game_data::game_handler
     rts
 .endproc
 
@@ -650,10 +652,10 @@ handle_menu_done:
     sta a:menu::player, x
     tya
     sta a:menu::parent_menu, x
-    stx game_data + game_data::curr_menu
+    stx a:game_data + game_data::curr_menu
 
     lda #.loword(handle_current_menu)
-    sta game_data + game_data::game_handler
+    sta a:game_data + game_data::game_handler
     stz a:game_data + game_data::fight_p
 
     A8

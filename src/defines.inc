@@ -97,7 +97,7 @@ PLAYER_MAX = 4
 ;; for iterating over the player table
 ;; double the amount of actual players, as we're iterating over words
 ;; pointing to the player structs
-PLAYER_TABLE_I = $4 ;; times two because it's easier to code with
+PLAYER_TABLE_MAX = $8 ;; times two because it's easier to code with
 PLAYER_OAM_OFFSET = $0
 PLAYER_OAM_MUG_SHOT = $7 ;; for HUD
 PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
@@ -182,9 +182,6 @@ BULLET_SHOOT_SIDE_Y_ADJUST = $40
 
 BULLET_H_VELO = $47
 BULLET_V_VELO = $47
-
-;; also times 2 (both BULLETS_PER_PLAYER and PLAYER_TABLE_I are times 2)
-BULLET_TABLE_I = ((BULLETS_PER_PLAYER / 2) * PLAYER_TABLE_I)
 
 BULLET_OAM_OFFSET = $20
 
@@ -319,6 +316,7 @@ SELECT_CARET_SPRITE_OFFSET = ($0 + ($4 * $10))
 
 .struct game_data
     no_players      .word
+    bullets_pp      .word
     curr_map        .word
     curr_map_dirty  .word
     fight_p         .word

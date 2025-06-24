@@ -25,13 +25,13 @@ move_table:
 
 player_start_coords:
 .word $200 ; p1 x
-.word $200 ; p1 y
-.word $500 ; p2 x
-.word $200 ; p2 y
-.word $b00 ; p3 x
-.word $200 ; p3 y
-.word $900 ; p4 x
-.word $700 ; p4 y
+.word $220 ; p1 y
+.word $e00 ; p2 x
+.word $b20 ; p2 y
+.word $e80 ; p3 x
+.word $1a0 ; p3 y
+.word $200 ; p4 x
+.word $b20 ; p4 y
 
 
 player_sprite_vtable:
@@ -260,7 +260,7 @@ loop:
     inc
     inc
     tax
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     bne loop
 
     lda #0
@@ -496,7 +496,7 @@ loop:
     inx
     inx
     phx
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     bne loop
     plx ; clear the stack
     lda #$0
@@ -788,7 +788,7 @@ loop:
     inx
     inx
     phx
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     bne loop
     plx
     lda #$0
@@ -962,7 +962,7 @@ end:
     inx
     inx
     phx
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     bne player_loop
 ;; epilogue
     plx ; clear the stack

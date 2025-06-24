@@ -125,6 +125,12 @@ INIT_GAME_INC = 1
     jsr init_sound
 
     A16
+    lda #8
+    sta a:game_data + game_data::no_players
+    ;; ((BULLETS_PER_PLAYER / 2) * PLAYERS)
+    lda #$28
+    sta a:game_data + game_data::bullets_pp
+
     jsr init_players
     jsr init_bullets
     jsr init_select_menu

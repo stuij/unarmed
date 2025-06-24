@@ -178,7 +178,7 @@ bullet_hit:
 bullet_end:
     inx
     inx
-    cpx #BULLET_TABLE_I
+    cpx a:game_data + game_data::bullets_pp
     beq :+
     jmp bullet_loop
     :
@@ -188,7 +188,7 @@ next_player:
     inx
     inx
     phx
-    cpx #PLAYER_TABLE_I
+    cpx a:game_data + game_data::no_players
     beq :+
     jmp player_loop
   : plx ; clear the stack
