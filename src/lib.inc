@@ -108,6 +108,27 @@ end:
     rts
 .endproc
 
+.a16
+.i16
+;; in:
+;; A - a nr bottom byte
+;; X - a nr top byte
+;; y - b nr byte
+;;
+;; out:
+;; A - result
+.proc mul_ppu
+    A8
+    I8
+    sta M7A
+    stx M7A
+    sty M7B
+    A16
+    I16
+    lda MPYL
+    rts
+.endproc
+
 
 ;; setup lib code
 

@@ -301,6 +301,32 @@ clear_bg_behind_tiles_loop:
 .endproc
 
 
+.a16
+.i16
+.proc handle_between_edit
+    rts
+.endproc
+
+
+.a16
+.i16
+.proc handle_between_players
+    lda ::menu::curr_column
+    clc
+    adc #2
+    asl
+    sta a:game_data + game_data::no_players_new
+    rts
+.endproc
+
+
+.a16
+.i16
+.proc handle_between_level
+    rts
+.endproc
+
+
 ;; ----------------------
 ;; init between game menu
 .a16
@@ -310,9 +336,30 @@ clear_bg_behind_tiles_loop:
     lda (menu::player), y
     and #JOY_A
     beq end
+    ;; We pressed a button. We do different things depending on the row.
+    lda ::menu::curr_row
 
-    ;; We pressed a button. For now this means we start a new game
+    cmp #between_rows::start
+    bne after_start
     jsr start_new_game
+    bra end
+after_start:
+
+    cmp #between_rows::edit
+    bne after_edit
+    jsr handle_between_edit
+    bra end
+after_edit:
+
+    cmp #::between_rows::players
+    bne after_players
+    jsr handle_between_players
+    bra end
+after_players:
+
+    cmp #::between_rows::level
+    bne end
+    jsr handle_between_level
 end:
     rts
 .endproc

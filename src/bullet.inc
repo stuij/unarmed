@@ -106,6 +106,7 @@ loop:
     lda #0
     tcd
 
+    A8
     ;; handle this blasted table separately
     lda #BULLET_OAM_DEFAULT
     sta OAM_mirror + $201
@@ -123,6 +124,7 @@ loop:
     sta OAM_mirror + $207
     lda #BULLET_OAM_DEFAULT
     sta OAM_mirror + $208
+    A16
 
     rts
 .endproc

@@ -306,14 +306,23 @@ BG3_HEAD_CHAR_OFFSET = $60
 .endstruct
 
 
+.enum between_rows
+    start
+    edit
+    players
+    level
+.endenum ; Enm between
+
+
 ;; ----------------
 ;; global game data
 
 .struct game_data
     no_players      .word
+    no_players_new  .word
     bullets_pp      .word
     curr_map        .word
-    curr_map_dirty  .word
+    curr_map_new    .word
     fight_p         .word
     game_handler    .word
     curr_menu       .word

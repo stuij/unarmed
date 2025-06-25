@@ -112,14 +112,14 @@ between_wins: .asciiz "wins"
 
 between_start_str:     .asciiz  "  start  >"
 between_edit_str:      .asciiz  "   edit  >"
-between_players_str:   .asciiz  "players  1234"
-between_level_str:     .asciiz  "  level  123456789"
+between_players_str:   .asciiz  "players  234"
+between_level_str:     .asciiz  "  level  0123456789"
 
 between_menu_row_table:
 .word 1
 .word 1
-.word PLAYER_MAX
-.word 9
+.word (PLAYER_MAX - 1)
+.word $a
 
 draw_tile_row_count: .word $1c
 

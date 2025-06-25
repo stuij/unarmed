@@ -125,20 +125,15 @@ INIT_GAME_INC = 1
     jsr init_sound
 
     A16
-    lda #8
-    sta a:game_data + game_data::no_players
-    ;; ((BULLETS_PER_PLAYER / 2) * PLAYERS)
-    lda #$28
-    sta a:game_data + game_data::bullets_pp
+    lda #4
+    sta a:game_data + game_data::no_players_new
 
-    jsr init_players
-    jsr init_bullets
+    jsr reset_game
     jsr init_select_menu
     jsr init_draw_menu
     jsr init_between_games_menu
     jsr init_caret
 
-    jsr reset_hp
     jsr reset_wins
 
     jsr init_score_graphics
@@ -197,10 +192,38 @@ INIT_GAME_INC = 1
 .endproc
 
 
+.a16
+.i16
+.proc set_player_no
+    lda game_data + game_data::no_players_new
+    sta game_data + game_data::no_players
+    tay
+
+    ;; calc and save total bullets
+    ldx #0
+    lda #BULLETS_PER_PLAYER
+    lsr
+    jsr mul_ppu
+    sta game_data + ::game_data::bullets_pp
+
+    rts
+.endproc
+
+
+.a16
+.i16
 .proc reset_game
+    jsr set_player_no
     jsr reset_hp
     jsr init_players
     jsr init_bullets
+    A8
+    force_vblank
+    A16
+    jsr init_score_graphics
+    A8
+    unforce_vblank
+    A16
     rts
 .endproc
 
