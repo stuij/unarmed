@@ -111,6 +111,7 @@ current_tile_map: .res GAME_MAP_SIZE
 between_wins: .asciiz "wins"
 
 between_start_str:     .asciiz  "  start  >"
+between_restart_str:   .asciiz  "restart  >"
 between_edit_str:      .asciiz  "   edit  >"
 between_players_str:   .asciiz  "players  234"
 between_level_str:     .asciiz  "  level  0123456789"

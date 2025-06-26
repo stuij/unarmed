@@ -99,7 +99,7 @@ check_again:
     bra return
 switch_to_menu_mode:
     lda a:W0
-    ldx #.loword(select_tile_menu)
+    ldx #.loword(between_games_menu)
     ldy #0
     ;; we initialize the select menu
     jsr switch_to_menu
@@ -172,10 +172,14 @@ end:
 .i16
 .proc update_vram
     ;; jsr update_bgs
+    jsr vblank_draw_menu
     A16
+    I16
     jsr update_score_graphics
+    A16
     I8
     jsr dma_OAM
+    ;; switch back for sanity
     A8
     I16
     rts

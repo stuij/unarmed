@@ -148,6 +148,8 @@ end:
     sty tile_canvas + canvas_menu::tile_type
     jsr draw_init_chosen_tile
     jsr level_screen_to_fore
+    lda #.loword(select_tile_menu)
+    sta tile_canvas + menu::parent_menu
     inc tile_canvas + menu::just_moved
     rts
 .endproc
@@ -226,28 +228,6 @@ end:
 
 .a8
 .i16
-.proc clear_menu_map
-    ldy #VRAM_MAP_MENU_BASE
-    ldx #($20 * $18 * 2)
-    stz a:W0
-    jsr dma_fixed_to_vram
-    rts
-.endproc
-
-
-.a8
-.i16
-.proc clear_menu_l3
-    ldy #(VRAM_MAP_FONT_BASE + ($20 * 3 * 2))
-    ldx #($20 * $18 * 2)
-    stz a:W0
-    jsr dma_fixed_to_vram
-    rts
-.endproc
-
-
-.a8
-.i16
 .proc draw_select_screen
     jsr clear_menu_map
 
@@ -273,7 +253,7 @@ end:
     adc #($6 * $20)
     sta a:W2
 clear_bg_behind_tiles_loop:
-    ldx #$30
+    ldx #$2c
     A8
     jsr dma_fixed_to_vram
     A16
@@ -301,9 +281,19 @@ clear_bg_behind_tiles_loop:
 .endproc
 
 
+;; ----------------------
+;; init between game menu
+
 .a16
 .i16
 .proc handle_between_edit
+    lda menu::player
+    ldx #.loword(select_tile_menu)
+    ldy #.loword(between_games_menu)
+    jsr switch_to_menu
+    A8
+    jsr hide_menu_carets
+    A16
     rts
 .endproc
 
@@ -311,7 +301,7 @@ clear_bg_behind_tiles_loop:
 .a16
 .i16
 .proc handle_between_players
-    lda ::menu::curr_column
+    lda menu::curr_column
     clc
     adc #2
     asl
@@ -327,11 +317,9 @@ clear_bg_behind_tiles_loop:
 .endproc
 
 
-;; ----------------------
-;; init between game menu
 .a16
 .i16
-.proc between_menu_callback
+.proc between_menu_handle_row_callback
     ldy #player::joy_trigger
     lda (menu::player), y
     and #JOY_A
@@ -357,10 +345,60 @@ after_edit:
     bra end
 after_players:
 
-    cmp #::between_rows::level
+    cmp #between_rows::level
     bne end
     jsr handle_between_level
 end:
+    rts
+.endproc
+
+
+.a16
+.i16
+;; I was thinking of generalizing this, but you run into the issue
+;; that in our menu framework the amount of rows in a menu are dynamic
+;; and most rows in most menus don't want/have selected things to
+;; highlight. Plus if you want to make all of this dynamic, you also
+;; need to have dynamic sprite allocation, etc.. It's all possible
+;; but since we only need this for two rows in one menu right now,
+;; we're just gonna roll things by hand, and see at what time
+;; it pays off to do the hard work.
+.proc between_menu_set_select_carets
+
+    ;; player caret
+    lda a:game_data + game_data::no_players_new
+    sec
+    sbc #4 ;; players menu starts at player 2, so dec by 2 to get to index
+    lshift 2 ;; x8 (but players is already x2, so only 2 left shifts)
+    clc
+    adc #BETWEEN_MENU_X_TABLE_OFFSET
+    A8
+    sta OAM_MENU_CARET_SELECT_OFFSET + oam_entry::x_pos
+    A16
+
+    lda #(BETWEEN_MENU_Y_TABLE_OFFSET + (between_rows::players * 8))
+    A8
+    sta OAM_MENU_CARET_SELECT_OFFSET + oam_entry::y_pos
+    A16
+
+
+    ;; level caret
+
+
+    lda #(BETWEEN_MENU_Y_TABLE_OFFSET + (between_rows::level * 8))
+    A8
+    sta OAM_MENU_CARET_SELECT_OFFSET + 4 + oam_entry::y_pos
+    A16
+
+    rts
+.endproc
+
+
+.a16
+.i16
+.proc between_menu_callback
+    jsr between_menu_set_select_carets
+    jsr between_menu_handle_row_callback
     rts
 .endproc
 
@@ -453,9 +491,16 @@ loop:
     sta VMADD
     tax
 
+    lda a:game_data + game_data::in_game
+    bne restart
     lda #.loword(between_start_str)
     jsr print_string
+    bra edit
+restart:
+    lda #.loword(between_restart_str)
+    jsr print_string
 
+edit:
     ;; edit
     txa
     clc
@@ -520,6 +565,28 @@ loop:
 ;; ------------
 ;; general menu
 
+.a8
+.i16
+.proc clear_menu_l3
+    ldy #(VRAM_MAP_FONT_BASE + ($20 * 3 * 2))
+    ldx #($20 * $18 * 2)
+    stz a:W0
+    jsr dma_fixed_to_vram
+    rts
+.endproc
+
+
+.a8
+.i16
+.proc clear_menu_map
+    ldy #VRAM_MAP_MENU_BASE
+    ldx #($20 * $18 * 2)
+    stz a:W0
+    jsr dma_fixed_to_vram
+    rts
+.endproc
+
+
 .a16
 .i16
 .proc init_menu_common
@@ -533,13 +600,33 @@ loop:
 
 .a16
 .i16
-.proc init_caret
+.proc init_carets
     A8
+    ;; menu selection caret
     lda #$30                ; no flip, prio 3, palette 0
     sta OAM_MENU_CARET_OFFSET + oam_entry::attrs
 
-    ;; set sprite to 16x16px
-    lda #$2
+    lda #$30                ; no flip, prio 3, palette 0
+    sta OAM_MENU_CARET_SELECT_OFFSET + oam_entry::attrs
+
+    lda #$30                ; no flip, prio 3, palette 0
+    sta OAM_MENU_CARET_SELECT_OFFSET + 4 + oam_entry::attrs
+
+    lda #$30                ; no flip, prio 3, palette 0
+    sta OAM_MENU_CARET_SELECT_OFFSET + 8 + oam_entry::attrs
+
+    ;; current value carets aren't going to change tile id for now
+    lda #($2 + ($4 * $10))
+    sta OAM_MENU_CARET_SELECT_OFFSET + oam_entry::tile_pos
+
+    lda #($2 + ($4 * $10))
+    sta OAM_MENU_CARET_SELECT_OFFSET + 4 + oam_entry::tile_pos
+
+    lda #($2 + ($4 * $10))
+    sta OAM_MENU_CARET_SELECT_OFFSET + 8 + oam_entry::tile_pos
+
+    ;; set sprites to 16x16px
+    lda #$aa
     sta OAM_MENU_CARET_XTRA_PROPS
     A16
     rts
@@ -548,9 +635,12 @@ loop:
 
 .a8
 .i16
-.proc hide_menu_caret
+.proc hide_menu_carets
     lda #$F0
     sta OAM_MENU_CARET_OFFSET + oam_entry::y_pos
+    sta OAM_MENU_CARET_OFFSET + $4 + oam_entry::y_pos
+    sta OAM_MENU_CARET_OFFSET + $8 + oam_entry::y_pos
+    sta OAM_MENU_CARET_OFFSET + $a + oam_entry::y_pos
     rts
 .endproc
 
@@ -696,15 +786,27 @@ end:
 ;; A - map base
 .proc handle_menu
     tcd
+    ;; Check for B(ack) button. If pressed we move to previous
+    ;; menu, if there is one. And we can skip the menu callback.
+    ldy #player::joy_trigger
+    lda (menu::player), y
+    and #JOY_B
+    beq :+
 
-    jsr menu_cursor_just_moved
+    ldx menu::parent_menu
+    beq :+
+    lda menu::player
+    ldy #$ffff
+    jsr switch_to_menu
+    bra handle_menu_done
+
+  : jsr menu_cursor_just_moved
     bne handle_menu_done
 
     jsr menu_handle_row
     jsr menu_handle_column
 
     jsr set_menu_caret_position
-
     ;; no direct page indirect jumping, so we need to
     ;; create an absolute address by adding the D register, which
     ;; currently points to the current menu address, to the callback
@@ -714,7 +816,7 @@ end:
     adc #menu::callback
     tax
     jsr (0, x)
-
+after_callback:
     lda menu::dirty_p
     beq handle_menu_done
     inc menu::just_moved
@@ -746,20 +848,41 @@ handle_menu_done:
 
 ;; A - current player
 ;; X - address of menu struct
-;; Y - address of parent menu struct
+;; Y - address of parent menu struct.
+;;     0    = no parent menu, but do write that in parent field
+;;     ffff = we're moving back down the menu chain. Don't save
+;;            to parent field, because that effectively means
+;;            clobbering it
 .proc switch_to_menu
     sta a:menu::player, x
+
+    cpy #$ffff
+    beq after_parent_save
     tya
     sta a:menu::parent_menu, x
+after_parent_save:
+
     stx a:game_data + game_data::curr_menu
 
     lda #.loword(handle_current_menu)
     sta a:game_data + game_data::game_handler
     stz a:game_data + game_data::fight_p
 
+    inc a:game_data + game_data::menu_dirty_draw
+
     A8
-        lda a:menu::caret_sprite, x
-        sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
+
+    A16
+
+    rts
+.endproc
+
+
+.a8
+.i16
+.proc vblank_draw_menu
+    lda a:game_data + game_data::menu_dirty_draw
+    beq end
 
         lda #((VRAM_MAP_MENU_BASE >> 10) << 2)
         sta BG1SC ; set bg 1 tile map
@@ -767,28 +890,31 @@ handle_menu_done:
         lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
         sta BG2SC ; set bg 2 tile map
 
-        ;; Oof! Not the prettiest solution.
-        ;; we're wrapping our menu drawing code in a force vblank,
-        ;; as sometimes we're running out of time when calling this.
-        ;; It's not exactly elegant to just call this regardless of where
-        ;; we are in the frame. Let's see how bad this really is in
-        ;; practice.
-        force_vblank
-        jsr (menu::draw_fn, x)
-        unforce_vblank
-    A16
+    jsr clear_menu_l3
+    ldx a:game_data + game_data::curr_menu
+
+    ;; this one doesn't need to be here, but I figured
+    ;; good to have everything together
+    lda a:menu::caret_sprite, x
+    sta OAM_MENU_CARET_OFFSET + oam_entry::tile_pos
+
+    jsr (menu::draw_fn, x)
+    stz a:game_data + game_data::menu_dirty_draw
+end:
     rts
 .endproc
 
 
+.a16
+.i16
 .proc level_screen_to_fore
     ;; set map x/y coords back
 
     A8
     force_vblank
-    jsr hide_menu_caret
+    jsr hide_menu_carets
     jsr clear_menu_l3
-    unforce_vblank
+    jsr load_tilemap_to_vram
 
     stz BG1HOFS
     stz BG1HOFS
@@ -800,11 +926,11 @@ handle_menu_done:
     lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
     sta BG1SC ; set bg 1 tile map
 
-    ;; TODO: set BG2SC to the background of the level
-
     A8
-    jsr load_tilemap_to_vram
+    unforce_vblank
     A16
+
+    ;; TODO: set BG2SC to the background of the level
     rts
 .endproc
 

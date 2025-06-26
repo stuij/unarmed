@@ -105,6 +105,9 @@ player_bbox_default_ledge_lookup:
 .word 0 ; middle right
 
 
+;; -----------------
+;; player management
+
 ;; X - current player offset times 2
 ;; D - current player mem loc
 .a16
@@ -268,6 +271,74 @@ loop:
     rts
 .endproc
 
+
+.a16
+.i16
+.proc set_player_no
+    lda game_data + game_data::no_players_new
+    sta game_data + game_data::no_players
+    tay
+
+    ;; calc and save total bullets
+    ldx #0
+    lda #BULLETS_PER_PLAYER
+    lsr
+    jsr mul_ppu
+    sta game_data + ::game_data::bullets_pp
+
+    rts
+.endproc
+
+.proc hide_players
+    lda #$F0
+    sta OAM_mirror + ::oam_entry::y_pos
+    sta OAM_mirror + ::oam_entry::y_pos + $4
+    sta OAM_mirror + ::oam_entry::y_pos + $8
+    sta OAM_mirror + ::oam_entry::y_pos + $C
+    sta OAM_mirror + ::oam_entry::y_pos + $10
+    sta OAM_mirror + ::oam_entry::y_pos + $14
+    sta OAM_mirror + ::oam_entry::y_pos + $18
+    sta OAM_mirror + ::oam_entry::y_pos + $1C
+
+    rts
+.endproc
+
+
+;; a - player number
+.proc set_OAM_player_top_x
+    ;; upper part of the 4 players are in OAM $200
+    ;; lower part of the 4 players are in OAM $201
+    lda #$F000
+    sta sprite::y_new
+
+    cmp #0
+        bne :+
+        lda #%00000001
+        bra set_bits
+  : cmp #1
+        bne :+
+        lda #%00000100
+        bra set_bits
+  : cmp #2
+        bne :+
+        lda #%00010000
+        bra set_bits
+  ;; so it must be p4
+  :     lda #%01000000
+
+set_bits:
+    A8
+    ora OAM_mirror + $200
+    sta OAM_mirror + $200
+    ora OAM_mirror + $201
+    sta OAM_mirror + $201
+    A16
+    rts 
+.endproc
+
+
+;; --------
+;; movement
 
 .a16
 .i16
@@ -625,39 +696,6 @@ end:
     rts
 .endproc
     
-;; a - player number
-.proc set_OAM_player_top_x
-    ;; upper part of the 4 players are in OAM $200
-    ;; lower part of the 4 players are in OAM $201
-    lda #$F000
-    sta sprite::y_new
-
-    cmp #0
-        bne :+
-        lda #%00000001
-        bra set_bits
-  : cmp #1
-        bne :+
-        lda #%00000100
-        bra set_bits
-  : cmp #2
-        bne :+
-        lda #%00010000
-        bra set_bits
-  ;; so it must be p4
-  :     lda #%01000000
-
-set_bits:
-    A8
-    ora OAM_mirror + $200
-    sta OAM_mirror + $200
-    ora OAM_mirror + $201
-    sta OAM_mirror + $201
-    A16
-    rts 
-.endproc
-
-
 
 ;; ----------------
 ;; sprite animation

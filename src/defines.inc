@@ -33,6 +33,7 @@ OAM_BULLET_SIZE     = (4 * 32)
 OAM_MENU_CARET_SIZE = (1 * 32)
 
 OAM_MENU_CARET_OFFSET = (OAM_mirror + OAM_PLAYER_SIZE + OAM_BULLET_SIZE)
+OAM_MENU_CARET_SELECT_OFFSET = OAM_MENU_CARET_OFFSET + 4
 
 ;;------------
 ;; sprite base struct
@@ -326,6 +327,7 @@ BG3_HEAD_CHAR_OFFSET = $60
     fight_p         .word
     game_handler    .word
     curr_menu       .word
+    menu_dirty_draw .word
     in_game         .word
 .endstruct
 

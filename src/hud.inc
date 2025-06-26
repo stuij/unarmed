@@ -24,10 +24,14 @@ loop:
     cpx a:W0
     bne loop
 
+    print_pad $10 ;; to overwrite potential artifacts from
+                  ;; when last player count was higher
     rts
 .endproc
 
 
+.i16
+.a16
 .proc update_score_graphics
     ;; vram start position
     lda #VRAM_MAP_FONT_BASE
