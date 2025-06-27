@@ -313,6 +313,8 @@ clear_bg_behind_tiles_loop:
 .a16
 .i16
 .proc handle_between_level
+    lda menu::curr_column
+    sta a:game_data + game_data::curr_map_new
     rts
 .endproc
 
@@ -383,6 +385,13 @@ end:
 
 
     ;; level caret
+    lda a:game_data + ::game_data::curr_map_new
+    lshift 3
+    clc
+    adc #BETWEEN_MENU_X_TABLE_OFFSET
+    A8
+    sta OAM_MENU_CARET_SELECT_OFFSET + 4 + oam_entry::x_pos
+    A16
 
 
     lda #(BETWEEN_MENU_Y_TABLE_OFFSET + (between_rows::level * 8))
@@ -640,7 +649,7 @@ edit:
     sta OAM_MENU_CARET_OFFSET + oam_entry::y_pos
     sta OAM_MENU_CARET_OFFSET + $4 + oam_entry::y_pos
     sta OAM_MENU_CARET_OFFSET + $8 + oam_entry::y_pos
-    sta OAM_MENU_CARET_OFFSET + $a + oam_entry::y_pos
+    sta OAM_MENU_CARET_OFFSET + $c + oam_entry::y_pos
     rts
 .endproc
 

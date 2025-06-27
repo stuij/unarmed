@@ -127,6 +127,7 @@ INIT_GAME_INC = 1
     A16
     lda #4
     sta a:game_data + game_data::no_players_new
+    stz a:game_data + ::game_data::curr_map_new
 
     jsr reset_game
     jsr init_select_menu
@@ -198,6 +199,7 @@ INIT_GAME_INC = 1
     jsr reset_hp
     jsr hide_players
     jsr set_player_no
+    jsr set_current_map
     jsr init_players
     jsr init_bullets
     A8

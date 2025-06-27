@@ -289,6 +289,7 @@ loop:
     rts
 .endproc
 
+
 .proc hide_players
     lda #$F0
     sta OAM_mirror + ::oam_entry::y_pos
