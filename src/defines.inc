@@ -17,7 +17,6 @@ COLL_MAP_BOTTOM_SIZE = $60
 
 BG_TILE_PALETTE_ENTRY = $0800 ;; palette 2
 
-
 ; OAM offsets
 
 .struct oam_entry
@@ -323,7 +322,6 @@ BG3_HEAD_CHAR_OFFSET = $60
     no_players_new  .word
     bullets_pp      .word
     curr_map        .word
-    curr_map_new    .word
     fight_p         .word
     game_handler    .word
     curr_menu       .word

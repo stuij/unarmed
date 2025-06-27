@@ -3,7 +3,7 @@
 from enum import Enum
 import json
 import os
-from struct import *
+from struct import pack
 import sys
 
 # for debugging
@@ -85,27 +85,34 @@ def choose_nr_to_tile_nr(nr, choose_table):
 def tiled_tile_to_tile(tile_idx, choose_table):
     h_flip = (tile_idx & 0x80000000) >> 25
     v_flip = (tile_idx & 0x40000000) >> 23
-    palette_nr = 2 << 2 # the first two (4bpp) palettes are reserved for BG3
+    # the first two (4bpp) palettes are reserved for BG3
+    palette_nr = 2 << 2
     top_byte = (h_flip | v_flip | palette_nr)
     nr = tile_idx & 0x0FFFFFFF
     bottom_byte = choose_nr_to_tile_nr(nr if nr == 0 else nr - 1, choose_table)
     return encode_tile(top_byte, bottom_byte)
 
 
-def encode_map(layer, choose_table):
+def encode_map(layer, choose_table, tile_map, coll):
     if layer['width'] != 32 or layer['height'] != 28:
         error("map isn't 32x28")
 
-    with open(layer['name'] + ".map", "wb") as tile_map:
-        with open(layer['name'] + ".coll", "wb") as coll:
-            count = 0
-            # print("{}".format(count))
-            for tile in layer['data']:
-                row, col = divmod(count, 32)
-                # print("row: {}, column: {}".format(row, col))
-                tile_map.write(tiled_tile_to_tile(tile, choose_table))
-                coll.write(tiled_tile_to_props(tile, choose_table))
-                count += 1
+    count = 0
+    # print("{}".format(count))
+    for tile in layer['data']:
+        row, col = divmod(count, 32)
+        # print("row: {}, column: {}".format(row, col))
+        tile_map.write(tiled_tile_to_tile(tile, choose_table))
+        coll.write(tiled_tile_to_props(tile, choose_table))
+        count += 1
+
+
+def encode_level_maps(tmj, choose_table):
+    with open("town-map.map", "wb") as tile_map:
+        with open("town-map.coll", "wb") as coll:
+            for layer in tmj['layers']:
+                encode_map(layer, choose_table, tile_map, coll)
+                # layer['name']
 
 
 def tile_spec_from_file (file_name):
@@ -131,7 +138,8 @@ def prop_list_to_nr(prop_list):
 
 
 def make_invalid_IndexEntry(choose_row, choose_row_idx, choose_idx):
-    return IndexEntry(choose_row, choose_row_idx, choose_idx, -1, -1, "invalid", False, False, False)
+    return IndexEntry(choose_row, choose_row_idx, choose_idx, -1, -1,
+                      "invalid", False, False, False)
 
 
 class Border(Enum):
@@ -139,6 +147,7 @@ class Border(Enum):
     RIGHT = 2
     TOP = 3
     BOTTOM = 4
+
 
 def make_border_entry(type, border_base):
     h_flip = False
@@ -314,8 +323,9 @@ def tile_spec_to_index_lookup(schema):
             tile_idx += 1
 
         for _ in range(32 - tiles_in_row):
-            choose_table.append(make_invalid_IndexEntry(choose_row, choose_row_idx,
-                                                        choose_idx))
+            choose_table.append(make_invalid_IndexEntry(
+                choose_row, choose_row_idx,
+                choose_idx))
 
         for _ in range(select_table_width - tiles_in_row - 2):
             select_table.append(select_inner_entry)
@@ -337,10 +347,13 @@ def tile_spec_to_index_lookup(schema):
 def schema_sanity_check(schema):
     index, choose = tile_spec_to_index_lookup(schema)
     for i in choose:
-        print("{}, {}, {}, {}, {}, {}, {}".format(i.choose_idx, i.choose_row, i.choose_row_idx, i.tile_idx, i.props, i.ty_name, i.valid))
+        print("{}, {}, {}, {}, {}, {}, {}".format(
+            i.choose_idx, i.choose_row, i.choose_row_idx,
+            i.tile_idx, i.props, i.ty_name, i.valid))
 
     for i in index:
-        print("{}, {}, {}, {}".format(i.choose_idx, i.tile_idx, i.props,  i.ty_name))
+        print("{}, {}, {}, {}".format(i.choose_idx, i.tile_idx,
+                                      i.props,  i.ty_name))
 
 
 def tile_flags_to_byte(flip_h, flip_v, priority):
@@ -355,7 +368,7 @@ def encode_string_map(string, max_len, file):
     str_len = len(string)
     if str_len > max_len:
         raise ValueError("string length {} higher than max {}"
-                           .format(str_len, length))
+                           .format(str_len, max_len))
     for char in string:
         file.write(encode_word(1 << 5, ord(char) - 32))
 
@@ -412,7 +425,8 @@ def encode_tile_select_bits(select_table, schema):
 
     with open("select_row_tile_types.bin", "wb") as row_tile_types:
         with open("select_row_table.bin", "wb") as row_table:
-            with open("select_row_table_cumulative.bin", "wb") as row_table_cumul:
+            with open("select_row_table_cumulative.bin", "wb") \
+              as row_table_cumul:
                 cumul = 0
                 for row in schema:
                     row_tiles = row[1]
@@ -425,14 +439,14 @@ def encode_tile_select_bits(select_table, schema):
         for row in schema:
             encode_string_map(row[0], 16, row_name)
 
+
 def main(tmj_in, spec_in):
     tmj = read_file(tmj_in)
     schema = tile_spec_from_file(spec_in)
 
     index_table, choose_table, select_table = tile_spec_to_index_lookup(schema)
 
-    for layer in tmj['layers']:
-        encode_map(layer, choose_table)
+    encode_level_maps(tmj, choose_table)
 
     encode_tile_select_bits(select_table, schema)
 

@@ -113,7 +113,7 @@ end:
 ;; in:
 ;; A - a nr bottom byte
 ;; X - a nr top byte
-;; y - b nr byte
+;; Y - b nr byte
 ;;
 ;; out:
 ;; A - result
@@ -189,13 +189,15 @@ end:
 ;   - B1L: dst WRAM bank address
 ;   - y: dst WRAM loword address
 ;   - W0: size
+.a8
+.i16
 .proc dma_to_wram
     sta A1B0    ; set bank of source address
     stx A1T0L   ; set loword of source address
     lda a:B1L
     sta WMADDH  ; set bank of wram dest addr
     sty WMADDL  ; set loword of wram dest addr
-    ldy a:W0    ; get size from zero page word reg 1
+    ldy a:B0L   ; get size from zero page word reg 1
     sty DAS0L   ; set DMA byte counter
 
     lda #<WMDATA
@@ -204,6 +206,54 @@ end:
     sta DMAP0   ; transfer mode, 1 register, 1 write
     lda #1
     sta MDMAEN  ; start dma, channel 0
+    rts
+.endproc
+
+
+.a8
+.i16
+;; A - map index
+.proc load_coll_map_to_wram
+    A16
+        tay
+        lda #(COLL_MAP_SIZE & $FF)
+        ldx #(COLL_MAP_SIZE >> 8)
+        jsr mul_ppu
+        clc
+        adc #.loword(town_coll)
+        tax
+    A8
+    lda #^current_coll_map
+    sta a:B1L
+    ldy #COLL_MAP_SIZE
+    sty a:W0
+    lda #^town_coll
+    ldy #.loword(current_coll_map)
+    jsr dma_to_wram
+    rts
+.endproc
+
+
+.a8
+.i16
+;; A - map index
+.proc load_tilemap_to_wram
+    A16
+        tay
+        lda #(GAME_MAP_SIZE & $FF)
+        ldx #(GAME_MAP_SIZE >> 8)
+        jsr mul_ppu
+        clc
+        adc #.loword(town_map)
+        tax
+    A8
+    lda #^current_tile_map
+    sta a:B1L
+    ldy #GAME_MAP_SIZE
+    sty a:W0
+    lda #^town_map
+    ldy #.loword(current_tile_map)
+    jsr dma_to_wram
     rts
 .endproc
 

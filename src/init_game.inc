@@ -23,17 +23,6 @@ INIT_GAME_INC = 1
     jsr dma_to_palette
 
 
-    ; load collision map to wram
-    lda #^current_coll_map
-    sta <B1L
-    ldy #COLL_MAP_SIZE
-    sty <W0
-    lda #^town_coll
-    ldx #.loword(town_coll)
-    ldy #.loword(current_coll_map)
-    jsr dma_to_wram
-
-    jsr clear_coll_map_bottom
 
     ; load tiles
     ldy #(town_tiles_end - town_tiles) ; size of transfer
@@ -49,29 +38,6 @@ INIT_GAME_INC = 1
     ldx #.loword(font_tiles)
     ldy #VRAM_FONT_CHR_BASE
     jsr dma_to_vram
-
-
-    ;; this should soon be handled somewhere else
-
-    ; load tile maps to wram
-    ; ldy #(fox_map_end - fox_map) ; size of transfer
-    ; sty <W0
-    ; lda #^fox_map
-    ; ldx #.loword(fox_map)
-    ; ldy #VRAM_MAP_FONT_BASE
-    ; jsr dma_to_vram
-
-
-    lda #^current_tile_map
-    sta <B1L
-    ldy #GAME_MAP_SIZE
-    sty <W0
-    lda #^town_map
-    ldx #.loword(town_map)
-    ldy #.loword(current_tile_map)
-    jsr dma_to_wram
-
-    jsr load_tilemap_to_vram
 
     ;; sprites
     ; set sprite base
@@ -119,16 +85,32 @@ INIT_GAME_INC = 1
 
 .a8
 .i16
+.proc set_game_map
+    lda a:game_data + ::game_data::curr_map
+    jsr load_coll_map_to_wram
+    jsr clear_coll_map_bottom
+
+    lda a:game_data + ::game_data::curr_map
+    jsr load_tilemap_to_wram
+    jsr load_tilemap_to_vram
+
+    rts
+.endproc
+
+
+.a8
+.i16
 ;; set up data
 .proc init_game_data
-    jsr init_binary_data
-    jsr init_sound
-
     A16
     lda #4
     sta a:game_data + game_data::no_players_new
-    stz a:game_data + ::game_data::curr_map_new
-
+    stz a:game_data + ::game_data::curr_map
+    A8
+    jsr init_binary_data
+    jsr set_game_map
+    jsr init_sound
+    A16
     jsr reset_game
     jsr init_select_menu
     jsr init_draw_menu
@@ -199,7 +181,6 @@ INIT_GAME_INC = 1
     jsr reset_hp
     jsr hide_players
     jsr set_player_no
-    jsr set_current_map
     jsr init_players
     jsr init_bullets
     A8

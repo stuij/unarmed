@@ -1,3 +1,10 @@
+game bank layout:
+
+RODATA: generated bits and bobs
+BANK1: sound
+BANK2: collision/game tile maps
+
+
 On cycle budget:
 
 tepples on https://forums.nesdev.org/viewtopic.php?p=215656#p215656

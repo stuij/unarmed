@@ -314,7 +314,12 @@ clear_bg_behind_tiles_loop:
 .i16
 .proc handle_between_level
     lda menu::curr_column
-    sta a:game_data + game_data::curr_map_new
+    sta a:game_data + game_data::curr_map
+    A8
+    force_vblank
+    jsr set_game_map
+    unforce_vblank
+    A16
     rts
 .endproc
 
@@ -385,7 +390,7 @@ end:
 
 
     ;; level caret
-    lda a:game_data + ::game_data::curr_map_new
+    lda a:game_data + ::game_data::curr_map
     lshift 3
     clc
     adc #BETWEEN_MENU_X_TABLE_OFFSET

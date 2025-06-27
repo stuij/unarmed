@@ -13,14 +13,6 @@ town_palette:
 .incbin "assets/town.palette"
 town_palette_end:
 
-town_map:
-.incbin "assets/town-map.map"
-town_map_end:
-
-town_coll:
-.incbin "assets/town-map.coll"
-town_coll_end:
-
 ;; font
 font_tiles:
 .incbin "assets/font.tiles"
@@ -79,5 +71,17 @@ select_row_name_end:
 select_row_tile_types:
 .incbin "assets/select_row_tile_types.bin"
 select_row_tile_types_end:
+
+
+.segment "BANK2"
+
+town_map:
+.incbin "assets/town-map.map"
+town_map_end:
+
+town_coll:
+.incbin "assets/town-map.coll"
+town_coll_end:
+
 
 .endif ; ASSETS_INC
