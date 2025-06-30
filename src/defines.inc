@@ -59,6 +59,7 @@ OUT_OF_BOUNDS_Y = $f7f
     right           = $e
 .endenum
 
+
 .struct point
     y_off .word
     x_off .word
@@ -166,6 +167,21 @@ BULLETS_PER_PLAYER = $A ;; times 2, because it's easier to code with
     shot_delay_timer    .word   ; 3c
     ;; fills so we have nice round nrs
     tmp2                .word   ; 3e
+.endstruct
+
+
+;; in game keybindings
+.struct igk
+    face_top_left       .word
+    face_bottom_left    .word
+    face_top_right      .word
+    face_bottom_right   .word
+    face_left           .word
+    face_top            .word
+    face_bottom         .word
+    face_right          .word
+    shoot               .word
+    jump                .word
 .endstruct
 
 

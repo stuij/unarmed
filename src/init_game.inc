@@ -116,7 +116,7 @@ INIT_GAME_INC = 1
     jsr init_draw_menu
     jsr init_between_games_menu
     jsr init_carets
-
+    jsr set_best_keys
     jsr reset_wins
 
     jsr init_score_graphics

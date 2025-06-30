@@ -58,6 +58,7 @@ game_data: .tag game_data
 tile_canvas: .tag canvas_menu
 select_tile_menu: .tag select_tile_menu
 between_games_menu: .tag between_games_menu
+in_game_keys: .tag igk
 
 ;; bullet data
 ;; start at 0 because we're not insane. player start kinda forced by

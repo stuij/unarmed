@@ -498,19 +498,18 @@ end:
 
 .proc run
     ;; are we instructed to jump?
-    lda player::joy_trigger_held
-    and #JOY_B
+    lda player::joy_trigger
+    and in_game_keys + igk::jump
     beq :+
     jmp init_jump
   : jmp h_move
 .endproc
 
 
-
 .proc idle
     ;; are we instructed to jump?
-    lda player::joy_trigger_held
-    and #JOY_B
+    lda player::joy_trigger
+    and in_game_keys + igk::jump
     beq test_run
     jmp init_jump
 test_run:
@@ -835,66 +834,68 @@ loop:
     rts
 .endproc
 
-
+;;   x
+;; y   a
+;;   b
 .a16
 .i16
 .proc set_player_direction
     lda player::joy
     tax
-    and #(JOY_UP + JOY_LEFT)
-    cmp #(JOY_UP + JOY_LEFT)
+    and in_game_keys + ::igk::face_top_left
+    cmp in_game_keys + ::igk::face_top_left
     bne check_down_left
     lda #face_dir::top_left
     sta sprite::face_dir
     bra done
 check_down_left:
     txa
-    and #(JOY_DOWN + JOY_LEFT)
-    cmp #(JOY_DOWN + JOY_LEFT)
+    and in_game_keys + ::igk::face_bottom_left
+    cmp in_game_keys + ::igk::face_bottom_left
     bne check_up_right
     lda #face_dir::bottom_left
     sta sprite::face_dir
     bra done
 check_up_right:
     txa
-    and #(JOY_UP + JOY_RIGHT)
-    cmp #(JOY_UP + JOY_RIGHT)
+    and in_game_keys + ::igk::face_top_right
+    cmp in_game_keys + ::igk::face_top_right
     bne check_down_right
     lda #face_dir::top_right
     sta sprite::face_dir
     bra done
 check_down_right:
     txa
-    and #(JOY_DOWN + JOY_RIGHT)
-    cmp #(JOY_DOWN + JOY_RIGHT)
+    and in_game_keys + ::igk::face_bottom_right
+    cmp in_game_keys + ::igk::face_bottom_right
     bne check_left
     lda #face_dir::bottom_right
     sta sprite::face_dir
     bra done
 check_left:
     txa
-    and #JOY_LEFT
+    and in_game_keys + ::igk::face_left
     beq check_up
     lda #face_dir::left
     sta sprite::face_dir
     bra done
 check_up:
     txa
-    and #JOY_UP
+    and in_game_keys + ::igk::face_top
     beq check_down
     lda #face_dir::top
     sta sprite::face_dir
     bra done
 check_down:
     txa
-    and #JOY_DOWN
+    and in_game_keys + ::igk::face_bottom
     beq check_right
     lda #face_dir::bottom
     sta sprite::face_dir
     bra done
 check_right:
     txa
-    and #JOY_RIGHT
+    and in_game_keys + ::igk::face_right
     beq done
     lda #face_dir::right
     sta sprite::face_dir
@@ -943,8 +944,8 @@ player_loop:
     tcd
 ;; meat
     ;; are we instructed to shoot?
-    lda player::joy_trigger
-    and #JOY_A
+    lda ::player::joy_trigger
+    and in_game_keys + igk::shoot
     beq end
     ;; we are shooting something!
     ;; save left x and y
@@ -1007,6 +1008,80 @@ end:
     plx ; clear the stack
     lda #$0
     tcd
+    rts
+.endproc
+
+
+.a16
+.i16
+.proc set_aim_shooting_separate
+    lda #(JOY_L)
+    sta in_game_keys + igk::shoot
+
+    lda #(JOY_R)
+    sta in_game_keys + igk::jump
+
+    lda #(JOY_L)
+    sta in_game_keys + ::igk::face_top_left
+
+    lda #(JOY_B | JOY_Y)
+    sta in_game_keys + ::igk::face_bottom_left
+
+    lda #(JOY_X | JOY_A)
+    sta in_game_keys + ::igk::face_top_right
+
+    lda #(JOY_B | JOY_A)
+    sta in_game_keys + ::igk::face_bottom_right
+
+    lda #(JOY_Y)
+    sta in_game_keys + ::igk::face_left
+
+    lda #(JOY_X)
+    sta in_game_keys + ::igk::face_top
+
+    lda #(JOY_B)
+    sta in_game_keys + ::igk::face_bottom
+
+    lda #(JOY_A)
+    sta in_game_keys + ::igk::face_right
+
+    rts
+.endproc
+
+
+.a16
+.i16
+.proc set_best_keys
+    lda #(JOY_A | JOY_B | JOY_X | JOY_Y)
+    sta in_game_keys + igk::shoot
+
+    lda #(JOY_R)
+    sta in_game_keys + igk::jump
+
+    lda #(JOY_X | JOY_Y)
+    sta in_game_keys + ::igk::face_top_left
+
+    lda #(JOY_B | JOY_Y)
+    sta in_game_keys + ::igk::face_bottom_left
+
+    lda #(JOY_X | JOY_A)
+    sta in_game_keys + ::igk::face_top_right
+
+    lda #(JOY_B | JOY_A)
+    sta in_game_keys + ::igk::face_bottom_right
+
+    lda #(JOY_Y)
+    sta in_game_keys + ::igk::face_left
+
+    lda #(JOY_X)
+    sta in_game_keys + ::igk::face_top
+
+    lda #(JOY_B)
+    sta in_game_keys + ::igk::face_bottom
+
+    lda #(JOY_A)
+    sta in_game_keys + ::igk::face_right
+
     rts
 .endproc
 
