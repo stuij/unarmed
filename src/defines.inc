@@ -115,7 +115,9 @@ V_VELO_INIT = $ffd7 ;; -29
 V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
 V_VELO_DOWN_MAX = $40
 
-BULLETS_PER_PLAYER = $A ;; times 2, because it's easier to code with
+BULLETS_PER_PLAYER = $10 ;; times 2, because it's easier to code with
+SHOT_BURST_COUNT = 3 ;; times 1, this will shoot 4 bullets
+SHOT_COOLDOWN_FRAMES = 29 ;; half a second
 
 .enum move_state
     idle
@@ -162,11 +164,16 @@ BULLETS_PER_PLAYER = $A ;; times 2, because it's easier to code with
     v_tribool           .word   ; 2a
     stance_dir          .word   ; 2c
     bullets_left        .word   ; 2e
-    bullet_queue        .res $a ; 30
-    nr                  .word   ; 3a
-    shot_delay_timer    .word   ; 3c
-    ;; fills so we have nice round nrs
-    tmp2                .word   ; 3e
+    ;; fix me: this should really read BULLETS_PER_PLAYER
+    ;; but the ca65 assembler has a bug where in these
+    ;; circumstances you need to add a global scope specifier: `::`
+    ;; and the vscode ca65 plugin I'm using can't parse this.
+    bullet_queue        .res $10 ; 30
+    nr                  .word   ; 40 - player nr
+    shot_burst_counter  .word   ; 42
+    shot_cooldown_timer .word   ; 44
+    invuln_timer        .word   ; 46
+    hit_anim_timer      .word   ; 48
 .endstruct
 
 

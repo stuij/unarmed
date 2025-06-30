@@ -212,11 +212,12 @@ loop:
     lsr
     sta player::nr
 
-    lda #$0
-    sta sprite::h_velo
-    sta sprite::v_velo
-    sta player::joy
-    sta sprite::anim_tick
+    stz sprite::h_velo
+    stz sprite::v_velo
+    stz player::joy
+    stz sprite::anim_tick
+    stz player::shot_burst_counter
+    stz player::shot_cooldown_timer
 
     phx
     jsr set_player_bullet_queue
@@ -935,6 +936,43 @@ end:
 
 .a16
 .i16
+;; out: A: 0 = no shoot, 1 = yes shoot
+.proc handle_shot_decision
+    ;; first handle burst. if we're bursting, we're also still
+    ;; in the cooldown timer
+    lda player::shot_burst_counter
+    bne handle_burst
+
+    ;; shot cooldown timer is counting down. 0 is shoot
+    lda ::player::shot_cooldown_timer
+    bne handle_cooldown
+
+    lda ::player::joy_trigger
+    and in_game_keys + igk::shoot
+    beq no_shoot
+    lda #SHOT_BURST_COUNT
+    sta player::shot_burst_counter
+    lda #SHOT_COOLDOWN_FRAMES
+    sta player::shot_cooldown_timer
+    bra yes_shoot
+handle_burst:
+    dec player::shot_burst_counter
+    dec player::shot_cooldown_timer
+yes_shoot:
+    lda #1
+    bra end
+handle_cooldown:
+    dec player::shot_cooldown_timer
+    bra no_shoot
+no_shoot:
+    lda #0
+end:
+    rts
+.endproc
+
+
+.a16
+.i16
 .proc handle_player_actions
 ;; prologue
     ldx #$0
@@ -944,8 +982,7 @@ player_loop:
     tcd
 ;; meat
     ;; are we instructed to shoot?
-    lda ::player::joy_trigger
-    and in_game_keys + igk::shoot
+    jsr handle_shot_decision
     beq end
     ;; we are shooting something!
     ;; save left x and y
