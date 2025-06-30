@@ -116,8 +116,10 @@ V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
 V_VELO_DOWN_MAX = $40
 
 BULLETS_PER_PLAYER = $10 ;; times 2, because it's easier to code with
-SHOT_BURST_COUNT = 3 ;; times 1, this will shoot 4 bullets
-SHOT_COOLDOWN_FRAMES = 29 ;; half a second
+SHOT_BURST_COUNT = 0 ;; times 1, this will shoot 4 bullets
+SHOT_COOLDOWN_FRAMES = 14 ;; half a second
+
+HIT_TIMER_LEN = (2 * 60) ;; after hit, player gets X seconds invulnerability
 
 .enum move_state
     idle
@@ -138,6 +140,7 @@ SHOT_COOLDOWN_FRAMES = 29 ;; half a second
     bottom_right  .tag point ; 1c
 .endstruct
 
+
 ;; points are offset from top-left corner:
 ;;   one byte for x, and one for y
 .struct player_bbox
@@ -148,10 +151,12 @@ SHOT_COOLDOWN_FRAMES = 29 ;; half a second
     middle_right  .tag point ; 18
 .endstruct
 
+
 .struct stance_dir
     left  .word
     right .word
 .endstruct
+
 
 .struct player
     sprite              .tag sprite
@@ -172,8 +177,7 @@ SHOT_COOLDOWN_FRAMES = 29 ;; half a second
     nr                  .word   ; 40 - player nr
     shot_burst_counter  .word   ; 42
     shot_cooldown_timer .word   ; 44
-    invuln_timer        .word   ; 46
-    hit_anim_timer      .word   ; 48
+    hit_timer           .word   ; 48
 .endstruct
 
 
@@ -211,7 +215,7 @@ BULLET_OAM_OFFSET = $20
 ; and on 7th row of y axis (rows are $10 wide)
 BULLET_SPRITE_OFFSET = ($0 + ($6 * $10))
 
-BULLET_MAX_FLIGHT = 60 ;; 1 sec
+BULLET_MAX_FLIGHT = 2 * 60 ;; 1 sec
 
 
 .enum bullet_state
@@ -242,6 +246,7 @@ MENU_MOVE_TIMEOUT = 8
     select_tile = $0
     stamp_tile = $2
 .endenum
+
 
 .struct menu
     cursor_x_pos_origin .word ; 0
@@ -358,6 +363,7 @@ BG3_HEAD_CHAR_OFFSET = $60
     p3_hp           .word
     p4_hp           .word
 .endstruct
+
 
 .struct wins
     p1_wins         .word

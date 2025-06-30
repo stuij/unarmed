@@ -5,6 +5,27 @@ COLL_SPRITE_INC = 1
 ;; ------------
 ;; sprite-bumps
 
+.proc handle_bullet_hit
+    jsr bullet_retire
+    ;; play player hit sound
+    A8
+    lda #SFX::robot_fires_laser
+    jsr Tad_QueueSoundEffect_D
+    A16
+
+    ;; W4 == player offset
+    ldx a:W4
+    ldy a:player_table, x
+    lda a:player::hit_timer, y
+    bne end
+    lda #HIT_TIMER_LEN
+    sta a:player::hit_timer, y
+    jsr player_dec_hp
+end:
+    rts
+.endproc
+
+
 .a16
 .i16
 .proc handle_sprite_bumps
@@ -161,18 +182,8 @@ x_middle_cont:
 
 bullet_hit:
     ;; it's a hit!!
-    jsr bullet_retire
-    ;; play player hit sound
     phx
-    A8
-    lda #SFX::robot_fires_laser
-    jsr Tad_QueueSoundEffect_D
-    A16
-    plx
-    phx
-    ldx a:W4
-    txa
-    jsr player_dec_hp
+    jsr handle_bullet_hit
     plx
 
 bullet_end:

@@ -218,6 +218,7 @@ loop:
     stz sprite::anim_tick
     stz player::shot_burst_counter
     stz player::shot_cooldown_timer
+    stz player::hit_timer
 
     phx
     jsr set_player_bullet_queue
@@ -539,6 +540,23 @@ still_idle:
 .endproc
 
 
+;; We're already running a few timers here and there.
+;; And we probably want to unify them here for sanity,
+;; although it might also be nice to just have them ticking along
+;; close to related code. Let's see..
+;;
+;; we hold ourselves to the contract that these timers should
+;; decrement before any code is run that uses them
+.proc handle_misc_player_timers
+    lda player::hit_timer
+    beq end
+    dec player::hit_timer
+end:
+    rts
+.endproc
+
+
+
 .a16
 .i16
 .proc handle_single_player_movement
@@ -563,6 +581,7 @@ loop:
     lda sprite::move_state
     cmp #move_state::dead
     beq :+
+    jsr handle_misc_player_timers
     jsr handle_single_player_movement
   : plx
     inx
