@@ -789,7 +789,7 @@ end:
 ;; Currently we only have animation for running,
 ;; For the other states we just use the first
 ;; frame of the running state.
-.proc animate_player_movement
+.proc anim_sprite
     lda sprite::move_state
     cmp #move_state::run
     bne other
@@ -815,6 +815,62 @@ set_sprite:
     A16
     rts
 .endproc
+
+
+;; Y holds OAM shadow mem position of 4th player byte,
+;; so the additional properties byte. Palette is encoded in
+;; bits 1, 2 and 3
+.proc hit_palette_swap
+    ;; first zero out the palette bits
+    lda #$F1
+    A8
+    and OAM_mirror, y
+    sta OAM_mirror, y
+    A16
+    lda ::player::hit_timer
+    rshift 4
+    and #$1
+    bne hit_palette
+    ;; we set the player palette
+    lda player::nr
+    bra set_palette
+hit_palette:
+    lda #4
+set_palette:
+    asl
+    A8
+    ora OAM_mirror, y
+    sta OAM_mirror, y
+    A16
+    rts
+.endproc
+
+
+;; Y holds OAM shadow mem position of third player byte,
+;; so the actual sprite address
+.proc animate_player_movement
+    jsr anim_sprite
+
+    lda player::hit_timer
+    beq end
+    ;; do for legs
+    iny
+    jsr hit_palette_swap
+    ;; and head
+    tya
+    sec
+    sbc #(4 * 4)
+    tay
+    jsr hit_palette_swap
+    ;; and move back y to original position
+    tya
+    clc
+    adc #((4 * 4) - 1)
+    tay
+end:
+    rts
+.endproc
+
 
 
 .a16
