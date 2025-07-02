@@ -120,6 +120,8 @@ SHOT_BURST_COUNT = 0 ;; times 1, this will shoot 4 bullets
 SHOT_COOLDOWN_FRAMES = 14 ;; half a second
 
 HIT_TIMER_LEN = (2 * 60) ;; after hit, player gets X seconds invulnerability
+HIT_H_VELO = 10
+HIT_V_VELO = 10
 
 .enum move_state
     idle
@@ -127,6 +129,8 @@ HIT_TIMER_LEN = (2 * 60) ;; after hit, player gets X seconds invulnerability
     jump
     cling
     climb
+    hit
+    recoil
     dead
 .endenum
 
@@ -178,6 +182,17 @@ HIT_TIMER_LEN = (2 * 60) ;; after hit, player gets X seconds invulnerability
     shot_burst_counter  .word   ; 42
     shot_cooldown_timer .word   ; 44
     hit_timer           .word   ; 48
+    ; when hit, we do hit movement in next frame, to make it easier on
+    ; collision detection. So for this we need to know the horizontal
+    ; velocity of the thing that hit us. This will give us direction
+    ; and force. Although we probably won't do much with the force
+    ; aspect to begin with.
+    hit_h_velo          .word   ; 4a
+    hit_v_velo          .word   ; 4c
+    ; just a bit of padding to round the struct for easy eye-balling
+    pad1                .word   ; 4e
+    pad2                .word   ; 4e ;; pad1's offset isn't right, but that means
+                                ; we need to figure out what's wrong, and I'm lazy
 .endstruct
 
 

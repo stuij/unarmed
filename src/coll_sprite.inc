@@ -6,7 +6,6 @@ COLL_SPRITE_INC = 1
 ;; sprite-bumps
 
 .proc handle_bullet_hit
-    jsr bullet_retire
     ;; play player hit sound
     A8
     lda #SFX::robot_fires_laser
@@ -18,10 +17,18 @@ COLL_SPRITE_INC = 1
     ldy a:player_table, x
     lda a:player::hit_timer, y
     bne end
+    ;; we're hit. set various hit-related bookkeeping things.
     lda #HIT_TIMER_LEN
     sta a:player::hit_timer, y
+    lda #move_state::hit
+    sta a:sprite::move_state, y
+    lda sprite::h_velo
+    sta a:player::hit_h_velo, y
+    lda sprite::v_velo
+    sta a:player::hit_v_velo, y
     jsr player_dec_hp
 end:
+    jsr bullet_retire
     rts
 .endproc
 

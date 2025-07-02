@@ -21,7 +21,9 @@ move_table:
 .addr jump
 .addr cling
 .addr climb
-
+.addr hit
+.addr recoil
+.addr dead
 
 player_start_coords:
 .word $200 ; p1 x
@@ -540,6 +542,37 @@ still_idle:
 .endproc
 
 
+.proc hit
+    lda player::hit_h_velo
+    sta sprite::h_velo
+    lda player::hit_v_velo
+    sta sprite::v_velo
+    lda #move_state::recoil
+    sta sprite::move_state
+    jmp recoil
+.endproc
+
+
+.proc recoil
+    lda sprite::x_pos
+    clc
+    adc sprite::h_velo
+    sta sprite::x_new
+
+    lda sprite::y_pos
+    clc
+    adc sprite::v_velo
+    sta sprite::y_new
+    rts
+.endproc
+
+
+.proc dead
+    ;; we shouldn't get here
+    jsr spinloop_handler
+    rts
+.endproc
+
 ;; We're already running a few timers here and there.
 ;; And we probably want to unify them here for sanity,
 ;; although it might also be nice to just have them ticking along
@@ -676,6 +709,11 @@ store_x_new:
     sta sprite::x_new
     lda #0
     sta sprite::h_velo
+    lda sprite::move_state
+    cmp #move_state::recoil
+    bne end
+    lda #move_state::jump
+    sta sprite::move_state
 end:
     rts
 .endproc
