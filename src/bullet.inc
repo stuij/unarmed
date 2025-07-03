@@ -67,7 +67,16 @@ loop:
     lda #BULLET_SPRITE_OFFSET
     sta OAM_mirror, y
     iny
-    lda #$20                ; no flip, prio 2, palette 0
+    txa
+    ;; giving bullets colors. this is a bit of a hack depending on
+    ;; exactly giving 8 bullets per player. too lazy today
+    ;; to do this properly
+    ;;
+    ;; shift to right to get to player nr. then move one to left
+    ;; to get into proper palette position
+    rshift 4
+    asl
+    ora #$20                ; no flip, prio 2
     sta OAM_mirror, y
     iny
     iny
