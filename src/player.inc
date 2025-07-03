@@ -695,7 +695,15 @@ store_y_new:
     sta sprite::y_new
     lda #0
     sta sprite::v_velo
-    lda COLL_STACK_POINT_HIT_GROUND + 2, s
+    lda sprite::move_state
+    ;; so when recoil we set move state to jump.
+    ;; but we still check if we didn't hit the ground, in which
+    ;; case we should change to idle
+    cmp #move_state::recoil
+    bne :+
+    lda #move_state::jump
+    sta sprite::move_state
+  : lda COLL_STACK_POINT_HIT_GROUND + 2, s
     beq store_x_new
     lda #move_state::idle
     sta sprite::move_state
