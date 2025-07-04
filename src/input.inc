@@ -84,7 +84,14 @@ joy_set_player_vals:
 .endproc
 
 
+;; input: A - joy input
 .proc set_player_joy
+    ;; mask with what buttons we're interested in this frame
+    ;; this will almost always be everything, but a check
+    ;; for if we even want to filter is more expensive
+    ;; than the one instruction of actual filtering
+    and a:game_data + game_data::input_mask
+
     ldy player::joy                  ; get input from last frame
     sta player::joy                  ; store new input from this frame
     tya                              ; check for newly pressed buttons...

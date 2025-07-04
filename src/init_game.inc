@@ -129,6 +129,9 @@ INIT_GAME_INC = 1
 
     stz a:game_data + game_data::in_game
 
+    lda #$ffff
+    sta a:game_data + game_data::input_mask
+
     A8
     ;; set up bg registers
     lda #$9 ; mode 1, BG3 prio high

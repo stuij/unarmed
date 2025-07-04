@@ -372,6 +372,9 @@ BG3_HEAD_CHAR_OFFSET = $60
     curr_menu       .word
     menu_dirty_draw .word
     in_game         .word
+    ; AND filter for any of the input buttons
+    ; masking in the input polling code
+    input_mask      .word
 .endstruct
 
 .struct hp
