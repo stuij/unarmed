@@ -93,8 +93,9 @@ check_again:
 ;; A - current player
 .proc switch_game_mode
     sta a:W0
-    lda a:game_data + game_data::fight_p
-    bne switch_to_menu_mode
+    lda a:game_data + game_data::game_handler
+    cmp #.loword(handle_main_loop)
+    beq switch_to_menu_mode
     ;; we're switching to fight_mode
     jsr switch_to_fight
     bra return

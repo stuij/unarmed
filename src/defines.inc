@@ -359,6 +359,14 @@ BG3_HEAD_CHAR_OFFSET = $60
 .endenum ; Enm between
 
 
+;; -------------
+;; overlay menus
+
+OVERLAY_TEXT_START = (($a * $20) + $9)
+OVERLAY_START_DURATION = (60 * 1) + 30
+OVERLAY_INPUT_MASK = 0
+
+
 ;; ----------------
 ;; global game data
 
@@ -367,7 +375,6 @@ BG3_HEAD_CHAR_OFFSET = $60
     no_players_new  .word
     bullets_pp      .word
     curr_map        .word
-    fight_p         .word
     game_handler    .word
     curr_menu       .word
     menu_dirty_draw .word
@@ -375,6 +382,7 @@ BG3_HEAD_CHAR_OFFSET = $60
     ; AND filter for any of the input buttons
     ; masking in the input polling code
     input_mask      .word
+    overlay_counter .word
 .endstruct
 
 .struct hp
@@ -383,7 +391,6 @@ BG3_HEAD_CHAR_OFFSET = $60
     p3_hp           .word
     p4_hp           .word
 .endstruct
-
 
 .struct wins
     p1_wins         .word

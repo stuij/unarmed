@@ -852,8 +852,6 @@ handle_menu_done:
 
 .proc switch_to_fight
     jsr level_screen_to_fore
-    lda #1
-    sta a:game_data + game_data::fight_p
     lda #.loword(handle_main_loop)
     sta a:game_data + game_data::game_handler
     rts
@@ -880,7 +878,6 @@ after_parent_save:
 
     lda #.loword(handle_current_menu)
     sta a:game_data + game_data::game_handler
-    stz a:game_data + game_data::fight_p
 
     inc a:game_data + game_data::menu_dirty_draw
 

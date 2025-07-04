@@ -201,10 +201,9 @@ INIT_GAME_INC = 1
 .a16
 .i16
 .proc start_new_game
+    jsr level_screen_to_fore
     jsr reset_game
-    jsr switch_to_fight
-    lda #1
-    sta a:game_data + game_data::in_game
+    jsr init_game_preamble
     rts
 .endproc
 

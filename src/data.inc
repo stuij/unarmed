@@ -125,6 +125,9 @@ between_menu_row_table:
 
 draw_tile_row_count: .word $1c
 
+start_game_overlay_text:
+.asciiz "Get set to KILL!"
+
 ;; So this seems like it is taking the soul a bit out of
 ;; the programmers mind, but this is the price I'm willing
 ;; to pay for a uniform menu system.
