@@ -203,7 +203,7 @@ INIT_GAME_INC = 1
 .proc start_new_game
     jsr level_screen_to_fore
     jsr reset_game
-    jsr init_game_preamble
+    jsr init_game_prologue
     rts
 .endproc
 

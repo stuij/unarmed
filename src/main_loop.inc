@@ -42,11 +42,7 @@ set_first_player:
     ;; everyone dead, so we set menu control player to 1st
     ldy #0
 end_game:
-    lda a:player_table, y
-    ldx #.loword(between_games_menu)
-    ldy #0
-    jsr switch_to_menu
-    stz a:game_data + game_data::in_game
+    jsr init_game_epilogue
 end:
     rts
 .endproc
@@ -117,7 +113,6 @@ end:
 .proc set_overlay
     stx game_data + game_data::overlay_counter
     sty game_data + game_data::input_mask
-    jsr set_overlay_message
     rts
 .endproc
 
@@ -136,22 +131,25 @@ end:
 .endproc
 
 
-.proc init_game_preamble
+.proc init_game_prologue
     lda #.loword(start_game_overlay_text)
+    jsr set_overlay_message
+
     ldx #OVERLAY_START_DURATION
     ldy #OVERLAY_INPUT_MASK
     jsr set_overlay
 
-    lda #.loword(handle_game_preamble)
+    lda #.loword(handle_game_prologue)
     sta a:game_data + game_data::game_handler
     rts
 .endproc
 
 
-.proc handle_game_preamble
-    lda a:game_data + ::game_data::overlay_counter
+.proc handle_game_prologue
+    lda a:game_data + game_data::overlay_counter
     beq game_start
-    dec a:game_data + ::game_data::overlay_counter
+    dec a:game_data + game_data::overlay_counter
+    jsr handle_main_loop
     bra end
 game_start:
     jsr exit_overlay
@@ -161,7 +159,57 @@ game_start:
     lda #1
     sta a:game_data + game_data::in_game
 end:
+    rts
+.endproc
+
+
+;; Y - player nr (x2)
+.proc init_game_epilogue
+    stz a:game_data + game_data::in_game
+
+    lda a:player_table, y
+    sta a:game_data + game_data::curr_winner
+
+
+    ;; set overlay text
+    A8
+    force_vblank
+    A16
+    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + 7)
+    sta VMADD
+    tya
+    jsr print_head
+    lda #.loword(end_game_overlay_text)
+    jsr print_string
+    A8
+    unforce_vblank
+    A16
+
+    ;; some general overlay things
+    ldx #OVERLAY_END_DURATION
+    ldy #OVERLAY_INPUT_MASK
+    jsr set_overlay
+
+    lda #.loword(handle_game_epilogue)
+    sta a:game_data + game_data::game_handler
+    rts
+.endproc
+
+
+.proc handle_game_epilogue
+    lda a:game_data + game_data::overlay_counter
+    beq end_epilogue
+    dec a:game_data + game_data::overlay_counter
     jsr handle_main_loop
+    bra end
+end_epilogue:
+    jsr exit_overlay
+
+    lda a:game_data + game_data::curr_winner
+    ldx #.loword(between_games_menu)
+    ldy #0
+    jsr switch_to_menu
+end:
     rts
 .endproc
 

@@ -362,9 +362,10 @@ BG3_HEAD_CHAR_OFFSET = $60
 ;; -------------
 ;; overlay menus
 
-OVERLAY_TEXT_START = (($a * $20) + $9)
-OVERLAY_START_DURATION = (60 * 1) + 30
-OVERLAY_INPUT_MASK = 0
+OVERLAY_TEXT_START      = (($a * $20) + $5)
+OVERLAY_START_DURATION  = (60 * 1) + 30
+OVERLAY_END_DURATION    = (60 * 2)
+OVERLAY_INPUT_MASK      = 0
 
 
 ;; ----------------
@@ -374,10 +375,11 @@ OVERLAY_INPUT_MASK = 0
     no_players      .word
     no_players_new  .word
     bullets_pp      .word
-    curr_map        .word
     game_handler    .word
-    curr_menu       .word
     menu_dirty_draw .word
+    curr_map        .word
+    curr_menu       .word
+    curr_winner     .word
     in_game         .word
     ; AND filter for any of the input buttons
     ; masking in the input polling code
