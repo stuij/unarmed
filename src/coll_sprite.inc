@@ -6,18 +6,18 @@ COLL_SPRITE_INC = 1
 ;; sprite-bumps
 
 .proc handle_bullet_hit
-    ;; play player hit sound
-    A8
-    lda #SFX::robot_fires_laser
-    jsr Tad_QueueSoundEffect_D
-    A16
-
     ;; W4 == player offset
     ldx a:W4
     ldy a:player_table, x
     lda a:player::hit_timer, y
     bne end
-    ;; we're hit. set various hit-related bookkeeping things.
+    ;; we're actually hit hit!!
+    ;; play player hit sound
+    A8
+    lda #SFX::robot_fires_laser
+    jsr Tad_QueueSoundEffect_D
+    A16
+    ; set various hit-related bookkeeping things.
     lda #HIT_TIMER_LEN
     sta a:player::hit_timer, y
     lda #move_state::hit
