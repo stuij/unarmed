@@ -87,6 +87,115 @@ end:
     rts
 .endproc
 
+
+;; -----------
+;; spawn boxes
+;;
+;; both used as player startting portals, and as respawn points
+
+.a8
+.i16
+.proc init_spawn_boxes
+    A16
+    lda #OAM_SPAWN_BOX_OFFSET
+    tcd
+    A8
+    ldx #0
+loop:
+        ;; menu selection caret
+        lda #$30                ; no flip, prio 3, palette 0
+        sta oam_entry::attrs
+
+        ;; current value carets aren't going to change tile id for now
+        lda #($6 + ($4 * $10))
+        sta oam_entry::tile_pos
+
+        A16
+        lda player_start_coords, x
+        rshift 4
+        A8
+        sta oam_entry::x_pos
+    ;; increment spawn box OAM entry
+    A16
+    tdc
+    clc
+    adc #4
+    tcd
+    A8
+    ;; increment player start pos to next x
+    inx
+    inx
+    inx
+    inx
+    cpx #(4 * 2 * 2) ; 4 players * 2 coords (x and y) * 2 bytes
+    bne loop
+    A16
+    lda #0
+    tcd
+    A8
+
+    ;; set sprites to 16x16px
+    lda #$aa
+    sta OAM_SPAWN_BOX_XTRA_PROPS
+
+    jsr show_spawn_boxes
+    rts
+.endproc
+
+
+.a8
+.i16
+.proc hide_spawn_boxes
+    lda #$F0
+    sta OAM_SPAWN_BOX_OFFSET + oam_entry::y_pos
+    sta OAM_SPAWN_BOX_OFFSET + $4 + oam_entry::y_pos
+    sta OAM_SPAWN_BOX_OFFSET + $8 + oam_entry::y_pos
+    sta OAM_SPAWN_BOX_OFFSET + $c + oam_entry::y_pos
+    rts
+.endproc
+
+
+.a8
+.i16
+.proc show_spawn_boxes
+    A16
+    lda #OAM_SPAWN_BOX_OFFSET
+    tcd
+    A8
+    ;; start at y pos
+    ldx #2
+loop:
+        A16
+        lda player_start_coords, x
+        rshift 4
+        A8
+        sta oam_entry::y_pos
+    ;; increment spawn box OAM entry
+    A16
+    tdc
+    clc
+    adc #4
+    tcd
+    A8
+    ;; increment player start pos to next x
+    inx
+    inx
+    inx
+    inx
+    ; 4 players * 2 coords (x and y) * 2 bytes + 1 for y pos
+    cpx #((4 * 2 * 2) + 2)
+    bne loop
+    A16
+    lda #0
+    tcd
+    A8
+    rts
+.endproc
+
+
+;; -------
+;; overlay
+
 .a16
 .i16
 ; a - asciiz pointer
