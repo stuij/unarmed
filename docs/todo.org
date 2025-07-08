@@ -4,7 +4,7 @@
 ** DONE getting bg/sprite on screen
 ** DONE make python script to convert Tiled tilemap data into snes backgrounds
 ** DONE include audio
-** game engine
+** DONE game engine
 *** DONE movement: jumping, running, idling
 *** DONE fall when idling if blocks are taken away
 *** DONE player background collisions
@@ -27,6 +27,10 @@
 ** do some music experiments to learn the sound engine
 * do during game jam
 ** bare minimum
+*** draw player spawn boxes
+*** parrying
+*** add extra background layer
+*** help text on menus
 *** DONE bullets should properly manage being active, and if not active
 no need to process. This includes doing the right thing for move state
 **** DONE when set to inactive, make routine to stop velocity, set offscreen, set move state
@@ -35,56 +39,61 @@ otherwise we:
 - have bullets that go on indefinately
 - will have no more bullets left if the initial ones fly
 - don't have to deal with awkward you don't have any more bullets left
-*** minimal actual game loop
+*** DONE minimal actual game loop
 **** DONE shoot people and health bar goes down
-**** winner is player who still has health
-**** timer
+**** DONE winner is player who still has health
 **** DONE can shoot yourself by bullet wall bounce?
 no, not for now. for now we exclude player, as you'd hit yourself so quickly near walls and could be fun shooting right at wall as you go there and bullet rebounds and hits player behind you
-*** code to restart level cleanly
-*** bugfix: when you bump into a wall when going right, and you glide down, you can land on killblock and go into idle/running state without triggering killblock ramifications
-*** bugfix: when spawning, mr green hovers one pixel above a block in idle state
-*** when you die, what to do?
-**** DONE dying from bullet
-**** dying from hazard, like a kill block or out of bounds
-**** should be some kind of lively animation, as immediately respawning
-   looks robotic and boring
-**** draw player spawn boxes
-*** menu/pause/game-over screen
-**** select from premade maps
-**** select player count
-**** show wins per player
-**** reset
-**** edit custom map
-**** single map/random maps mode?
-*** clean flow between different menus and game
-*** temporary invulnerability on game start and after getting hit/touching kill blocks
-*** add extra background layer
-** features
+*** DONE code to restart level cleanly
+*** DONE dying from bullet
+*** DONE menu/pause/game-over screen
+**** DONE select from premade maps
+**** DONE select player count
+**** DONE show wins per player
+**** DONE reset
+**** DONE edit custom map
+*** DONE clean flow between different menus and game
+*** DONE temporary invulnerability on game start and after getting hit/touching kill blocks
+*** DONE At game start, we start in idle mode.
+** hopefully done before end of game jam
+*** when going out of bounds and not on some kind of killblock, randomly spawn at one of the 4 spawnboxes
 *** implement different wall types
 **** ice
 **** non-deflecting
 **** allow climbing
 **** kill block
 *** sound effects
+**** for shooting
+**** getting hit
+**** jumping?
 *** make music
-*** start to think about movement while jumping.
-We're currently very floaty, and we're not doing anything special, like jumping higher after accelleration. What might be gbetter.
+*** make level designs
 *** title screen
-*** multiple projectile types
-*** At game start, we start in idle mode.
+*** adjust movement while jumping/floatiness
+We're currently very floaty, and we're not doing anything special, like jumping higher after accelleration. What might be gbetter.
+*** lore
+*** when you die, should be some kind of lively animation
+*** when you get hit, some form of explosion?
+** bugfixes
+*** bugfix: when you bump into a wall when going right, and you glide down, you can land on killblock and go into idle/running state without triggering killblock ramifications
+
+*** bugfix: when spawning or taking away tiles, when you're less than a block above a solid block, you hover in idle state, and can walk elevatedly above the block
+* nice to have
+** random map mode
+** timer
+** multiple projectile types
 When we then move we move to run state. But we're actually falling, which should be interpreted as jumping state. This might bite us at some point.
-*** make actual acceptable graphic art
-*** more sophisticated loop/game loop enhancements
-**** as in the core game loop should ideally have some kind of rock paper scissers thing going on. So the goal here is to add some features that make the competition aspect more intricate and combinatorial, so players need to start anticipating on more than one level, aka the meta needs to be strong, and game play needs to get more frentic.
-**** allow for deflection of projectiles
-**** bombs (so slower/different projectiles)
-**** should we be allowed to kick
-**** portals
-**** power ups
-*** implement wall climbing
-*** implement sliding under things
-* after game jam
+** make actual acceptable graphic art
+** more sophisticated loop/game loop enhancements
+*** as in the core game loop should ideally have some kind of rock paper scissers thing going on. So the goal here is to add some features that make the competition aspect more intricate and combinatorial, so players need to start anticipating on more than one level, aka the meta needs to be strong, and game play needs to get more frentic.
+*** allow for deflection of projectiles
+*** bombs (so slower/different projectiles)
+*** should we be allowed to kick/hit?
+*** portals
+*** power ups
+** implement wall climbing
+** implement sliding under things
+* saving/sharing (not allowed in game jam)
 ** script to parse save file and output say Tiled tmj file
 ** web-based save file exchange
 ** save custom map
