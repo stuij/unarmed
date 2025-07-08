@@ -178,6 +178,7 @@ end:
     lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + 7)
     sta VMADD
     tya
+    lsr
     jsr print_head
     lda #.loword(end_game_overlay_text)
     jsr print_string

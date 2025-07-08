@@ -740,7 +740,10 @@ end:
     inx
     lda player_start_coords, x
     sta sprite::y_new
-
+    stz sprite::h_velo
+    stz sprite::v_velo
+    lda #move_state::jump
+    sta ::sprite::move_state
     rts
 .endproc
 

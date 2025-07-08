@@ -229,6 +229,7 @@ end:
 .a8
 .i16
 .proc draw_select_screen
+    force_vblank
     jsr clear_menu_map
 
     ldy #(select_tile_map_end - select_tile_map)
@@ -277,6 +278,7 @@ clear_bg_behind_tiles_loop:
     sta BG1VOFS
     ;; we're effectively lobbing off the top two bits of the offset..
     stz BG1VOFS
+    unforce_vblank
     rts
 .endproc
 
@@ -552,6 +554,7 @@ edit:
 .a8
 .i16
 .proc draw_between_menu
+    force_vblank
     ldy #(between_menu_map_end - between_menu_map)
     sty a:W0
     lda #^between_menu_map
@@ -571,7 +574,7 @@ edit:
     jsr draw_between_wins
     jsr draw_between_menu_items
     A8
-
+    unforce_vblank
     rts
 .endproc
 
