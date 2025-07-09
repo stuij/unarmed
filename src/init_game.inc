@@ -111,6 +111,7 @@ INIT_GAME_INC = 1
     jsr set_game_map
     jsr init_sound
     jsr init_spawn_boxes
+    jsr init_shields
     A16
     jsr reset_game
     jsr init_select_menu

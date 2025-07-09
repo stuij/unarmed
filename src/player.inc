@@ -1246,4 +1246,50 @@ end:
     rts
 .endproc
 
+
+;; --------
+;; parrying
+
+.a8
+.i16
+.proc init_shields
+    A16
+    lda #OAM_SHIELD_OFFSET
+    tcd
+    A8
+    ldx #0
+loop:
+        lda #$20                ; no flip, prio 3, palette 0
+        sta oam_entry::attrs
+
+        ;; current value carets aren't going to change tile id for now
+        lda #($a + ($4 * $10))
+        sta oam_entry::tile_pos
+
+        ;; set them offscreen
+        lda #$f0
+        sta oam_entry::y_pos
+        stz oam_entry::x_pos
+    ;; increment OAM entry
+    A16
+    tdc
+    clc
+    adc #4
+    tcd
+    A8
+    inx
+    cpx #4 ; 4 shields
+    bne loop
+    A16
+    lda #0
+    tcd
+    A8
+
+    ;; set sprites to 16x16px
+    lda #$aa
+    sta OAM_SHIELD_XTRA_PROPS
+
+    rts
+.endproc
+
 .endif ; PLAYER_INC

@@ -102,11 +102,9 @@ end:
     A8
     ldx #0
 loop:
-        ;; menu selection caret
-        lda #$30                ; no flip, prio 3, palette 0
+        lda #$20                ; no flip, prio 2, palette 0
         sta oam_entry::attrs
 
-        ;; current value carets aren't going to change tile id for now
         lda #($6 + ($4 * $10))
         sta oam_entry::tile_pos
 
@@ -115,6 +113,7 @@ loop:
         rshift 4
         A8
         sta oam_entry::x_pos
+
     ;; increment spawn box OAM entry
     A16
     tdc
