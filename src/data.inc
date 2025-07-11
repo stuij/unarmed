@@ -2,6 +2,7 @@
 DATA_INC = 1
 
 .segment "ZEROPAGE"
+mem_start:
 W0:
 B0L:
 .res 1

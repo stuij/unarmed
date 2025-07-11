@@ -165,11 +165,17 @@ bullet_end:
 
 .proc handle_shield_hit
     ;; W4 == player offset
+    ldy a:W4
+    ldx a:player_table, y
+    stz a:player::parry_timer, x
+
     lda sprite::h_velo
     eor #$FFFF
     clc
     adc #$1
     sta sprite::h_velo
+
+    jsr hide_shield
     rts
 .endproc
 
@@ -219,31 +225,23 @@ player_loop:
     jmp next_player
 
   : ;; check shield collision
+    lda player::parry_timer
+    beq check_player_collision
+
     lda #.loword(shield_bbox_fine)
     pha
-        lda player::stance_dir
-        beq stance_left
-            lda sprite::x_new
-            clc
-            adc #SHIELD_RIGHT_OFFSET
-            bra shield_offset_calculated
-    stance_left:
-            lda sprite::x_new
-            sec
-            sbc #SHIELD_LEFT_OFFSET
-    shield_offset_calculated:
-    sta a:W6
-    lda sprite::y_new
-    sta a:W7
-    jsr check_bullet_points
+        jsr calc_shield_x_offset
+        sta a:W6
+        lda sprite::y_new
+        sta a:W7
+        jsr check_bullet_points
     pla    
 
     lda #.loword(handle_shield_hit)
     sta a:W6
     jsr check_bullet_hits
 
-
-    ;; check player collision
+check_player_collision:
     lda sprite::bbox_fine
     pha
         lda sprite::x_new

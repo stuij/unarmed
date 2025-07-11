@@ -218,14 +218,17 @@ HIT_PALETTE_ID = 4
     face_right          .word
     shoot               .word
     jump                .word
+    parry               .word
 .endstruct
 
 ;; ------
-;; shield
+;; parry
 
 ; relative to player sprite x origin
-SHIELD_LEFT_OFFSET = 4
-SHIELD_RIGHT_OFFSET = 8
+SHIELD_LEFT_OFFSET = $40
+SHIELD_RIGHT_OFFSET = $80
+
+PARRY_COUNT = $10
 
 ;; -------------
 ;; bullet things

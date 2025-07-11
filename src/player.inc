@@ -250,6 +250,7 @@ loop:
     stz player::shot_burst_counter
     stz player::shot_cooldown_timer
     stz player::hit_timer
+    stz player::parry_timer
 
     phx
     jsr set_player_bullet_queue
@@ -912,6 +913,49 @@ end:
 .endproc
 
 
+.a16
+.i16
+;; out: A - x offset
+.proc calc_shield_x_offset
+    lda player::stance_dir
+    beq stance_left
+    lda sprite::x_new
+    clc
+    adc #SHIELD_RIGHT_OFFSET
+    bra end
+stance_left:
+    lda sprite::x_new
+    sec
+    sbc #SHIELD_LEFT_OFFSET
+end:
+    rts
+.endproc
+
+
+.a16
+.i16
+.proc handle_parry_anim
+    lda player::nr
+    lshift 2
+    clc
+    adc #OAM_SHIELD_OFFSET
+    tay
+    ;; we're at our shield entry
+    ;; first calculate x
+    jsr calc_shield_x_offset
+    rshift 4
+    A8
+    sta a:mem_start, y
+    A16
+    iny
+    lda sprite::y_new
+    rshift 4
+    A8
+    sta a:mem_start, y
+    A16
+    rts
+.endproc
+
 
 .a16
 .i16
@@ -976,7 +1020,12 @@ loop:
     iny
     ;; increment the anim tick, after all uses
     inc sprite::anim_tick
-    plx
+
+    lda player::parry_timer
+    beq :+
+    ;; we're reusing Y here, but it will be refreshed at top of the loop
+    jsr handle_parry_anim
+  : plx
     inx
     inx
     phx
@@ -1087,6 +1136,19 @@ end:
 .endproc
 
 
+.proc handle_press_shield
+    lda player::parry_timer
+    bne end
+    lda player::joy_trigger
+    and in_game_keys + igk::parry
+    beq end
+    lda #PARRY_COUNT
+    sta player::parry_timer
+end:
+    rts
+.endproc
+
+
 .a16
 .i16
 ;; out: A: 0 = no shoot, 1 = yes shoot
@@ -1097,10 +1159,10 @@ end:
     bne handle_burst
 
     ;; shot cooldown timer is counting down. 0 is shoot
-    lda ::player::shot_cooldown_timer
+    lda player::shot_cooldown_timer
     bne handle_cooldown
 
-    lda ::player::joy_trigger
+    lda player::joy_trigger
     and in_game_keys + igk::shoot
     beq no_shoot
     lda #SHOT_BURST_COUNT
@@ -1124,19 +1186,7 @@ end:
 .endproc
 
 
-.a16
-.i16
-.proc handle_player_actions
-;; prologue
-    ldx #$0
-    phx
-player_loop:
-    lda a:player_table, x
-    tcd
-;; meat
-    ;; are we instructed to shoot?
-    jsr handle_shot_decision
-    beq end
+.proc handle_player_shoot
     ;; we are shooting something!
     ;; save left x and y
     ;; x
@@ -1188,6 +1238,25 @@ player_loop:
 
     jsr bullet_set_for_flight
 end:
+    rts
+.endproc
+
+
+.a16
+.i16
+.proc handle_player_actions
+;; prologue
+    ldx #$0
+    phx
+player_loop:
+    lda a:player_table, x
+    tcd
+;; meat
+    ;; are we instructed to shoot?
+    jsr handle_shot_decision
+    beq :+
+    jsr handle_player_shoot
+  : jsr handle_press_shield
     plx
     inx
     inx
@@ -1235,6 +1304,9 @@ end:
     lda #(JOY_A)
     sta in_game_keys + ::igk::face_right
 
+    lda #(JOY_L)
+    sta in_game_keys + ::igk::parry
+
     rts
 .endproc
 
@@ -1271,6 +1343,9 @@ end:
 
     lda #(JOY_A)
     sta in_game_keys + ::igk::face_right
+
+    lda #(JOY_L)
+    sta in_game_keys + ::igk::parry
 
     rts
 .endproc
@@ -1318,6 +1393,12 @@ loop:
     lda #$aa
     sta OAM_SHIELD_XTRA_PROPS
 
+    rts
+.endproc
+
+
+.proc hide_shield
+;; TODO: do!
     rts
 .endproc
 
