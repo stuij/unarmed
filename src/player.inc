@@ -67,6 +67,7 @@ player_bbox_default:
 .word $8  ;; y   $1c
 .word $6  ;; x   $1e
 
+
 player_bbox_default_fine:
 ;; top left
 .word $20  ;; y  $0
@@ -92,6 +93,34 @@ player_bbox_default_fine:
 ;; middle right
 .word $80  ;; y   $1c
 .word $60  ;; x   $1e
+
+
+shield_bbox_fine:
+;; top left
+.word $20  ;; y  $0
+.word $00  ;; x  $2
+;; bottom left
+.word $d0  ;; y   $4
+.word $00  ;; x   $6
+;; top right
+.word $20  ;; y   $8
+.word $40  ;; x   $a
+;; bottom right
+.word $d0  ;; y   $c
+.word $40  ;; x   $e
+;; middle left
+.word $80  ;; y   $10
+.word $00  ;; x   $12
+;; top middle
+.word $20  ;; y   $14
+.word $20  ;; x   $16
+;; bottom middle
+.word $d0  ;; y   $18
+.word $20  ;; x   $1a
+;; middle right
+.word $80  ;; y   $1c
+.word $40  ;; x   $1e
+
 
 
 ;; for this point, do we need to test if it's on

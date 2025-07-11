@@ -166,10 +166,10 @@ HIT_PALETTE_ID = 4
 .endstruct
 
 
-.struct stance_dir
-    left  .word
-    right .word
-.endstruct
+.enum stance_dir
+    left
+    right
+.endenum
 
 
 .struct player
@@ -200,7 +200,7 @@ HIT_PALETTE_ID = 4
     hit_h_velo          .word   ; 4a
     hit_v_velo          .word   ; 4c
     ; just a bit of padding to round the struct for easy eye-balling
-    pad1                .word   ; 4e
+    parry_timer         .word   ; 4e
     pad2                .word   ; 4e ;; pad1's offset isn't right, but that means
                                 ; we need to figure out what's wrong, and I'm lazy
 .endstruct
@@ -220,6 +220,12 @@ HIT_PALETTE_ID = 4
     jump                .word
 .endstruct
 
+;; ------
+;; shield
+
+; relative to player sprite x origin
+SHIELD_LEFT_OFFSET = 4
+SHIELD_RIGHT_OFFSET = 8
 
 ;; -------------
 ;; bullet things

@@ -5,78 +5,37 @@ COLL_SPRITE_INC = 1
 ;; ------------
 ;; sprite-bumps
 
-.proc handle_bullet_hit
-    ;; W4 == player offset
-    ldx a:W4
-    ldy a:player_table, x
-    lda a:player::hit_timer, y
-    bne end
-    ;; we're actually hit hit!!
-    ;; play player hit sound
-    A8
-    lda #SFX::robot_fires_laser
-    jsr Tad_QueueSoundEffect_D
-    A16
-    ; set various hit-related bookkeeping things.
-    lda #HIT_TIMER_LEN
-    sta a:player::hit_timer, y
-    lda #move_state::hit
-    sta a:sprite::move_state, y
-    lda sprite::h_velo
-    sta a:player::hit_h_velo, y
-    lda sprite::v_velo
-    sta a:player::hit_v_velo, y
-    jsr player_dec_hp
-end:
-    jsr bullet_retire
+
+.proc check_bullet_points
+    ldy #square_bbox::top_left + point::x_off
+    lda (3, s), y
+    clc
+    adc a:W6
+    sta a:W0
+
+    ldy #square_bbox::top_left + point::y_off
+    lda (3, s), y
+    clc
+    adc a:W7
+    sta a:W1
+
+    ldy #square_bbox::bottom_right + point::x_off
+    lda (3, s), y
+    clc
+    adc a:W6
+    sta a:W2
+
+    ldy #square_bbox::bottom_right + point::y_off
+    lda (3, s), y
+    clc
+    adc a:W7
+    sta a:W3
     rts
 .endproc
 
 
-.a16
-.i16
-.proc handle_sprite_bumps
-    ldx #$0
-    phx
-player_loop:
-    lda a:player_table, x
-    tcd
-    sta a:W5
-    stx a:W4
-
-    lda sprite::move_state
-    cmp #move_state::dead
-    bne :+
-    jmp next_player
-
-  : ldy #square_bbox::top_left + point::x_off
-    lda (sprite::bbox_fine), y
-    clc
-    adc sprite::x_new
-    sta a:W0
-
-    ldy #square_bbox::top_left + point::y_off
-    lda (sprite::bbox_fine), y
-    clc
-    adc sprite::y_new
-    sta a:W1
-
-    ldy #square_bbox::bottom_right + point::x_off
-    lda (sprite::bbox_fine), y
-    clc
-    adc sprite::x_new
-    sta a:W2
-
-    ldy #square_bbox::bottom_right + point::y_off
-    lda (sprite::bbox_fine), y
-    clc
-    adc sprite::y_new
-    sta a:W3
-
-    ;; ------------------------------------------
-    ;; now we can start comparing with our bullet
-
-    ldx #$0
+.proc check_bullet_hits
+   ldx #$0
 bullet_loop:
     lda a:bullet_table, x
     tcd
@@ -190,7 +149,8 @@ x_middle_cont:
 bullet_hit:
     ;; it's a hit!!
     phx
-    jsr handle_bullet_hit
+    ldx #0
+    jsr (W6, x)
     plx
 
 bullet_end:
@@ -199,7 +159,104 @@ bullet_end:
     cpx a:game_data + game_data::bullets_pp
     beq :+
     jmp bullet_loop
-    :
+  : rts
+.endproc
+
+
+.proc handle_shield_hit
+    ;; W4 == player offset
+    lda sprite::h_velo
+    eor #$FFFF
+    clc
+    adc #$1
+    sta sprite::h_velo
+    rts
+.endproc
+
+
+.proc handle_bullet_hit
+    ;; W4 == player offset
+    ldx a:W4
+    ldy a:player_table, x
+    lda a:player::hit_timer, y
+    bne end
+    ;; we're actually hit hit!!
+    ;; play player hit sound
+    A8
+    lda #SFX::robot_fires_laser
+    jsr Tad_QueueSoundEffect_D
+    A16
+    ; set various hit-related bookkeeping things.
+    lda #HIT_TIMER_LEN
+    sta a:player::hit_timer, y
+    lda #move_state::hit
+    sta a:sprite::move_state, y
+    lda sprite::h_velo
+    sta a:player::hit_h_velo, y
+    lda sprite::v_velo
+    sta a:player::hit_v_velo, y
+    jsr player_dec_hp
+end:
+    jsr bullet_retire
+    rts
+.endproc
+
+
+.a16
+.i16
+.proc handle_sprite_bumps
+    ldx #$0
+    phx
+player_loop:
+    lda a:player_table, x
+    tcd
+    sta a:W5
+    stx a:W4
+
+    lda sprite::move_state
+    cmp #move_state::dead
+    bne :+
+    jmp next_player
+
+  : ;; check shield collision
+    lda #.loword(shield_bbox_fine)
+    pha
+        lda player::stance_dir
+        beq stance_left
+            lda sprite::x_new
+            clc
+            adc #SHIELD_RIGHT_OFFSET
+            bra shield_offset_calculated
+    stance_left:
+            lda sprite::x_new
+            sec
+            sbc #SHIELD_LEFT_OFFSET
+    shield_offset_calculated:
+    sta a:W6
+    lda sprite::y_new
+    sta a:W7
+    jsr check_bullet_points
+    pla    
+
+    lda #.loword(handle_shield_hit)
+    sta a:W6
+    jsr check_bullet_hits
+
+
+    ;; check player collision
+    lda sprite::bbox_fine
+    pha
+        lda sprite::x_new
+        sta a:W6
+        lda sprite::y_new
+        sta a:W7
+        jsr check_bullet_points
+    pla
+
+    lda #.loword(handle_bullet_hit)
+    sta a:W6
+    jsr check_bullet_hits
+ 
     ;; check for player loop things
 next_player:
     plx
