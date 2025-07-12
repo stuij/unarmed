@@ -612,8 +612,16 @@ still_idle:
 ;; decrement before any code is run that uses them
 .proc handle_misc_player_timers
     lda player::hit_timer
-    beq end
+    beq :+
     dec player::hit_timer
+
+  : lda player::parry_timer
+    beq end
+    dec player::parry_timer
+    lda player::parry_timer
+    bne end
+    lda player::nr
+    jsr hide_shield
 end:
     rts
 .endproc
@@ -1397,8 +1405,17 @@ loop:
 .endproc
 
 
+.a16
+.i16
 .proc hide_shield
-;; TODO: do!
+    lshift 2
+    clc
+    adc #(OAM_SHIELD_OFFSET + 1)
+    tay
+    lda #$F0
+    A8
+    sta a:mem_start, y
+    A16
     rts
 .endproc
 

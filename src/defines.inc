@@ -228,7 +228,7 @@ HIT_PALETTE_ID = 4
 SHIELD_LEFT_OFFSET = $40
 SHIELD_RIGHT_OFFSET = $80
 
-PARRY_COUNT = $10
+PARRY_COUNT = $7
 
 ;; -------------
 ;; bullet things

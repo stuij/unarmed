@@ -175,6 +175,7 @@ bullet_end:
     adc #$1
     sta sprite::h_velo
 
+    lda a:player::nr, x
     jsr hide_shield
     rts
 .endproc
@@ -240,6 +241,8 @@ player_loop:
     lda #.loword(handle_shield_hit)
     sta a:W6
     jsr check_bullet_hits
+    lda a:W5
+    tcd
 
 check_player_collision:
     lda sprite::bbox_fine
@@ -254,6 +257,7 @@ check_player_collision:
     lda #.loword(handle_bullet_hit)
     sta a:W6
     jsr check_bullet_hits
+    ;; tcd is now set to bullet, but next player iteration sets to next player
  
     ;; check for player loop things
 next_player:

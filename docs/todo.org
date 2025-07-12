@@ -27,10 +27,19 @@
 ** do some music experiments to learn the sound engine
 * do during game jam
 ** bare minimum
-*** draw player spawn boxes
 *** parrying
+**** DONE initial implementation
+**** DONE shield sprite goes away when it's done
+**** DONE timer isn't counting down, so shield stays until shot w bullet
+**** when facing left, the graphic should be inversed
+**** shield should be unusable for a bit after use
+**** shield animation
+**** when reflecting, bullet can now do damage (and should change color to red)
+*** 1 frame delay to lock in
 *** add extra background layer
 *** help text on menus
+*** implement concept of match/cap max wins
+*** DONE draw player spawn boxes
 *** DONE bullets should properly manage being active, and if not active
 no need to process. This includes doing the right thing for move state
 **** DONE when set to inactive, make routine to stop velocity, set offscreen, set move state
@@ -72,6 +81,7 @@ no, not for now. for now we exclude player, as you'd hit yourself so quickly nea
 *** adjust movement while jumping/floatiness
 We're currently very floaty, and we're not doing anything special, like jumping higher after accelleration. What might be gbetter.
 *** lore
+*** alternate control scheme(s)
 *** when you die, should be some kind of lively animation
 *** when you get hit, some form of explosion?
 ** bugfixes
