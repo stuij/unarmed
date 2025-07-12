@@ -225,7 +225,7 @@ HIT_PALETTE_ID = 4
 ;; parry
 
 ; relative to player sprite x origin
-SHIELD_LEFT_OFFSET = $40
+SHIELD_LEFT_OFFSET = $110
 SHIELD_RIGHT_OFFSET = $80
 
 PARRY_COUNT = $7

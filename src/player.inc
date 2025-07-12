@@ -961,6 +961,23 @@ end:
     A8
     sta a:mem_start, y
     A16
+
+    ; handle shield flip
+    iny
+    iny ;; we're now at sprite attributes
+    A8
+    lda a:mem_start, y
+    A16
+    ldx player::stance_dir
+    beq stance_left
+    and #$bf ;; mask everything but flip horizontal
+    bra save_dir
+stance_left:
+    ora #$40 ;; or with horizontal flip
+save_dir:
+    A8
+    sta a:mem_start, y
+    A16
     rts
 .endproc
 
