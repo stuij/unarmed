@@ -268,6 +268,7 @@ BULLET_MAX_FLIGHT = 2 * 60 ;; 1 sec
     player          .word
     queue_offset    .word
     flight_timer    .word
+    rogue       .word ;; if set, can hit owner
 .endstruct
 
 

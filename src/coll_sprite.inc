@@ -45,14 +45,16 @@ bullet_loop:
     bne :+
     jmp bullet_end
     :
-    ;; you can't get hit by your own bullets
+    ;; you can't get hit by your own bullets, unless rogue is set
+    lda bullet::rogue
+    bne :+
     lda bullet::player
     cmp a:W5
     bne :+
     jmp bullet_end
-    :
+
     ;; take Y coord of our new bullet pos
-    lda (sprite::bbox_fine) ;; y
+  : lda (sprite::bbox_fine) ;; y
     clc
     adc sprite::y_new
 
@@ -175,6 +177,8 @@ bullet_end:
     adc #$1
     sta sprite::h_velo
 
+    inc bullet::rogue
+
     lda a:player::nr, x
     jsr hide_shield
     rts
@@ -193,7 +197,7 @@ bullet_end:
     lda #SFX::robot_fires_laser
     jsr Tad_QueueSoundEffect_D
     A16
-    ; set various hit-related bookkeeping things.
+    ; set various hit-related bookkeeping things
     lda #HIT_TIMER_LEN
     sta a:player::hit_timer, y
     lda #move_state::hit

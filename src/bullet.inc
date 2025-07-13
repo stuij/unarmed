@@ -240,8 +240,9 @@ end:
     ;; set speed to 0
     stz sprite::h_velo
     stz sprite::v_velo
-    stz bullet::flight_timer
     stz sprite::anim_tick
+    stz bullet::flight_timer
+    stz bullet::rogue
 
     ;; set move state to idle
     lda #bullet_state::idle
