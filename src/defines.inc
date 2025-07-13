@@ -125,7 +125,7 @@ V_VELO_DOWN_MAX = $40
 
 BULLETS_PER_PLAYER = $10 ;; times 2, because it's easier to code with
 SHOT_BURST_COUNT = 0 ;; times 1, this will shoot 4 bullets
-SHOT_COOLDOWN_FRAMES = 14 ;; half a second
+SHOT_COOLDOWN_FRAMES = 14
 
 HIT_TIMER_LEN = (3 * 60) ;; after hit, player gets X seconds invulnerability
 HIT_H_VELO = 10
@@ -228,7 +228,8 @@ HIT_PALETTE_ID = 4
 SHIELD_LEFT_OFFSET = $110
 SHIELD_RIGHT_OFFSET = $80
 
-PARRY_COUNT = $7
+PARRY_COUNT = $14
+PARRY_COOLDOWN_ZONE = $7
 
 ;; -------------
 ;; bullet things

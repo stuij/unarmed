@@ -231,7 +231,8 @@ player_loop:
 
   : ;; check shield collision
     lda player::parry_timer
-    beq check_player_collision
+    cmp #PARRY_COOLDOWN_ZONE
+    bcc check_player_collision
 
     lda #.loword(shield_bbox_fine)
     pha

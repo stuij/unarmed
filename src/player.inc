@@ -618,8 +618,10 @@ still_idle:
   : lda player::parry_timer
     beq end
     dec player::parry_timer
+    ;; if we're in cooldown zone, hide shield
     lda player::parry_timer
-    bne end
+    cmp #PARRY_COOLDOWN_ZONE
+    bcs end
     lda player::nr
     jsr hide_shield
 end:
@@ -1047,7 +1049,8 @@ loop:
     inc sprite::anim_tick
 
     lda player::parry_timer
-    beq :+
+    cmp #PARRY_COOLDOWN_ZONE
+    bcc :+
     ;; we're reusing Y here, but it will be refreshed at top of the loop
     jsr handle_parry_anim
   : plx

@@ -32,8 +32,9 @@
 **** DONE shield sprite goes away when it's done
 **** DONE timer isn't counting down, so shield stays until shot w bullet
 **** DONE when facing left, the graphic should be inversed
-**** shield should be unusable for a bit after use
-**** when reflecting, bullet can now do damage (and should change color to red)
+**** DONE when reflecting, bullet can now do damage
+**** shield should gbe unusable for a bit after firing
+**** when reflected, a bullet should change color to red to indicate harm to owner
 **** shield animation
 *** 1 frame delay to lock in
 *** add extra background layer
