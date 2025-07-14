@@ -189,22 +189,29 @@ HIT_PALETTE_ID = 4
     ;; and the vscode ca65 plugin I'm using can't parse this.
     bullet_queue        .res $10 ; 30
     nr                  .word   ; 40 - player nr
-    shot_burst_counter  .word   ; 42
-    shot_cooldown_timer .word   ; 44
-    hit_timer           .word   ; 48
     ; when hit, we do hit movement in next frame, to make it easier on
     ; collision detection. So for this we need to know the horizontal
     ; velocity of the thing that hit us. This will give us direction
     ; and force. Although we probably won't do much with the force
     ; aspect to begin with.
-    hit_h_velo          .word   ; 4a
-    hit_v_velo          .word   ; 4c
+    hit_h_velo          .word   ; 42
+    hit_v_velo          .word   ; 44
     ; just a bit of padding to round the struct for easy eye-balling
-    parry_timer         .word   ; 4e
-    pad2                .word   ; 4e ;; pad1's offset isn't right, but that means
-                                ; we need to figure out what's wrong, and I'm lazy
+    parry_timer         .word   ; 46
+    shot_burst_counter  .word   ; 48
+    shot_cooldown_timer .word   ; 4a
+    hit_timer           .word   ; 4c
+    ;; shot delay: we're trading one or two frames of delay
+    ;; for more chance of diagonals being detected.
+    ;; meaning of possible different values:
+    ;; 0 - we're not in shot delay
+    ;; 1 - we shoot in this frame
+    ;; > 1 - we're in shot delay, and counting down
+    shot_delay          .word   ; 4e
 .endstruct
 
+
+SHOT_DELAY_AMOUT = $2
 
 ;; in game keybindings
 .struct igk

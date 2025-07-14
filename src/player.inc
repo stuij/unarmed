@@ -251,6 +251,7 @@ loop:
     stz player::shot_cooldown_timer
     stz player::hit_timer
     stz player::parry_timer
+    stz player::shot_delay
 
     phx
     jsr set_player_bullet_queue
@@ -1183,6 +1184,8 @@ end:
 .proc handle_shot_decision
     ;; first handle burst. if we're bursting, we're also still
     ;; in the cooldown timer
+    ;;
+    ;; note, atm we're not really doing bursts (multiple bullets in consequetive frames)
     lda player::shot_burst_counter
     bne handle_burst
 
@@ -1190,14 +1193,32 @@ end:
     lda player::shot_cooldown_timer
     bne handle_cooldown
 
-    lda player::joy_trigger
+    lda player::shot_delay
+    beq check_trigger_shot_delay
+
+    ;; so we're prepping to shoot
+    dec player::shot_delay
+    bne no_shoot
+    ;; if shot_delay is now 0, it was 1 before, and we should shoot
+    ;; but only if shoot buttons are still firing
+    lda player::joy_held
     and in_game_keys + igk::shoot
-    beq no_shoot
+    beq no_shoot ;; nothing to do
+
     lda #SHOT_BURST_COUNT
     sta player::shot_burst_counter
     lda #SHOT_COOLDOWN_FRAMES
     sta player::shot_cooldown_timer
     bra yes_shoot
+
+check_trigger_shot_delay:
+    lda player::joy_trigger
+    and in_game_keys + igk::shoot
+    beq no_shoot ;; nothing to do
+    lda #SHOT_DELAY_AMOUT
+    sta player::shot_delay
+    bra no_shoot
+
 handle_burst:
     dec player::shot_burst_counter
     dec player::shot_cooldown_timer

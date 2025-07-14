@@ -27,19 +27,18 @@
 ** do some music experiments to learn the sound engine
 * do during game jam
 ** bare minimum
-*** parrying
+*** help text on menus
+*** add extra background layer
+*** implement concept of match/cap max wins
+*** DONE 1 or more frames of delay on shooting to lock in diagonals
+(as it's tricky to press both buttons of a diagonal in the same frame)
+*** DONE parrying
 **** DONE initial implementation
 **** DONE shield sprite goes away when it's done
 **** DONE timer isn't counting down, so shield stays until shot w bullet
 **** DONE when facing left, the graphic should be inversed
 **** DONE when reflecting, bullet can now do damage
-**** shield should gbe unusable for a bit after firing
-**** when reflected, a bullet should change color to red to indicate harm to owner
-**** shield animation
-*** 1 frame delay to lock in
-*** add extra background layer
-*** help text on menus
-*** implement concept of match/cap max wins
+**** DONE shield should gbe unusable for a bit after firing
 *** DONE draw player spawn boxes
 *** DONE bullets should properly manage being active, and if not active
 no need to process. This includes doing the right thing for move state
@@ -78,6 +77,8 @@ no, not for now. for now we exclude player, as you'd hit yourself so quickly nea
 **** jumping?
 *** make music
 *** make level designs
+*** when reflected, a bullet should change color to red to indicate harm to owner
+*** shield animation
 *** title screen
 *** adjust movement while jumping/floatiness
 We're currently very floaty, and we're not doing anything special, like jumping higher after accelleration. What might be gbetter.
@@ -90,8 +91,10 @@ We're currently very floaty, and we're not doing anything special, like jumping 
 
 *** bugfix: when spawning or taking away tiles, when you're less than a block above a solid block, you hover in idle state, and can walk elevatedly above the block
 * nice to have
-** random map mode
+** coyote time
+(aka some leeway in where the edge of a ledge is when jumping off them while runnining)
 ** timer
+** random map mode
 ** multiple projectile types
 When we then move we move to run state. But we're actually falling, which should be interpreted as jumping state. This might bite us at some point.
 ** make actual acceptable graphic art

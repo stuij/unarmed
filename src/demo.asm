@@ -25,7 +25,6 @@
 .include "coll_sprite.inc"
 .include "main_loop.inc"
 .include "hud.inc"
-.include "map.inc"
 
 
 .code
