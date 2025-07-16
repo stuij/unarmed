@@ -42,6 +42,20 @@ OAM_MENU_CARET_XTRA_PROPS = OAM_mirror + $20A
 OAM_SPAWN_BOX_XTRA_PROPS = OAM_MENU_CARET_XTRA_PROPS + 1
 OAM_SHIELD_XTRA_PROPS = OAM_SPAWN_BOX_XTRA_PROPS + 1
 
+
+;; --------
+;; BG tiles
+
+.enum tile_props
+    void            = $0
+    wall            = $1
+    bounce          = $2
+    climb           = $4
+    kill            = $8
+    out_of_bounds   = $80
+.endenum
+
+
 ;;------------
 ;; sprite base struct
 
@@ -368,6 +382,7 @@ BETWEEN_MENU_PLAYER_FONT_MAP_OFFSET = $e6
 BETWEEN_MENU_ITEMS_FONT_MAP_OFFSET = $1a5
 
 BG3_HEAD_CHAR_OFFSET = $60
+
 
 .struct between_games_menu
     menu .tag menu

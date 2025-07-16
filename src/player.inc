@@ -710,13 +710,23 @@ end:
 
 .proc player_coll_end_callback
     lda COLL_STACK_TILE_PROPS + 2, s
-    and #$8 ;; is equal to kill (should add vars for these)
-    bne player_handle_kill ;; if so handle kill
+    and #tile_props::kill
+    bne jmp_player_handle_kill ;; if so handle kill
+    lda COLL_STACK_TILE_PROPS + 2, s
+    and #tile_props::out_of_bounds
+    bne player_handle_out_of_bounds
+kill_resume:
     lda sprite::move_state ;; only execute
     cmp #move_state::idle
     beq ledge_fall
     cmp #move_state::run
     bne store_y_new
+    bra ledge_fall
+jmp_player_handle_kill:
+    lda player::hit_timer
+    bne kill_resume
+    jsr player_handle_kill
+    bra kill_resume
 ledge_fall:
     lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
     bne store_y_new ; we didn't fall off the ledge
@@ -768,9 +778,23 @@ end:
 .endproc
 
 
+.proc player_handle_kill
+    A8
+    lda #SFX::robot_fires_laser
+    jsr Tad_QueueSoundEffect_D
+    A16
+    lda player::nr
+    asl
+    tax
+    jsr player_dec_hp
+    lda #HIT_TIMER_LEN
+    sta player::hit_timer
+    rts
+.endproc
+
 ;; This is another exit out of the fn. My first one in this project.
 ;; The compiler engineer in me feels dirty.
-.proc player_handle_kill
+.proc player_handle_out_of_bounds
     lda player::nr
     asl
     asl

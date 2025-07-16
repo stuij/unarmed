@@ -143,7 +143,7 @@ after_prop_save:
     bne collision              ; if not zero, collision
     jmp no_coll_for_point ; otherwise, do no collision things
 out_of_bounds:
-    lda #$8
+    lda #tile_props::out_of_bounds
     sta COLL_STACK_TILE_PROPS, s
     jmp cleanup
 collision:

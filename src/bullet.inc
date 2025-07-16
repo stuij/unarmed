@@ -194,8 +194,8 @@ loop_end:
 
 .proc bullet_coll_end_callback
     lda COLL_STACK_TILE_PROPS + 2, s
-    and #$8 ;; is equal to kill (should add vars for these)
-    bne bullet_handle_kill ;; if so handle kill
+    and #tile_props::out_of_bounds
+    bne bullet_handle_out_of_bounds ;; if so handle kill
 
     lda COLL_STACK_Y_NEW_TMP + 2, s
     bmi flip_v
@@ -223,7 +223,7 @@ end:
 .endproc
 
 
-.proc bullet_handle_kill
+.proc bullet_handle_out_of_bounds
     jsr bullet_retire
     rts
 .endproc
