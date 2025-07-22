@@ -135,11 +135,11 @@ H_VELO_INC_RELAX = $2
 
 V_VELO_INIT = $ffd7 ;; -29
 V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
-V_VELO_DOWN_MAX = $40
+V_VELO_DOWN_MAX = $20
 
 BULLETS_PER_PLAYER = $10 ;; times 2, because it's easier to code with
 SHOT_BURST_COUNT = 0 ;; times 1, this will shoot 4 bullets
-SHOT_COOLDOWN_FRAMES = 14
+SHOT_COOLDOWN_FRAMES = $30
 
 HIT_TIMER_LEN = (3 * 60) ;; after hit, player gets X seconds invulnerability
 HIT_H_VELO = 10
@@ -262,8 +262,8 @@ BULLET_Y_POS_INIT = $F00
 BULLET_SHOOT_DOWN_Y_ADJUST = $60
 BULLET_SHOOT_SIDE_Y_ADJUST = $40
 
-BULLET_H_VELO = $47
-BULLET_V_VELO = $47
+BULLET_H_VELO = $27
+BULLET_V_VELO = $27
 
 BULLET_OAM_OFFSET = $20
 
