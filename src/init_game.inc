@@ -139,6 +139,10 @@ INIT_GAME_INC = 1
     lda #$9 ; mode 1, BG3 prio high
     sta BGMODE
 
+    ;; set our seed for the prng
+    lda #$a723
+    sta a:seed
+
     ; set bg 1 and bg 2 char vram base addr. both the same for now.
     lda #((VRAM_CHR_BASE >> 12) << 4 | (VRAM_CHR_BASE >> 12))
     sta BG12NBA

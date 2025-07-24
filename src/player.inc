@@ -792,10 +792,14 @@ end:
     rts
 .endproc
 
+.a16
+.i16
 ;; This is another exit out of the fn. My first one in this project.
 ;; The compiler engineer in me feels dirty.
 .proc player_handle_out_of_bounds
-    lda player::nr
+    ;; by the power of pseudo rng, choose one of the 4 start coords at random
+    jsr prng
+    and #$3
     asl
     asl
     tax

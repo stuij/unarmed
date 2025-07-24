@@ -130,6 +130,36 @@ end:
 .endproc
 
 
+;; RNG
+;; taken from https://www.nesdev.org/wiki/Random_number_generator
+
+; Returns a random 8-bit number in A (0-255), clobbers Y (0).
+;
+; Requires a 2-byte value on the zero page called "seed".
+; Initialize seed to any value except 0 before the first call to prng.
+; (A seed value of 0 will cause prng to always return 0.)
+;
+; This is a 16-bit Galois linear feedback shift register with polynomial $0039.
+; The sequence of numbers it generates will repeat after 65535 calls.
+;
+; Execution time is an average of 125 cycles (excluding jsr and rts)
+
+.proc prng
+	ldy #8     ; iteration count (generates 8 bits)
+	lda a:seed+0
+:
+	asl        ; shift the register
+	rol a:seed+1
+	bcc :+
+	eor #$39   ; apply XOR feedback whenever a 1 bit is shifted out
+:
+	dey
+	bne :--
+	sta a:seed+0
+	rts
+.endproc
+
+
 ;; setup lib code
 
 ; dma_to_vram
@@ -283,8 +313,6 @@ SpriteEmptyVal:
 .a8
 .i16
 .proc clear_coll_map_bottom
-;fills the buffer with 224 for low table
-;and $00 for high table
 	php
 	ldx #.loword(current_coll_map_bottom)
 	stx WMADDL ;WRAM_ADDR_L
@@ -294,7 +322,7 @@ SpriteEmptyVal:
 	stx DMAP0
 	ldx	#.loword(DMAZero)
 	stx A1T0L ; and 4303
-	lda #^SpriteEmptyVal ;bank #
+	lda #^DMAZero ;bank #
 	sta A1B0
 	ldx #COLL_MAP_BOTTOM_SIZE
 	stx DAS0L ;and 4306

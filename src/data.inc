@@ -47,6 +47,10 @@ B7H:
 in_nmi:
 .res 2
 
+;; used for geneneral purpose pseudo rng needs
+seed:
+.res 2
+
 ;; map data
 map_x: .res 2
 map_y: .res 2

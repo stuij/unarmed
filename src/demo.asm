@@ -191,6 +191,7 @@ end:
 .i16
 .proc game_loop
     jsr wait_nmi ; wait for NMI / V-Blank
+
     ; we're in vblank, so first update video memory things
     jsr update_vram
 
