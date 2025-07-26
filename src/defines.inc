@@ -3,13 +3,31 @@ DEFINES_INC = 1
 
 
 ;; vram things
-VRAM_SPRITE_BASE = $2000
-VRAM_CHR_BASE = $5000
-VRAM_FONT_CHR_BASE = $6000
 
-VRAM_MAP_FONT_BASE = $8800 ;; $800 alignment == 256x256 pixels,
-VRAM_MAP_MENU_BASE = $9000 ;; aka (32x32x2 bytes) map
-VRAM_MAP_BG_GAME_BASE = $9800
+
+;; we're deviding everything by two because
+;; VRAM sees everything as 32K words,
+;; instead of 64K bytes
+
+;; sprite base is 2x8KB blocks aka 2x$2000 KB blocks for the two sprite sheets
+;; for now, we'll see if 1 $2000 KB block is enough
+VRAM_SPRITE_BASE = $0000
+
+;; BG CHAR alignment: $2000 B
+VRAM_BG_CHR_BASE = VRAM_SPRITE_BASE + ($2000 / 2)
+VRAM_BLOCKS_CHR_BASE = VRAM_BG_CHR_BASE + ($4000 / 2)
+VRAM_FONT_CHR_BASE = VRAM_BLOCKS_CHR_BASE + ($2000 / 2)
+
+;; maps
+;; $800 alignment == 256x256 pixels,
+;; aka (32x32x2 bytes) map
+VRAM_MAP_FONT_BASE = VRAM_FONT_CHR_BASE + ($2000 / 2)
+VRAM_MAP_MENU_BASE = VRAM_MAP_FONT_BASE + ($800 / 2)
+VRAM_MAP_BLOCKS_GAME_BASE = VRAM_MAP_MENU_BASE + ($800 / 2)
+
+;; ---------------------------- +
+;; $6000 bytes used, $4000 free
+
 
 GAME_MAP_SIZE = $700
 COLL_MAP_SIZE = $380

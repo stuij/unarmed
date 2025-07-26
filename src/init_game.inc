@@ -29,7 +29,7 @@ INIT_GAME_INC = 1
     sty <W0
     lda #^town_tiles
     ldx #.loword(town_tiles)
-    ldy #VRAM_CHR_BASE
+    ldy #VRAM_BLOCKS_CHR_BASE
     jsr dma_to_vram
 
     ldy #(font_tiles_end - font_tiles) ; size of transfer
@@ -134,17 +134,18 @@ INIT_GAME_INC = 1
     lda #$ffff
     sta a:game_data + game_data::input_mask
 
+    ;; set our seed for the prng
+    lda #$a723
+    sta a:seed
+
+
     A8
     ;; set up bg registers
     lda #$9 ; mode 1, BG3 prio high
     sta BGMODE
 
-    ;; set our seed for the prng
-    lda #$a723
-    sta a:seed
-
     ; set bg 1 and bg 2 char vram base addr. both the same for now.
-    lda #((VRAM_CHR_BASE >> 12) << 4 | (VRAM_CHR_BASE >> 12))
+    lda #((VRAM_BLOCKS_CHR_BASE >> 12) << 4 | (VRAM_BLOCKS_CHR_BASE >> 12))
     sta BG12NBA
 
     ; set bg 3 and bg4 vram base addr. both the same for now.

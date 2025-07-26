@@ -4,14 +4,6 @@ ASSETS_INC = 1
 ;; we should auto-generate this one at some point
 .segment "RODATA"
 
-;; backgrounds
-town_tiles:
-.incbin "assets/town.tiles"
-town_tiles_end:
-
-town_palette:
-.incbin "assets/town.palette"
-town_palette_end:
 
 ;; font
 font_tiles:
@@ -75,6 +67,18 @@ select_row_tile_types_end:
 
 .segment "BANK2"
 
+;; backgrounds
+
+;; these are the level tiles
+;; map is coming from the
+town_tiles:
+.incbin "assets/town.tiles"
+town_tiles_end:
+
+town_palette:
+.incbin "assets/town.palette"
+town_palette_end:
+
 town_map:
 .incbin "assets/town-map.map"
 town_map_end:
@@ -82,6 +86,22 @@ town_map_end:
 town_coll:
 .incbin "assets/town-map.coll"
 town_coll_end:
+
+
+.segment "BANK3"
+
+;; city
+city_tiles:
+.incbin "assets/city.tiles"
+city_tiles_end:
+
+city_map:
+.incbin "assets/city.map"
+city_map_end:
+
+city_palette:
+.incbin "assets/city.palette"
+city_palette_end:
 
 
 .endif ; ASSETS_INC

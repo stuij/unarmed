@@ -70,7 +70,7 @@ end:
 .proc canvas_patch_chosen_tile
     jsr canvas_calc_tile_under_cursor
     clc
-    adc #VRAM_MAP_BG_GAME_BASE
+    adc #VRAM_MAP_BLOCKS_GAME_BASE
     sta VMADD
     lda canvas_menu::chosen_tile
     sta VMDATA
@@ -247,7 +247,7 @@ end:
     sta a:W0 ;; first tile, aka transparent
     lda #($7 * $20 + $5)
     clc
-    adc #VRAM_MAP_BG_GAME_BASE
+    adc #VRAM_MAP_BLOCKS_GAME_BASE
     sta a:W1
     tay
     clc
@@ -901,7 +901,7 @@ after_parent_save:
         lda #((VRAM_MAP_MENU_BASE >> 10) << 2)
         sta BG1SC ; set bg 1 tile map
 
-        lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
+        lda #((VRAM_MAP_BLOCKS_GAME_BASE >> 10) << 2)
         sta BG2SC ; set bg 2 tile map
 
     jsr clear_menu_l3
@@ -937,7 +937,7 @@ end:
     stz BG1VOFS
     A16
 
-    lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
+    lda #((VRAM_MAP_BLOCKS_GAME_BASE >> 10) << 2)
     sta BG1SC ; set bg 1 tile map
 
     A8

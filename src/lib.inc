@@ -296,7 +296,7 @@ end:
     sty a:W0
     lda #^current_tile_map
     ldx #.loword(current_tile_map)
-    ldy #VRAM_MAP_BG_GAME_BASE
+    ldy #VRAM_MAP_BLOCKS_GAME_BASE
     jsr dma_to_vram
     rts
 .endproc
