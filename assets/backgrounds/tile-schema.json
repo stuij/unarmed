@@ -1,8 +1,8 @@
 { "schema" : [ 
         ["void",         3,   ""],
-        ["simple wall", 10,  "w"],
-        ["bounce wall",  6, "wb"],
-        ["climb wall",   1, "wc"],
+        ["simple wall", 16,  "w"],
+        ["bounce wall", 15, "wb"],
+        ["climb wall",  15, "wc"],
         ["kill block",   1, "wk"]
     ]
 }
