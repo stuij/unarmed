@@ -898,11 +898,16 @@ after_parent_save:
     lda a:game_data + game_data::menu_dirty_draw
     beq end
 
-        lda #((VRAM_MAP_MENU_BASE >> 10) << 2)
-        sta BG1SC ; set bg 1 tile map
+    ; set bg 1 and bg 2 char vram base addr.
+    ; level and menu share character data
+    lda #((VRAM_BLOCKS_CHR_BASE >> 12) << 4 | (VRAM_BLOCKS_CHR_BASE >> 12))
+    sta BG12NBA
 
-        lda #((VRAM_MAP_BLOCKS_GAME_BASE >> 10) << 2)
-        sta BG2SC ; set bg 2 tile map
+    lda #((VRAM_MAP_MENU_BASE >> 10) << 2)
+    sta BG1SC ; set bg 1 tile map
+
+    lda #((VRAM_MAP_BLOCKS_GAME_BASE >> 10) << 2)
+    sta BG2SC ; set bg 2 tile map
 
     jsr clear_menu_l3
     ldx a:game_data + game_data::curr_menu
@@ -935,12 +940,18 @@ end:
     lda #$FF
     sta BG1VOFS
     stz BG1VOFS
-    A16
+
+    ; set bg 1 and bg 2 char vram base addr.
+    ; level and menu share character data
+    lda #((VRAM_BG_CHR_BASE >> 12) << 4 | (VRAM_BLOCKS_CHR_BASE >> 12))
+    sta BG12NBA
 
     lda #((VRAM_MAP_BLOCKS_GAME_BASE >> 10) << 2)
     sta BG1SC ; set bg 1 tile map
 
-    A8
+    lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
+    sta BG2SC ; set bg 2 tile map
+
     unforce_vblank
     A16
 

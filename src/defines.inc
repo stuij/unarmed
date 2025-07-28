@@ -19,14 +19,16 @@ VRAM_BLOCKS_CHR_BASE = VRAM_BG_CHR_BASE + ($4000 / 2)
 VRAM_FONT_CHR_BASE = VRAM_BLOCKS_CHR_BASE + ($2000 / 2)
 
 ;; maps
+;; (if need be, we can put these within the gaps between the char data blocks)
 ;; $800 alignment == 256x256 pixels,
 ;; aka (32x32x2 bytes) map
 VRAM_MAP_FONT_BASE = VRAM_FONT_CHR_BASE + ($2000 / 2)
 VRAM_MAP_MENU_BASE = VRAM_MAP_FONT_BASE + ($800 / 2)
 VRAM_MAP_BLOCKS_GAME_BASE = VRAM_MAP_MENU_BASE + ($800 / 2)
+VRAM_MAP_BG_GAME_BASE = VRAM_MAP_BLOCKS_GAME_BASE + ($800 / 2)
 
 ;; ---------------------------- +
-;; $6000 bytes used, $4000 free
+;; $B800 bytes used, $4800 free
 
 
 GAME_MAP_SIZE = $700

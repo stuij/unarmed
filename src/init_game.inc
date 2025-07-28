@@ -8,6 +8,13 @@ INIT_GAME_INC = 1
 .proc init_binary_data
     ; let's copy over some binary data
     ;; first the palette
+    ldy #(city_palette_end - city_palette) ; # of palette entries
+    sty <W0
+    lda #^city_palette
+    ldx #.loword(city_palette)
+    ldy #$30
+    jsr dma_to_palette
+
     ldy #(town_palette_end - town_palette) ; # of palette entries
     sty <W0
     lda #^town_palette
@@ -23,8 +30,14 @@ INIT_GAME_INC = 1
     jsr dma_to_palette
 
 
+    ;; load tiles
+    ldy #(city_tiles_end - city_tiles) ; size of transfer
+    sty <W0
+    lda #^city_tiles
+    ldx #.loword(city_tiles)
+    ldy #VRAM_BG_CHR_BASE
+    jsr dma_to_vram
 
-    ; load tiles
     ldy #(town_tiles_end - town_tiles) ; size of transfer
     sty <W0
     lda #^town_tiles
@@ -38,6 +51,16 @@ INIT_GAME_INC = 1
     ldx #.loword(font_tiles)
     ldy #VRAM_FONT_CHR_BASE
     jsr dma_to_vram
+
+
+    ;; bg map
+    ldy #(city_map_end - city_map) ; size of transfer
+    sty a:W0
+    lda #^city_map
+    ldx #.loword(city_map)
+    ldy #VRAM_MAP_BG_GAME_BASE
+    jsr dma_to_vram
+
 
     ;; sprites
     ; set sprite base
@@ -143,10 +166,6 @@ INIT_GAME_INC = 1
     ;; set up bg registers
     lda #$9 ; mode 1, BG3 prio high
     sta BGMODE
-
-    ; set bg 1 and bg 2 char vram base addr. both the same for now.
-    lda #((VRAM_BLOCKS_CHR_BASE >> 12) << 4 | (VRAM_BLOCKS_CHR_BASE >> 12))
-    sta BG12NBA
 
     ; set bg 3 and bg4 vram base addr. both the same for now.
     lda #(VRAM_FONT_CHR_BASE >> 12)
