@@ -1,0 +1,71 @@
+{
+  "_about": {
+    "file_type": "Terrific Audio Driver project file",
+    "version": "0.1.0-beta.1"
+  },
+  "instruments": [
+    {
+      "name": "gun_shot",
+      "source": "fx/brr/gun-shot.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": true,
+      "first_octave": 4,
+      "last_octave": 4,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "slap_bass",
+      "source": "instruments/brr/Slap Bass(Pop).brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 4,
+      "last_octave": 4,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "side_stick",
+      "source": "instruments/brr/drums/Side Stick.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 4,
+      "last_octave": 4,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "kick",
+      "source": "instruments/brr/drums/Kick.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 4,
+      "last_octave": 4,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    }
+  ],
+  "samples": [],
+  "default_sfx_flags": {
+    "one_channel": true,
+    "interruptible": true
+  },
+  "high_priority_sound_effects": [],
+  "sound_effects": [],
+  "low_priority_sound_effects": [],
+  "sound_effect_file": null,
+  "songs": [
+    {
+      "name": "test",
+      "source": "songs/test.mml"
+    }
+  ]
+}
