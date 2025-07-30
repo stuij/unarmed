@@ -37,7 +37,18 @@ COLL_MAP_BOTTOM_SIZE = $60
 
 BG_TILE_PALETTE_ENTRY = $0800 ;; palette 2
 
-; OAM offsets
+
+;; ----------
+;; BG offsets
+
+BG_H_TOP_ALIGN = 0
+;; one scanline down for aligning with top, because of how the SNES hardware works
+BG_V_TOP_ALIGN = $FF
+
+BG3_H_OFFS_DEFAULT = $FC
+BG3_V_OFFS_DEFAULT = $F8
+
+;; OAM offsets
 
 .struct oam_entry
     x_pos       .byte
@@ -80,7 +91,7 @@ OAM_SHIELD_XTRA_PROPS = OAM_SPAWN_BOX_XTRA_PROPS + 1
 ;; sprite base struct
 
 ;; when doing collision checking, if we move past these consts,
-;; we are out of bounds of the playing field, and we incur a penalty
+;; we are out of bounds of the playing field, and we incur consequences
 OUT_OF_BOUNDS_X = $fff
 OUT_OF_BOUNDS_Y = $f7f
 

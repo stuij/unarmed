@@ -187,16 +187,16 @@ INIT_GAME_INC = 1
     stz BG2HOFS
     stz BG2HOFS
 
-    lda #$FC
+    lda #BG3_H_OFFS_DEFAULT
     sta BG3HOFS
     stz BG3HOFS
 
     ;; put vertical offset one below, because of how SNES works
-    lda #$FF
+    lda #BG_V_TOP_ALIGN
     sta BG2VOFS
     stz BG2VOFS
 
-    lda #$FB
+    lda #BG3_V_OFFS_DEFAULT
     sta BG3VOFS
     stz BG3VOFS
 
