@@ -125,11 +125,17 @@ current_tile_map: .res GAME_MAP_SIZE
 .segment "RODATA"
 
 ;; menus
+select_screen_title: .asciiz "Choose tile to draw"
+select_screen_tile_type_desc: .asciiz "type:"
+
 menu_legend_between_screen_root: .asciiz "a:choose"
 menu_legend_between_screen_pause: .asciiz "a:choose select:unpause"
-menu_legend_select_screen_1: .asciiz "a:choose b:back"
-menu_legend_select_screen_2: .asciiz "select:unpause"
-menu_legend_choose_screen_1: .asciiz "a:set tile, b:back, select:unpause"
+menu_legend_select_screen: .asciiz "a:choose b:back"
+menu_legend_select_screen_pause_1: .asciiz "a:choose b:back"
+menu_legend_select_screen_pause_2: .asciiz "select:unpause"
+
+
+menu_legend_choose_screen_1: .asciiz "a:choose b:back select:unpause"
 menu_legend_choose_screen_2: .asciiz "x:flip horizontal, y: flip vertical"
 
 

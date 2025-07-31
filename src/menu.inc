@@ -158,6 +158,19 @@ end:
 ;; -----------
 ;; select menu
 
+.a8
+.i16
+.proc select_menu_clear_selected_tile_txt
+    ldy #(VRAM_MAP_FONT_BASE + SELECT_SCREEN_TILE_TYPE_DESC_OFFSET)
+    ldx #SELECT_SCREEN_TILE_TYPE_ERASE_LENGTH
+    stz a:W0 ;; write zeros
+    jsr dma_fixed_to_vram
+    rts
+.endproc
+
+
+.a16
+.i16
 .proc select_menu_callback
     ;; if we're pressing A, we've selected a tile,
     ;; and we need to move on to the canvas menu/mode
@@ -183,6 +196,18 @@ end:
     ldx menu::player
     jsr activate_draw_menu
 end:
+    ;; update current tile description
+    ;; first erase the last msg
+    A8
+    jsr select_menu_clear_selected_tile_txt
+    A16
+    lda menu::curr_row
+    lshift 4 ;; tile descriptions currently are padded to $10
+    clc
+    adc select_tile_menu::tile_type_names
+    tax
+    lda #SELECT_SCREEN_TILE_TYPE_DESC_OFFSET
+    jsr print_string_to_offset
     rts
 .endproc
 
@@ -245,13 +270,13 @@ end:
     A16
     lda #BG_TILE_PALETTE_ENTRY
     sta a:W0 ;; first tile, aka transparent
-    lda #($7 * $20 + $5)
+    lda #SELECT_SCREEN_DRAW_BEHIND_OFFSET
     clc
     adc #VRAM_MAP_BLOCKS_GAME_BASE
     sta a:W1
     tay
     clc
-    adc #($6 * $20)
+    adc #SELECT_SCREEN_DRAW_BEHIND_AMOUNT
     sta a:W2
 clear_bg_behind_tiles_loop:
     ldx #$2c
@@ -265,7 +290,29 @@ clear_bg_behind_tiles_loop:
     sta a:W1
     cmp a:W2
     bmi clear_bg_behind_tiles_loop
-    A8
+
+    lda #SELECT_SCREEN_HEADER_OFFSET
+    ldx #.loword(select_screen_title)
+    jsr print_string_to_offset
+
+    lda #SELECT_SCREEN_TILE_TYPE_DESC_HEADER_OFFSET
+    ldx #.loword(select_screen_tile_type_desc)
+    jsr print_string_to_offset
+
+
+    ldx a:game_data + game_data::in_game
+    bne :+
+    lda #(SELECT_SCREEN_LEGEND_MAP_OFFSET + $20)
+    ldx #.loword(menu_legend_select_screen)
+    jsr print_string_to_offset
+    bra :++
+  : lda #SELECT_SCREEN_LEGEND_MAP_OFFSET
+    ldx #.loword(menu_legend_select_screen_pause_1)
+    jsr print_string_to_offset
+    lda #(SELECT_SCREEN_LEGEND_MAP_OFFSET + $20)
+    ldx #.loword(menu_legend_select_screen_pause_2)
+    jsr print_string_to_offset
+  : A8
 
     lda #SELECT_SCREEN_X_COORDS
     ;; this is one of those latching regs
@@ -555,6 +602,7 @@ edit:
 .i16
 .proc draw_between_menu
     force_vblank
+    jsr clear_menu_map
     ldy #(between_menu_map_end - between_menu_map)
     sty a:W0
     lda #^between_menu_map
@@ -593,8 +641,8 @@ edit:
 .a8
 .i16
 .proc clear_menu_l3
-    ldy #(VRAM_MAP_FONT_BASE + ($20 * 3 * 2))
-    ldx #($20 * $18 * 2)
+    ldy #(VRAM_MAP_FONT_BASE + ($3 * $20 * 2))
+    ldx #($18 * $20 * 2)
     stz a:W0
     jsr dma_fixed_to_vram
     rts
@@ -605,7 +653,7 @@ edit:
 .i16
 .proc clear_menu_map
     ldy #VRAM_MAP_MENU_BASE
-    ldx #($20 * $18 * 2)
+    ldx #($18 * $20 * 2)
     stz a:W0
     jsr dma_fixed_to_vram
     rts

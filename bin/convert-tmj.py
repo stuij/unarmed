@@ -299,10 +299,15 @@ def tile_spec_to_index_lookup(schema):
     select_opaque_entry = make_pad_tile()
     select_inner_entry = make_inner_tile(total_schema_tiles)
 
-    select_table_width = 24
+    select_table_width = 26
 
     select_table.extend(make_table_border_row_tiles(
         select_table_width, True, total_schema_tiles))
+
+    for i in range(3):
+        select_table.extend(
+            make_table_row_bg(select_table_width, total_schema_tiles, select_inner_entry))
+
 
     for row in schema:
         ty_name = row[0]
@@ -337,6 +342,11 @@ def tile_spec_to_index_lookup(schema):
 
         choose_row += 1
         choose_row_idx = 0
+
+    for i in range(9):
+        select_table.extend(
+            make_table_row_bg(select_table_width, total_schema_tiles, select_inner_entry))
+
 
     select_table.extend(make_table_border_row_tiles(
         select_table_width, False, total_schema_tiles))
@@ -374,6 +384,19 @@ def encode_string_map(string, max_len, file):
 
     for pad in range(max_len - str_len):
         file.write(encode_word(0, 0))
+
+
+def encode_cstring_to_file(string, max_len, file):
+    str_len = len(string)
+    if str_len > max_len:
+        raise ValueError("string length {} higher than max {}"
+                           .format(str_len, max_len))
+    for char in string:
+        file.write(encode_byte(ord(char)))
+
+    for pad in range(max_len + 1 - str_len):
+        file.write(encode_byte(0))
+
 
 
 # this one is for programatically in asm copying these tiles
@@ -417,7 +440,7 @@ def encode_tile_select_bits(select_table, schema):
 
     with open("select_row_name.bin", "wb") as row_name:
         for row in schema:
-            encode_string_map(row[0], 16, row_name)
+            encode_cstring_to_file(row[0], 15, row_name)
 
 
 def main(tmj_in, spec_in):
