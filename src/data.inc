@@ -124,6 +124,15 @@ current_tile_map: .res GAME_MAP_SIZE
 
 .segment "RODATA"
 
+;; menus
+menu_legend_between_screen_root: .asciiz "a:choose"
+menu_legend_between_screen_pause: .asciiz "a:choose select:unpause"
+menu_legend_select_screen_1: .asciiz "a:choose b:back"
+menu_legend_select_screen_2: .asciiz "select:unpause"
+menu_legend_choose_screen_1: .asciiz "a:set tile, b:back, select:unpause"
+menu_legend_choose_screen_2: .asciiz "x:flip horizontal, y: flip vertical"
+
+
 between_wins: .asciiz "wins"
 
 between_start_str:     .asciiz  "  start  >"

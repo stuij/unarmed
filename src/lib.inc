@@ -75,6 +75,22 @@ LIB_INC = 1
 
 .a16
 .i16
+;; in:
+;; A - map offset
+;; X - string to print
+.proc print_string_to_offset
+    clc
+    adc #VRAM_MAP_FONT_BASE
+    sta VMADD
+
+    txa
+    jsr print_string
+    rts
+.endproc
+
+
+.a16
+.i16
 ;; A - string address
 .proc print_string
     pha

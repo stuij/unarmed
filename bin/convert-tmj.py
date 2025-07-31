@@ -376,26 +376,6 @@ def encode_string_map(string, max_len, file):
         file.write(encode_word(0, 0))
 
 
-# def make_font_entry(char):
-#     return IndexEntry(-1, -1, -1, ord(char) - 32, 0, "char", False, False, True)
-
-
-# def encode_string_map_entries(string, max_len, pad_tile):
-#     entries = []
-
-#     str_len = len(string)
-#     if str_len > max_len:
-#         raise ValueError("string length {} higher than max {}"
-#                            .format(str_len, length))
-#     for char in string:
-#         entries.append(make_font_entry(char))
-
-#     for pad in range(max_len - str_len):
-#         entries.append(pad_tile)
-
-#     return entries
-
-
 # this one is for programatically in asm copying these tiles
 # char by char when constructing a string of words
 def encode_font_ascii_table():
@@ -452,7 +432,7 @@ def main(tmj_in, spec_in):
 
     encode_font_ascii_table()
 
-    make_menu_bg("between_menu.map", 24, 14, schema)
+    make_menu_bg("between_menu.map", 26, 16, schema)
 
 
 if __name__ == "__main__":

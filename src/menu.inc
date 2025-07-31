@@ -573,6 +573,14 @@ edit:
     A16
     jsr draw_between_wins
     jsr draw_between_menu_items
+
+    lda #BETWEEN_MENU_LEGEND_MAP_OFFSET
+    ldx a:game_data + game_data::in_game
+    beq :+
+    ldx #.loword(menu_legend_between_screen_pause)
+    bra :++
+  : ldx #.loword(menu_legend_between_screen_root)
+  : jsr print_string_to_offset
     A8
     unforce_vblank
     rts
@@ -937,7 +945,7 @@ end:
 
     stz BG1HOFS
     stz BG1HOFS
-    lda #$FF
+    lda #BG_V_TOP_ALIGN
     sta BG1VOFS
     stz BG1VOFS
 
