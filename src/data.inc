@@ -134,10 +134,9 @@ menu_legend_select_screen: .asciiz "a:choose b:back"
 menu_legend_select_screen_pause_1: .asciiz "a:choose b:back"
 menu_legend_select_screen_pause_2: .asciiz "select:unpause"
 
-
-menu_legend_choose_screen_1: .asciiz "a:choose b:back select:unpause"
-menu_legend_choose_screen_2: .asciiz "x:flip horizontal, y: flip vertical"
-
+menu_legend_draw_screen_1: .asciiz "a:choose b:back"
+menu_legend_draw_screen_2: .asciiz "x:flip horz y:flip vert"
+menu_legend_draw_screen_pause_1: .asciiz "a:choose b:back select:unpause"
 
 between_wins: .asciiz "wins"
 

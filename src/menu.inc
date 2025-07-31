@@ -119,7 +119,7 @@ end:
     lda #.loword(draw_tile_menu_callback)
     sta menu::callback
 
-    lda #.loword(draw_between_menu)
+    lda #.loword(draw_draw_menu)
     sta menu::draw_fn
 
     lda #($4 + ($4 * $10))
@@ -127,6 +127,12 @@ end:
 
     lda #$0
     tcd
+    rts
+.endproc
+
+
+;; not used, as draw menu is a bit different
+.proc draw_draw_menu
     rts
 .endproc
 
@@ -147,10 +153,36 @@ end:
     stx tile_canvas + menu::player
     sty tile_canvas + canvas_menu::tile_type
     jsr draw_init_chosen_tile
+    A8
+    jsr clear_menu_l3
+    A16
     jsr level_screen_to_fore
     lda #.loword(select_tile_menu)
     sta tile_canvas + menu::parent_menu
     inc tile_canvas + menu::just_moved
+
+    ;; help text
+    A8
+    force_vblank
+    A16
+    ldx a:game_data + game_data::in_game
+    bne :+
+    lda #(DRAW_SCREEN_LEGEND_MAP_OFFSET)
+    ldx #.loword(menu_legend_draw_screen_1)
+    jsr print_string_to_offset
+    lda #(DRAW_SCREEN_LEGEND_MAP_OFFSET + $20)
+    ldx #.loword(menu_legend_draw_screen_2)
+    jsr print_string_to_offset
+    bra :++
+  : lda #DRAW_SCREEN_LEGEND_MAP_OFFSET
+    ldx #.loword(menu_legend_draw_screen_pause_1)
+    jsr print_string_to_offset
+    lda #(DRAW_SCREEN_LEGEND_MAP_OFFSET + $20)
+    ldx #.loword(menu_legend_draw_screen_2)
+    jsr print_string_to_offset
+  : A8
+    unforce_vblank
+    A16
     rts
 .endproc
 
