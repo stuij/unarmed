@@ -27,11 +27,14 @@
 ** do some music experiments to learn the sound engine
 * do during game jam
 ** bare minimum
-*** help text on menus
-*** add extra background layer
-*** implement concept of match/cap max wins
 *** DONE 1 or more frames of delay on shooting to lock in diagonals
-(as it's tricky to press both buttons of a diagonal in the same frame)
+as it's tricky to press both buttons of a diagonal in the same frame
+*** DONE dying from bullet
+*** DONE minimal actual game loop
+**** DONE shoot people and health bar goes down
+**** DONE winner is player who still has health
+**** DONE can shoot yourself by bullet wall bounce?
+no, not for now. for now we exclude player, as you'd hit yourself so quickly near walls and could be fun shooting right at wall as you go there and bullet rebounds and hits player behind you
 *** DONE parrying
 **** DONE initial implementation
 **** DONE shield sprite goes away when it's done
@@ -48,13 +51,7 @@ otherwise we:
 - have bullets that go on indefinately
 - will have no more bullets left if the initial ones fly
 - don't have to deal with awkward you don't have any more bullets left
-*** DONE minimal actual game loop
-**** DONE shoot people and health bar goes down
-**** DONE winner is player who still has health
-**** DONE can shoot yourself by bullet wall bounce?
-no, not for now. for now we exclude player, as you'd hit yourself so quickly near walls and could be fun shooting right at wall as you go there and bullet rebounds and hits player behind you
 *** DONE code to restart level cleanly
-*** DONE dying from bullet
 *** DONE menu/pause/game-over screen
 **** DONE select from premade maps
 **** DONE select player count
@@ -64,31 +61,47 @@ no, not for now. for now we exclude player, as you'd hit yourself so quickly nea
 *** DONE clean flow between different menus and game
 *** DONE temporary invulnerability on game start and after getting hit/touching kill blocks
 *** DONE At game start, we start in idle mode.
+*** implement concept of match/cap max wins
+as now after 9 wins we run into non-letter ascii codes
 ** hopefully done before end of game jam
-*** when going out of bounds and not on some kind of killblock, randomly spawn at one of the 4 spawnboxes
+*** DONE when going out of bounds and not on some kind of killblock, randomly spawn at one of the 4 spawnboxes
+*** DONE adjust movement while jumping/floatiness
+We're currently very floaty, and we're not doing anything special, like jumping higher after accelleration. What might be better.
+
+tbh test group seemed to be fine with the floatiness
+*** DONE help text on menus
+*** DONE add background layer
 *** implement different wall types
-**** ice
 **** non-deflecting
+**** walk-through kill block
+**** warp block
+**** bounce block
+**** ice?
 **** allow climbing
-**** kill block
+**** DONE solid kill block
 *** sound effects
 **** for shooting
 **** getting hit
-**** jumping?
+**** jumping
+*** title screen
 *** make music
 *** make level designs
-*** when reflected, a bullet should change color to red to indicate harm to owner
 *** shield animation
-*** title screen
-*** adjust movement while jumping/floatiness
-We're currently very floaty, and we're not doing anything special, like jumping higher after accelleration. What might be gbetter.
+*** dying animation
+*** winning animation
+*** when people get hit by bullet, do easing off of impact speed
+*** shooter is pushed back when shooting, by a lot might be fun
+*** hold shield upwards
+*** a couple of current levels have dead ends. would be more fun to be able to move to other places. But also sometimes nice to have level be a shootout area.
 *** lore
-*** alternate control scheme(s)
 *** when you die, should be some kind of lively animation
 *** when you get hit, some form of explosion?
+*** max bullets ricochet
+*** when reflected, a bullet should change color to red to indicate harm to owner
+*** allow for space above level, just like below. is a bit trickier as we would need to offset all y coords, but would make playing field a bit bigger, as you can then jump upwards, instead of immediately hitting the electric fences/warp spots
+*** alternate control scheme(s)
 ** bugfixes
 *** bugfix: when you bump into a wall when going right, and you glide down, you can land on killblock and go into idle/running state without triggering killblock ramifications
-
 *** bugfix: when spawning or taking away tiles, when you're less than a block above a solid block, you hover in idle state, and can walk elevatedly above the block
 * nice to have
 ** coyote time

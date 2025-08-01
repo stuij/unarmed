@@ -1,0 +1,33 @@
+Sprites:
+
+- sprite sheets are 128 pixels (px) wide and 64 pixels high
+- we can load two sprite sheets at the same time in the system
+- player sprites:
+  - player sprites consist of two 8x8 px sprites on top of eachother
+  - the top and bottom part move independently so every top animation should fit with every bottom animation
+  - the smaller the player sprites are the better
+  - we can have a variable amount of frames per movement, but anything that's an exponent of 2 makes programming them easier
+  - for bottom sprites we currently have an 8 frame walking loop. seems like enough?
+- we have 8 color palettes for backgrounds, each consisting of 16 colors
+- same for sprites
+- every sprite and every background tile can choose between their respective 8 palettes
+- the very first entry of every palette will be transparent, regardless of what color you choose for it
+- to draw the sprites/backgrounds I use Aseprite
+  - export to png, or work on the png directly
+    - the png will be converted to the SNES format by the SuperFamiconv tool in the build script for this game.
+  - right now I have no elegant way to switch palette for the different sprites in the sprite sheets
+    - but there are ways to get around this, either by writing some kind of script for aseprite or copy pasting rows to the first row. to be documented.
+  - what I do is pull the palette area to 16 entries wide, so it's easy to see what palette you're using (every palette on it's own line)
+  - I personally first did animation frames in a different file, then exported to spritesheet, and then copied to our 128x64 sprite sheet.
+- what might we need. just some ideas:
+  - running animation
+  - jumping animation
+  - idle animation
+  - bigger bullet
+    - round is easiest, but rectangular, more bullet-like probably looks better. that needs some coding to change with direction. shouldn't be too bad.
+  - player recoil when shooting
+  - player recoil when hit
+  - the portals that players come out of at start of the game and when teleported from out of bounds
+  - background tiles (we have tiles with different behaviour, and we would need a bunch of the different kinds for variety and for making corners and edges, etc..)
+- right now we have some colored people with no arms and shooting bullets from their head, but that's just because it was quick to draw
+  - I'd be happy with anything: ppl actually shooting guns, robot chickens, kittens, whatever. as long as it looks cool. Story can come later.
