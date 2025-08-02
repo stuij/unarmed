@@ -194,9 +194,14 @@ loop_end:
 
 .proc bullet_coll_end_callback
     lda COLL_STACK_TILE_PROPS + 2, s
-    and #tile_props::out_of_bounds
-    bne bullet_handle_out_of_bounds ;; if so handle kill
-
+    ;; no collision with anything meaningful
+    beq end
+    ;; either contact with no-bounce wall or out of bounds
+    ;; means the bullet disappears
+    bit #tile_props::out_of_bounds
+    bne bullet_retire
+    bit #tile_props::bounce
+    beq bullet_retire
     lda COLL_STACK_Y_NEW_TMP + 2, s
     bmi flip_v
     ;; x collision occured, save new x.
@@ -219,12 +224,6 @@ flip_v:
     adc #$1
     sta sprite::h_velo
 end:
-    rts
-.endproc
-
-
-.proc bullet_handle_out_of_bounds
-    jsr bullet_retire
     rts
 .endproc
 

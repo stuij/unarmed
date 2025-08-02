@@ -140,6 +140,7 @@ point_x_calc:
     beq after_prop_save
     sta COLL_STACK_TILE_PROPS, s
 after_prop_save:
+    bit #tile_props::wall
     bne collision              ; if not zero, collision
     jmp no_coll_for_point ; otherwise, do no collision things
 out_of_bounds:
