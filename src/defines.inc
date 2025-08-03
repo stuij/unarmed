@@ -78,7 +78,6 @@ OAM_SHIELD_XTRA_PROPS = OAM_SPAWN_BOX_XTRA_PROPS + 1
 ;; BG tiles
 
 .enum tile_props
-    void            = $0
     wall            = $1
     bounce          = $2
     climb           = $4

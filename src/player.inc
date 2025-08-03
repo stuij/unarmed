@@ -693,15 +693,13 @@ ledge_check:
     clc
     adc #$20 ;; set to tile under point
     tax
+    lda #0
     A8
     lda current_coll_map, x
+    ;; we only need one collision with any of the collision tile properties
+    ;; to feel their effects, so we can just OR them for all the relevant points
     A16
-    beq end ; not a collision, so we move on
-    ;; it's a collision, so we register it
-    ;; we only need one collision to know that we're standing with at least
-    ;; one point on the ledge, so we can just write 1 whenever we find
-    ;; something
-    lda #1
+    ora COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
     sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
 end:
     rts
@@ -711,33 +709,21 @@ end:
 .proc player_coll_end_callback
     lda COLL_STACK_TILE_PROPS + 2, s
     and #tile_props::kill
-    bne jmp_player_handle_kill ;; if so handle kill
+    beq after_check_kill
+    jsr player_handle_kill ;; if so handle kill
+after_check_kill:
     lda COLL_STACK_TILE_PROPS + 2, s
     and #tile_props::out_of_bounds
+    ;; we're calling out of the fn with this one, and are never coming back
     bne player_handle_out_of_bounds
-kill_resume:
     lda sprite::move_state ;; only execute
     cmp #move_state::idle
-    beq ledge_fall
-    cmp #move_state::run
-    bne store_y_new
-    bra ledge_fall
-jmp_player_handle_kill:
-    lda player::hit_timer
-    bne kill_resume
-    jsr player_handle_kill
-    bra kill_resume
-ledge_fall:
-    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
-    bne store_y_new ; we didn't fall off the ledge
-    ; we  did fall off the ledge. we're now fallling
-    lda #0
-    sta sprite::v_velo
-    sta sprite::anim_tick
-    lda #move_state::jump
-    sta sprite::move_state
-    lda #V_VELO_DEC
-    sta sprite::v_velo_dec
+    beq do_ledge_fall
+    cmp move_state::run
+    beq do_ledge_fall
+    bra store_y_new
+do_ledge_fall:
+    jsr handle_ledge_fall
 store_y_new:
     lda COLL_STACK_Y_NEW_TMP + 2, s
     bmi store_x_new
@@ -778,20 +764,6 @@ end:
 .endproc
 
 
-.proc player_handle_kill
-    A8
-    lda #SFX::robot_fires_laser
-    jsr Tad_QueueSoundEffect_D
-    A16
-    lda player::nr
-    asl
-    tax
-    jsr player_dec_hp
-    lda #HIT_TIMER_LEN
-    sta player::hit_timer
-    rts
-.endproc
-
 .a16
 .i16
 ;; This is another exit out of the fn. My first one in this project.
@@ -815,6 +787,48 @@ end:
     sta ::sprite::move_state
     rts
 .endproc
+
+
+.proc handle_ledge_fall
+    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 4, s
+    bit #tile_props::wall
+    bne ledge_fall_check_kill_prop ; we didn't fall off the ledge
+    ; we  did fall off the ledge. we're now fallling
+    lda #0
+    sta sprite::v_velo
+    sta sprite::anim_tick
+    lda #move_state::jump
+    sta sprite::move_state
+    lda #V_VELO_DEC
+    sta sprite::v_velo_dec
+ledge_fall_check_kill_prop:
+    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 4, s
+    bit #tile_props::kill
+    beq end
+    jsr player_handle_kill
+end:
+    rts
+.endproc
+
+
+.proc player_handle_kill
+    lda player::hit_timer
+    bne end
+    A8
+    lda #SFX::robot_fires_laser
+    jsr Tad_QueueSoundEffect_D
+    A16
+    lda player::nr
+    asl
+    tax
+    jsr player_dec_hp
+    lda #HIT_TIMER_LEN
+    sta player::hit_timer
+end:
+    rts
+.endproc
+
+
 
 
 ;; in - X: player offset

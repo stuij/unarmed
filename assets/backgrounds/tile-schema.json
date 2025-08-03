@@ -1,7 +1,7 @@
 { "schema" : [ 
         ["non-wall",        3,  ""],
         ["bounce wall",    16,  "wb"],
-        ["simple wall",    15,  "w"],
+        ["no-bounce wall", 15,  "w"],
         ["kill non-wall",  15,  "k"],
         ["kill block",      1,  "wkb"]
     ]
