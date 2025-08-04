@@ -455,7 +455,7 @@ def main(tmj_in, spec_in):
 
     encode_font_ascii_table()
 
-    make_menu_bg("between_menu.map", 26, 16, schema)
+    make_menu_bg("between_menu.map", 26, 18, schema)
 
 
 if __name__ == "__main__":

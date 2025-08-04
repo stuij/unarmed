@@ -65,12 +65,12 @@ OAM_MENU_CARET_SIZE = (4 * 3)
 OAM_MENU_CARET_OFFSET = (OAM_mirror + OAM_PLAYER_SIZE + OAM_BULLET_SIZE)
 OAM_MENU_CARET_SELECT_OFFSET = OAM_MENU_CARET_OFFSET + 4
 
-OAM_SPAWN_BOX_OFFSET = OAM_MENU_CARET_SELECT_OFFSET + (3 * 4)
+OAM_SPAWN_BOX_OFFSET = OAM_MENU_CARET_SELECT_OFFSET + (7 * 4)
 OAM_SHIELD_OFFSET = OAM_SPAWN_BOX_OFFSET + (4 * 4)
 
 ;; xtra props
 OAM_MENU_CARET_XTRA_PROPS = OAM_mirror + $20A
-OAM_SPAWN_BOX_XTRA_PROPS = OAM_MENU_CARET_XTRA_PROPS + 1
+OAM_SPAWN_BOX_XTRA_PROPS = OAM_MENU_CARET_XTRA_PROPS + 2
 OAM_SHIELD_XTRA_PROPS = OAM_SPAWN_BOX_XTRA_PROPS + 1
 
 
@@ -398,30 +398,20 @@ DRAW_CARET_Y_INIT_OFFSET = (DRAW_CARET_INIT_ROW * 8) - 1
 DRAW_SCREEN_LEGEND_MAP_OFFSET = $1 + ($18 * $20)
 
 
+;; --------------------
 ;; between games screen
-
-; - wins section; not parts of games screen proper
-; - start game
-; - customize level
-; - player count select
-; - level select
-
-; TODO:
-; - amount of hitpoints
-; - wins per match
-; - level select type: manual or random
 
 ;; for setting BG
 BETWEEN_MENU_X_COORDS = SELECT_SCREEN_X_COORDS
 BETWEEN_MENU_Y_COORDS = SELECT_SCREEN_Y_COORDS
 
-BETWEEN_MENU_LEGEND_MAP_OFFSET = $5 + ($13 * $20)
+BETWEEN_MENU_LEGEND_MAP_OFFSET = $5 + ($15 * $20)
 
-BETWEEN_MENU_X_TABLE_OFFSET = $73
+BETWEEN_MENU_X_TABLE_OFFSET = $8b
 BETWEEN_MENU_Y_TABLE_OFFSET = ($d * $8) + 6
 BETWEEN_PLAYER_SKIP = $18
 
-BETWEEN_MENU_ROW_COUNT = 4
+BETWEEN_MENU_ROW_COUNT = $6
 
 BETWEEN_MENU_PLAYER_FONT_MAP_OFFSET = $e6
 BETWEEN_MENU_ITEMS_FONT_MAP_OFFSET = $1a5
@@ -438,6 +428,8 @@ BG3_HEAD_CHAR_OFFSET = $60
     start
     edit
     players
+    hitpoints
+    wins
     level
 .endenum ; Enm between
 
@@ -457,6 +449,10 @@ OVERLAY_INPUT_MASK      = 0
 .struct game_data
     no_players      .word
     no_players_new  .word
+    wins            .word
+    wins_new        .word
+    hitpoints       .word
+    hitpoints_new   .word
     bullets_pp      .word
     game_handler    .word
     menu_dirty_draw .word
@@ -478,6 +474,13 @@ OVERLAY_INPUT_MASK      = 0
 .endstruct
 
 .struct wins
+    p1_wins         .word
+    p2_wins         .word
+    p3_wins         .word
+    p4_wins         .word
+.endstruct
+
+.struct matches
     p1_wins         .word
     p2_wins         .word
     p3_wins         .word

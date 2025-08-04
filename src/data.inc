@@ -68,6 +68,7 @@ p4: .tag player
 .align 16
 
 wins: .tag wins
+matches: .tag matches
 hp: .tag hp
 game_data: .tag game_data
 tile_canvas: .tag canvas_menu
@@ -129,28 +130,32 @@ select_screen_title: .asciiz "Choose tile to draw"
 select_screen_tile_type_desc: .asciiz "type:"
 
 menu_legend_between_screen_root: .asciiz "a:choose"
-menu_legend_between_screen_pause: .asciiz "a:choose select:unpause"
+menu_legend_between_screen_pause: .asciiz "a:choose start:unpause"
 menu_legend_select_screen: .asciiz "a:choose b:back"
 menu_legend_select_screen_pause_1: .asciiz "a:choose b:back"
-menu_legend_select_screen_pause_2: .asciiz "select:unpause"
+menu_legend_select_screen_pause_2: .asciiz "start:unpause"
 
 menu_legend_draw_screen_1: .asciiz "a:choose b:back"
 menu_legend_draw_screen_2: .asciiz "x:flip horz y:flip vert"
-menu_legend_draw_screen_pause_1: .asciiz "a:choose b:back select:unpause"
+menu_legend_draw_screen_pause_1: .asciiz "a:choose b:back start:unpause"
 
 between_wins: .asciiz "wins"
 
-between_start_str:     .asciiz  "  start  >"
-between_restart_str:   .asciiz  "restart  >"
-between_edit_str:      .asciiz  "   edit  >"
-between_players_str:   .asciiz  "players  234"
-between_level_str:     .asciiz  "  level  0123456789"
+between_start_str:     .asciiz  "start match >"
+between_restart_str:   .asciiz  "  new match >"
+between_edit_str:      .asciiz  "       edit >"
+between_players_str:   .asciiz  "    players 234"
+between_hitpoints_str: .asciiz  "  hitpoints 123456789"
+between_wins_str:      .asciiz  "       wins 123456789"
+between_level_str:     .asciiz  "      level 0123456789"
 
 between_menu_row_table:
-.word 1
-.word 1
-.word (PLAYER_MAX - 1)
-.word $a
+.word 1                 ; start/restart
+.word 1                 ; edit
+.word (PLAYER_MAX - 1)  ; players
+.word $9                ; hitpoints
+.word $9                ; wins
+.word $a                ; level
 
 draw_tile_row_count: .word $1c
 

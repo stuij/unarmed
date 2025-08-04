@@ -616,6 +616,26 @@ edit:
     lda #.loword(between_players_str)
     jsr print_string
 
+    ;; hitpoints
+    txa
+    clc
+    adc #$20
+    sta VMADD
+    tax
+
+    lda #.loword(between_hitpoints_str)
+    jsr print_string
+
+    ;; wins
+    txa
+    clc
+    adc #$20
+    sta VMADD
+    tax
+
+    lda #.loword(between_wins_str)
+    jsr print_string
+
     ;; level
     txa
     clc
@@ -710,29 +730,23 @@ edit:
     ;; menu selection caret
     lda #$30                ; no flip, prio 3, palette 0
     sta OAM_MENU_CARET_OFFSET + oam_entry::attrs
-
-    lda #$30                ; no flip, prio 3, palette 0
     sta OAM_MENU_CARET_SELECT_OFFSET + oam_entry::attrs
+    sta OAM_MENU_CARET_SELECT_OFFSET + $4 + oam_entry::attrs
+    sta OAM_MENU_CARET_SELECT_OFFSET + $8 + oam_entry::attrs
+    sta OAM_MENU_CARET_SELECT_OFFSET + $c + oam_entry::attrs
 
-    lda #$30                ; no flip, prio 3, palette 0
-    sta OAM_MENU_CARET_SELECT_OFFSET + 4 + oam_entry::attrs
-
-    lda #$30                ; no flip, prio 3, palette 0
-    sta OAM_MENU_CARET_SELECT_OFFSET + 8 + oam_entry::attrs
 
     ;; current value carets aren't going to change tile id for now
     lda #($2 + ($4 * $10))
     sta OAM_MENU_CARET_SELECT_OFFSET + oam_entry::tile_pos
-
-    lda #($2 + ($4 * $10))
-    sta OAM_MENU_CARET_SELECT_OFFSET + 4 + oam_entry::tile_pos
-
-    lda #($2 + ($4 * $10))
-    sta OAM_MENU_CARET_SELECT_OFFSET + 8 + oam_entry::tile_pos
+    sta OAM_MENU_CARET_SELECT_OFFSET + $4 + oam_entry::tile_pos
+    sta OAM_MENU_CARET_SELECT_OFFSET + $8 + oam_entry::tile_pos
+    sta OAM_MENU_CARET_SELECT_OFFSET + $c + oam_entry::tile_pos
 
     ;; set sprites to 16x16px
     lda #$aa
     sta OAM_MENU_CARET_XTRA_PROPS
+    sta OAM_MENU_CARET_XTRA_PROPS + 1
     A16
     rts
 .endproc
@@ -746,6 +760,7 @@ edit:
     sta OAM_MENU_CARET_OFFSET + $4 + oam_entry::y_pos
     sta OAM_MENU_CARET_OFFSET + $8 + oam_entry::y_pos
     sta OAM_MENU_CARET_OFFSET + $c + oam_entry::y_pos
+    sta OAM_MENU_CARET_OFFSET + $10 + oam_entry::y_pos
     rts
 .endproc
 
