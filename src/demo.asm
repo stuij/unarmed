@@ -35,7 +35,7 @@
 .i16
 .a16
 .proc reset_hp
-    lda #PLAYER_HP_START
+    lda a:game_data + game_data::hitpoints
     sta hp
     sta hp + 2
     sta hp + 4

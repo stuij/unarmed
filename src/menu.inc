@@ -393,6 +393,26 @@ clear_bg_behind_tiles_loop:
 
 .a16
 .i16
+.proc handle_between_hitpoints
+    lda menu::curr_column
+    inc
+    sta a:game_data + game_data::hitpoints
+    rts
+.endproc
+
+
+.a16
+.i16
+.proc handle_between_wins
+    lda menu::curr_column
+    inc
+    sta a:game_data + game_data::wins_new
+    rts
+.endproc
+
+
+.a16
+.i16
 .proc handle_between_level
     lda menu::curr_column
     sta a:game_data + game_data::curr_map
@@ -433,6 +453,18 @@ after_edit:
     bra end
 after_players:
 
+    cmp #between_rows::hitpoints
+    bne after_hitpoints
+    jsr handle_between_hitpoints
+    bra end
+after_hitpoints:
+
+    cmp #between_rows::wins
+    bne after_wins
+    jsr handle_between_wins
+    bra end
+after_wins:
+
     cmp #between_rows::level
     bne end
     jsr handle_between_level
@@ -470,19 +502,51 @@ end:
     A16
 
 
-    ;; level caret
-    lda a:game_data + ::game_data::curr_map
+    ;; hitpoints caret
+    lda a:game_data + game_data::hitpoints
+    dec
     lshift 3
     clc
     adc #BETWEEN_MENU_X_TABLE_OFFSET
     A8
-    sta OAM_MENU_CARET_SELECT_OFFSET + 4 + oam_entry::x_pos
+    sta OAM_MENU_CARET_SELECT_OFFSET + $4 + oam_entry::x_pos
+    A16
+
+    lda #(BETWEEN_MENU_Y_TABLE_OFFSET + (between_rows::hitpoints * 8))
+    A8
+    sta OAM_MENU_CARET_SELECT_OFFSET + $4 + oam_entry::y_pos
+    A16
+
+
+    ;; wins caret
+    lda a:game_data + game_data::wins_new
+    dec
+    lshift 3
+    clc
+    adc #BETWEEN_MENU_X_TABLE_OFFSET
+    A8
+    sta OAM_MENU_CARET_SELECT_OFFSET + $8 + oam_entry::x_pos
+    A16
+
+    lda #(BETWEEN_MENU_Y_TABLE_OFFSET + (between_rows::wins * 8))
+    A8
+    sta OAM_MENU_CARET_SELECT_OFFSET + $8 + oam_entry::y_pos
+    A16
+
+
+    ;; level caret
+    lda a:game_data + game_data::curr_map
+    lshift 3
+    clc
+    adc #BETWEEN_MENU_X_TABLE_OFFSET
+    A8
+    sta OAM_MENU_CARET_SELECT_OFFSET + $c + oam_entry::x_pos
     A16
 
 
     lda #(BETWEEN_MENU_Y_TABLE_OFFSET + (between_rows::level * 8))
     A8
-    sta OAM_MENU_CARET_SELECT_OFFSET + 4 + oam_entry::y_pos
+    sta OAM_MENU_CARET_SELECT_OFFSET + $c + oam_entry::y_pos
     A16
 
     rts

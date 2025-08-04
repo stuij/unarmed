@@ -128,7 +128,12 @@ INIT_GAME_INC = 1
     A16
     lda #4
     sta a:game_data + game_data::no_players_new
-    stz a:game_data + ::game_data::curr_map
+    stz a:game_data + game_data::curr_map
+    lda #$5
+    sta a:game_data + game_data::hitpoints
+    lda #$2
+    sta a:game_data + game_data::wins_new
+
     A8
     jsr init_binary_data
     jsr set_game_map

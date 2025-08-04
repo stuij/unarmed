@@ -147,7 +147,7 @@ between_edit_str:      .asciiz  "       edit >"
 between_players_str:   .asciiz  "    players 234"
 between_hitpoints_str: .asciiz  "  hitpoints 123456789"
 between_wins_str:      .asciiz  "       wins 123456789"
-between_level_str:     .asciiz  "      level 0123456789"
+between_level_str:     .asciiz  "      level 123456789"
 
 between_menu_row_table:
 .word 1                 ; start/restart
@@ -155,7 +155,7 @@ between_menu_row_table:
 .word (PLAYER_MAX - 1)  ; players
 .word $9                ; hitpoints
 .word $9                ; wins
-.word $a                ; level
+.word $9                ; level
 
 draw_tile_row_count: .word $1c
 
