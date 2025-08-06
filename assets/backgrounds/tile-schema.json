@@ -3,6 +3,7 @@
         ["bounce wall",    16,  "wb"],
         ["no-bounce wall", 15,  "w"],
         ["kill non-wall",  15,  "k"],
-        ["kill block",      1,  "wkb"]
+        ["kill block",      1,  "wkb"],
+        ["destructo wall",  1,  "wd"]
     ]
 }

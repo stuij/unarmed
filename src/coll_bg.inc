@@ -11,10 +11,12 @@ COLL_BG_INC = 1
 ;; left down and right down, plus the intermediate points so we don't allow
 ;; impaling ourselves horizontally on 8x8 blocks
 
-COLL_STACK_ROOM = $23
-COLL_STACK_TMP = $1f
-COLL_STACK_TILE_PROPS = $1d
-COLL_STACK_POINT_HIT_GROUND = $1b
+COLL_STACK_ROOM = $27
+COLL_STACK_TMP = $23
+COLL_STACK_TILE_PROPS = $21
+COLL_STACK_POINT_HIT_GROUND = $1f
+COLL_STACK_POINT_TILE_PROPS = $1d
+COLL_STACK_POINT_SPRITE_CALLBACK_TMP_2 = $1b
 COLL_STACK_POINT_SPRITE_CALLBACK_TMP = $19
 COLL_STACK_Y_NEW_TMP = $17
 COLL_STACK_X_NEW_TMP = $15
@@ -28,6 +30,14 @@ COLL_STACK_TILE_OFF = $7
 COLL_STACK_POINT_TILE_OFF = $5
 COLL_STACK_POINT_Y_OFF_NEW = $3
 COLL_STACK_POINT_X_OFF_NEW = $1
+
+
+.a16
+.i16
+.proc coll_callback_dummy
+    rts
+.endproc
+
 
 .a16
 .i16
@@ -67,7 +77,8 @@ COLL_STACK_POINT_X_OFF_NEW = $1
     sta COLL_STACK_TILE_OFF, s  ; save tile offset to stack for later
 
     lda #0
-    sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP, s ; set to 0
+    sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP, s
+    sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP_2, s
     sta COLL_STACK_POINT_HIT_GROUND, s
     sta COLL_STACK_TILE_PROPS, s
     ;; So now we have our base info calculated.
@@ -132,11 +143,9 @@ point_x_calc:
     sta COLL_STACK_POINT_TILE_OFF, s
     tax
     A8
-    lda current_coll_map, x           ; check collision map for point
-    ;; save the tile props only if the tile props aren't nil
-    ;; otherwise they'll get overwritten by the props of points that
-    ;; don't actually touch anything
+    lda current_coll_map, x
     A16
+    sta COLL_STACK_POINT_TILE_PROPS, s
     beq after_prop_save
     sta COLL_STACK_TILE_PROPS, s
 after_prop_save:
@@ -260,7 +269,7 @@ coll_snap_y:
     and #$FF80 ; not z flag set, so bigger than 8 + subpixels
                ; tells us we moved out of the block
     bne coll_snap_y_cont
-    jmp point_end ;; assuming we got here from x also not out of bounds
+    jmp point_coll_callback ;; assuming we got here from x also not out of bounds
 coll_snap_y_cont:
     ;; if n flag set, we moved from upper block, so downwards
     bpl coll_snap_y_end
@@ -291,7 +300,7 @@ coll_left_up:
     jmp coll_snap_to_bottom
   : jsr snap_to_right
     jsr snap_to_bottom
-    jmp point_end
+    jmp point_coll_callback
 
 coll_left_down:
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -312,7 +321,7 @@ coll_left_down:
     beq coll_snap_to_top
     jsr snap_to_right
     jsr snap_to_top
-    bra point_end
+    bra point_coll_callback
 
 coll_right_up:
     lda COLL_STACK_POINT_TILE_OFF, s
@@ -333,7 +342,7 @@ coll_right_up:
     beq coll_snap_to_bottom
     jsr snap_to_left
     jsr snap_to_bottom
-    bra point_end
+    bra point_coll_callback
 
 
 ; we're moving in right/down direction
@@ -367,25 +376,33 @@ coll_right_down:
     ; of current tile
     jsr snap_to_left
     jsr snap_to_top
-    bra point_end
+    bra point_coll_callback
 
 
 ;; snapping to what?
 coll_snap_to_top:
     jsr snap_to_top
-    jmp point_end
+    jmp point_coll_callback
 
 coll_snap_to_bottom:
     jsr snap_to_bottom
-    bra point_end
+    bra point_coll_callback
 
 
 coll_snap_to_left:
     jsr snap_to_left
-    bra point_end
+    bra point_coll_callback
 
 coll_snap_to_right:
     jsr snap_to_right
+    bra point_coll_callback
+
+point_coll_callback:
+    lda sprite::vptr
+    clc
+    adc #::sprite_vtable::coll_point_coll_callback
+    tax
+    jsr (0,x)
     bra point_end
 
 ;; put code here, if you want to do something specific if no

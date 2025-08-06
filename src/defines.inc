@@ -80,7 +80,7 @@ OAM_SHIELD_XTRA_PROPS = OAM_SPAWN_BOX_XTRA_PROPS + 1
 .enum tile_props
     wall            = $1
     bounce          = $2
-    climb           = $4
+    destructable    = $4
     kill            = $8
     out_of_bounds   = $80
 .endenum
@@ -95,8 +95,9 @@ OUT_OF_BOUNDS_X = $fff
 OUT_OF_BOUNDS_Y = $f7f
 
 .struct sprite_vtable
-    collision_end_callback       .addr
-    coll_point_no_coll_callback  .addr
+    collision_end_callback      .addr
+    coll_point_no_coll_callback .addr
+    coll_point_coll_callback    .addr
 .endstruct
 
 ;; locked to player_bbox order

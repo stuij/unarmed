@@ -127,7 +127,7 @@ def prop_list_to_nr(prop_list):
                 nr |= 1
             case "b": # bounce
                 nr |= 1 << 1
-            case "c": # climb
+            case "d": # destructable
                 nr |= 1 << 2
             case "k": # kill
                 nr |= 1 << 3

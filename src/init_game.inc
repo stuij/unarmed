@@ -117,20 +117,20 @@ INIT_GAME_INC = 1
     jsr clear_coll_map_bottom
 
     lda a:game_data + game_data::curr_map
-    jsr load_tilemap_to_wram
-    jsr load_tilemap_to_vram
+    jsr load_tilemap_to_staging_wram
+    A16
+    jsr copy_tile_map_staging
+    A8
 
     rts
 .endproc
 
 
-.a8
+.a16
 .i16
 .proc copy_game_map
-    A16
     jsr copy_coll_map_staging
-    A8
-    jsr load_tilemap_to_vram
+    jsr copy_tile_map_staging
     rts
 .endproc
 
@@ -234,8 +234,8 @@ INIT_GAME_INC = 1
     A8
     jsr hide_menu_carets
     force_vblank
-    jsr copy_game_map
     A16
+    jsr copy_game_map
     jsr init_score_graphics
     A8
     unforce_vblank

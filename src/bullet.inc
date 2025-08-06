@@ -42,8 +42,8 @@ bullet_table:
 
 bullet_sprite_vtable:
 .addr .loword(bullet_coll_end_callback)
-.addr .loword(bullet_point_no_coll_callback)
-
+.addr .loword(coll_callback_dummy)
+.addr .loword(bullet_coll_point_callback)
 
 bullet_bbox_default:
 .word $1  ;; y
@@ -186,12 +186,31 @@ loop_end:
     rts
 .endproc
 
+.proc bullet_coll_point_callback
+    ;; currently we're only interested in exploding
+    ;; destructible tiles
+    ;; If we have already registered a tile,
+    ;; we don't need another tile. We're done.
+    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
+    bne end
+    ;; check the current point map for destructo
+    lda COLL_STACK_POINT_TILE_PROPS + 2, s
+    bit #::tile_props::destructable
+    beq end
 
-.proc bullet_point_no_coll_callback
+    ;; we've got a live one. let's save
+    ;; we currently don't really need tile props info
+    ;; but let's see..
+    sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 2, s
+    lda COLL_STACK_POINT_TILE_OFF + 2, s
+    sta COLL_STACK_POINT_SPRITE_CALLBACK_TMP_2 + 2, s
+end:
     rts
 .endproc
 
 
+.a16
+.i16
 .proc bullet_coll_end_callback
     lda COLL_STACK_TILE_PROPS + 2, s
     ;; no collision with anything meaningful
@@ -201,7 +220,11 @@ loop_end:
     bit #tile_props::out_of_bounds
     bne bullet_retire
     bit #tile_props::bounce
-    beq bullet_retire
+    ;; no bounce means retire bullet
+    bne bounce
+    jsr bullet_retire
+    bra check_destructo ;; bullet retired, but might still have done damage
+bounce:
     lda COLL_STACK_Y_NEW_TMP + 2, s
     bmi flip_v
     ;; x collision occured, save new x.
@@ -214,7 +237,7 @@ loop_end:
     sta sprite::v_velo
 flip_v:
     lda COLL_STACK_X_NEW_TMP + 2, s
-    bmi end
+    bmi check_destructo
     ;; x collision occured, save new y
     sta sprite::x_new
     ;; we flip y speed
@@ -223,6 +246,24 @@ flip_v:
     clc
     adc #$1
     sta sprite::h_velo
+check_destructo:
+    ;; if this isn't 0, this is the offset that we want
+    ;; to modify
+    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP_2 + 2, s
+    beq end
+    ;; modify the current collison map
+    tax
+    lda #0
+    A8
+    sta current_coll_map, x
+    A16
+    ;; modify the tile map
+    txa
+    asl
+    tax
+    lda #0
+    ;; TODO: update actual VRAM
+    sta current_tile_map, x
 end:
     rts
 .endproc

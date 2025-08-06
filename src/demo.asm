@@ -183,6 +183,7 @@ end:
     ;; switch back for sanity
     A8
     I16
+    jsr load_tilemap_to_vram
     rts
 .endproc
 

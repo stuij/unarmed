@@ -31,12 +31,14 @@ MENU_INC = 1
     tax
     lda canvas_menu::tile_type
     A8
+    sta f:current_coll_map_staging, x
     sta current_coll_map, x
     A16
     tya
     asl
     tax
     lda canvas_menu::chosen_tile
+    sta f:current_tile_map_staging, x
     sta current_tile_map, x
 flip_h:
     ldy #player::joy_trigger

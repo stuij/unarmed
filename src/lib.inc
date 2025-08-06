@@ -292,10 +292,22 @@ end:
 .endproc
 
 
+.a16
+.i16
+;; no DMA for WRAM to WRAM
+.proc copy_tile_map_staging
+    lda #(GAME_MAP_SIZE - 1)
+    ldx #.loword(current_tile_map_staging)
+    ldy #.loword(current_tile_map)
+    mvn #^current_tile_map_staging, #^current_tile_map
+    rts
+.endproc
+
+
 .a8
 .i16
 ;; A - map index
-.proc load_tilemap_to_wram
+.proc load_tilemap_to_staging_wram
     A16
         tay
         lda #(GAME_MAP_SIZE & $FF)
@@ -305,12 +317,12 @@ end:
         adc #.loword(town_map)
         tax
     A8
-    lda #^current_tile_map
+    lda #^current_tile_map_staging
     sta a:B1L
     ldy #GAME_MAP_SIZE
     sty a:W0
     lda #^town_map
-    ldy #.loword(current_tile_map)
+    ldy #.loword(current_tile_map_staging)
     jsr dma_to_wram
     rts
 .endproc

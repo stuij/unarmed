@@ -118,10 +118,16 @@ b31: .tag bullet
 
 OAM_mirror: .res $220
 
-current_coll_map_staging: .res COLL_MAP_SIZE
 current_coll_map: .res COLL_MAP_SIZE
 current_coll_map_bottom: .res COLL_MAP_BOTTOM_SIZE
+
 current_tile_map: .res GAME_MAP_SIZE
+
+
+.segment "BSS7E"
+
+current_coll_map_staging: .res COLL_MAP_SIZE
+current_tile_map_staging: .res GAME_MAP_SIZE
 
 
 .segment "RODATA"

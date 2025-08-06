@@ -39,6 +39,7 @@ player_start_coords:
 player_sprite_vtable:
 .addr .loword(player_coll_end_callback)
 .addr .loword(player_point_no_coll_callback)
+.addr .loword(coll_callback_dummy)
 
 
 player_bbox_default:
