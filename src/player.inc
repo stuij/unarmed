@@ -720,8 +720,8 @@ after_check_kill:
     lda sprite::move_state ;; only execute
     cmp #move_state::idle
     beq do_ledge_fall
-    cmp move_state::run
-    beq do_ledge_fall
+    bit #move_state::run
+    bne do_ledge_fall
     bra store_y_new
 do_ledge_fall:
     jsr handle_ledge_fall
