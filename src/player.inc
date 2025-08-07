@@ -254,6 +254,9 @@ loop:
     stz player::parry_timer
     stz player::shot_delay
 
+    lda #V_VELO_DEC
+    sta sprite::v_velo_dec
+
     phx
     jsr set_player_bullet_queue
     plx
@@ -408,8 +411,6 @@ after_velo_add:
 .proc init_jump
     lda #V_VELO_INIT
     sta sprite::v_velo
-    lda #V_VELO_DEC
-    sta sprite::v_velo_dec
     lda #$0
     sta sprite::anim_tick
     lda #move_state::jump
@@ -800,8 +801,6 @@ end:
     sta sprite::anim_tick
     lda #move_state::jump
     sta sprite::move_state
-    lda #V_VELO_DEC
-    sta sprite::v_velo_dec
 ledge_fall_check_kill_prop:
     lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP + 4, s
     bit #tile_props::kill
