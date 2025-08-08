@@ -85,6 +85,7 @@ OAM_SHIELD_XTRA_PROPS = OAM_SPAWN_BOX_XTRA_PROPS + 1
     out_of_bounds   = $80
 .endenum
 
+BROKEN_WALL_TILE_OFFSET = 4
 
 ;;------------
 ;; sprite base struct

@@ -443,6 +443,11 @@ def encode_tile_select_bits(select_table, schema):
             encode_cstring_to_file(row[0], 15, row_name)
 
 
+def write_total_schema_offset(schema):
+    with open("select_tiles_max.bin", "wb") as total:
+        total.write(encode_word(0, get_total_schema_tiles(schema)))
+
+
 def main(tmj_in, spec_in):
     tmj = read_file(tmj_in)
     schema = tile_spec_from_file(spec_in)
@@ -450,12 +455,10 @@ def main(tmj_in, spec_in):
     index_table, choose_table, select_table = tile_spec_to_index_lookup(schema)
 
     encode_level_maps(tmj, choose_table)
-
     encode_tile_select_bits(select_table, schema)
-
     encode_font_ascii_table()
-
     make_menu_bg("between_menu.map", 26, 18, schema)
+    write_total_schema_offset(schema)
 
 
 if __name__ == "__main__":

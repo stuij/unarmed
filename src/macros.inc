@@ -31,7 +31,6 @@ MACROS_INC = 1
     sta VMDATA
 .endmacro
 
-
 .macro print_a
     sec
     sbc #$20
@@ -109,5 +108,12 @@ MACROS_INC = 1
     sta INIDISP
 .endmacro
 
+
+.macro make_forbidden_tile_entry offset
+	lda #offset
+	clc
+    adc select_tiles_max
+    ora #$800 ;; priority 2
+.endmacro
 
 .endif ;; MACROS_INC

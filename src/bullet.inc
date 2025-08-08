@@ -249,7 +249,24 @@ flip_v:
 check_destructo:
     ;; if this isn't 0, this is the offset that we want
     ;; to modify
-    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP_2 + 2, s
+    jsr check_destructo_bullet
+end:
+    rts
+.endproc
+
+
+.proc bullet_retire
+    jsr bullet_reset
+    ;; set bullet as inactive in queue
+    ldx bullet::queue_offset
+    ldy bullet::player
+    jsr set_player_queue_item_inactive
+    rts
+.endproc
+
+
+.proc check_destructo_bullet
+    lda COLL_STACK_POINT_SPRITE_CALLBACK_TMP_2 + 4, s
     beq end
     ;; modify the current collison map
     tax
@@ -261,8 +278,7 @@ check_destructo:
     txa
     asl
     tax
-    lda #0
-    ;; TODO: update actual VRAM
+    make_forbidden_tile_entry BROKEN_WALL_TILE_OFFSET
     sta current_tile_map, x
 end:
     rts
@@ -312,15 +328,6 @@ end:
     rts
 .endproc
 
-
-.proc bullet_retire
-    jsr bullet_reset
-    ;; set bullet as inactive in queue
-    ldx bullet::queue_offset
-    ldy bullet::player
-    jsr set_player_queue_item_inactive
-    rts
-.endproc
 
 ;       2
 ;      piv  bull

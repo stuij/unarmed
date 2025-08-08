@@ -124,6 +124,10 @@ end:
     rts
 .endproc
 
+
+
+;; maths
+
 .a16
 .i16
 ;; in:

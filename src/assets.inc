@@ -64,6 +64,10 @@ select_row_tile_types:
 .incbin "assets/select_row_tile_types.bin"
 select_row_tile_types_end:
 
+select_tiles_max:
+.incbin "assets/select_tiles_max.bin"
+select_tiles_max_end:
+
 
 .segment "BANK2"
 
