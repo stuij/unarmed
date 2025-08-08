@@ -343,7 +343,7 @@ def tile_spec_to_index_lookup(schema):
         choose_row += 1
         choose_row_idx = 0
 
-    for i in range(9):
+    for i in range(7):
         select_table.extend(
             make_table_row_bg(select_table_width, total_schema_tiles, select_inner_entry))
 
