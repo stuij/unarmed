@@ -83,10 +83,10 @@ end:
 .a16
 .i16
 .proc draw_tile_menu_callback
-    jsr canvas_set_tile
     A8
     jsr load_tilemap_to_vram
     A16
+    jsr canvas_set_tile
     jsr canvas_patch_chosen_tile
     rts
 .endproc
@@ -419,8 +419,9 @@ clear_bg_behind_tiles_loop:
     lda menu::curr_column
     sta a:game_data + game_data::curr_map
     A8
-    force_vblank
     jsr set_game_map
+    force_vblank
+    jsr load_tilemap_to_vram
     unforce_vblank
     A16
     rts

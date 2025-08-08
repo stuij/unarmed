@@ -131,6 +131,9 @@ INIT_GAME_INC = 1
 .proc copy_game_map
     jsr copy_coll_map_staging
     jsr copy_tile_map_staging
+    A8
+    jsr load_tilemap_to_vram
+    A16
     rts
 .endproc
 

@@ -183,7 +183,10 @@ end:
     ;; switch back for sanity
     A8
     I16
+    lda game_data + ::game_data::in_game
+    beq end
     jsr load_tilemap_to_vram
+end:
     rts
 .endproc
 
