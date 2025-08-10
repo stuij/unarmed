@@ -31,7 +31,7 @@ HUD_INC = 1
     lda #(VRAM_MAP_FONT_BASE + HUD_SET_BASE)
     sta VMADD
 
-    print_char 'S'
+    print_char 'G'
     print_char ':'
 
     ldx #$0
