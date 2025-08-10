@@ -290,7 +290,7 @@ end:
     ;; but first we increment the matches won counter
     tyx
     lda matches, x
-    cmp #$9
+    cmp #99
     bcs reset_match_count
     inc matches, x
     bra after_inc_matches

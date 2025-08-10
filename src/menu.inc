@@ -628,7 +628,23 @@ loop:
 
     print_pad 2
 
+    ;; calculate digits
     lda matches, x
+    sta WRDIVL ; and 4205
+    lda #$a
+    A8
+    sta WRDIVB
+    A16
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    lda RDDIVL
+    print_nr
+    lda RDMPYL
     print_nr
 
     lda a:W5
