@@ -61,7 +61,7 @@ otherwise we:
 *** DONE clean flow between different menus and game
 *** DONE temporary invulnerability on game start and after getting hit/touching kill blocks
 *** DONE At game start, we start in idle mode.
-*** implement concept of match/cap max wins
+*** DONE implement concept of match/cap max wins
 as now after 9 wins we run into non-letter ascii codes
 ** hopefully done before end of game jam
 *** DONE when going out of bounds and not on some kind of killblock, randomly spawn at one of the 4 spawnboxes
@@ -71,39 +71,50 @@ We're currently very floaty, and we're not doing anything special, like jumping 
 tbh test group seemed to be fine with the floatiness
 *** DONE help text on menus
 *** DONE add background layer
-*** implement different wall types
-**** non-deflecting
-**** walk-through kill block
-**** warp block
-**** bounce block
-**** ice?
-**** allow climbing
+*** DONE start for pause, instead of select
+*** DONE implement different wall types
+**** DONE non-deflecting
+**** DONE walk-through kill block
 **** DONE solid kill block
 *** sound effects
 **** for shooting
 **** getting hit
 **** jumping
-*** title screen
+**** dying
+**** parrying
+*** title screen/game start
+**** title screen
+**** lore
+**** controls (?)
 *** make music
+**** level music
+**** menu/non-level music
+**** win music
 *** make level designs
+**** a couple of current levels have dead ends. would be more fun to be able to move to other places. But also sometimes nice to have level be a shootout area.
+*** winning animation
 *** shield animation
 *** dying animation
-*** winning animation
-*** when people get hit by bullet, do easing off of impact speed
-*** shooter is pushed back when shooting, by a lot might be fun
-*** hold shield upwards
-*** a couple of current levels have dead ends. would be more fun to be able to move to other places. But also sometimes nice to have level be a shootout area.
-*** lore
-*** when you die, should be some kind of lively animation
-*** when you get hit, some form of explosion?
-*** max bullets ricochet
-*** when reflected, a bullet should change color to red to indicate harm to owner
-*** allow for space above level, just like below. is a bit trickier as we would need to offset all y coords, but would make playing field a bit bigger, as you can then jump upwards, instead of immediately hitting the electric fences/warp spots
-*** alternate control scheme(s)
 ** bugfixes
 *** bugfix: when you bump into a wall when going right, and you glide down, you can land on killblock and go into idle/running state without triggering killblock ramifications
 *** bugfix: when spawning or taking away tiles, when you're less than a block above a solid block, you hover in idle state, and can walk elevatedly above the block
 * nice to have
+** when you get hit, some form of explosion?
+** when people get hit by bullet, do easing off of impact speed
+** shooter is pushed back when shooting, by a lot might be fun
+** match count only goes up to 10 before they roll over to 0. Would be nice if they went up to 100.
+** hold shield upwards
+** max bullets ricochet
+** when reflected, a bullet should change color to red to indicate harm to owner
+*** allow for space above level, just like below. is a bit trickier as we would need to offset all y coords, but would make playing field a bit bigger, as you can then jump upwards, instead of immediately hitting the electric fences/warp spots
+** alternate control scheme(s)
+
+** more types of blocks
+**** warp block
+**** bounce block
+**** ice?
+**** allow climbing
+
 ** coyote time
 (aka some leeway in where the edge of a ledge is when jumping off them while runnining)
 ** timer
