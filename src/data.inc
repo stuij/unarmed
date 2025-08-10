@@ -170,7 +170,11 @@ start_game_overlay_text:
 .asciiz "    Get set to KILL!"
 
 end_game_overlay_text:
-.asciiz " wins!!!"
+.asciiz " wins game!!!"
+
+end_match_overlay_text:
+.asciiz " wins match!!!"
+
 
 ;; So this seems like it is taking the soul a bit out of
 ;; the programmers mind, but this is the price I'm willing

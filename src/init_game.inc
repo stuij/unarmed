@@ -149,7 +149,7 @@ INIT_GAME_INC = 1
     lda #$5
     sta a:game_data + game_data::hitpoints
     lda #$2
-    sta a:game_data + game_data::wins_new
+    sta a:game_data + game_data::wins
 
     A8
     jsr init_binary_data

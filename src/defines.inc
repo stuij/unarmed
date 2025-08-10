@@ -452,7 +452,6 @@ OVERLAY_INPUT_MASK      = 0
     no_players      .word
     no_players_new  .word
     wins            .word
-    wins_new        .word
     hitpoints       .word
     bullets_pp      .word
     game_handler    .word

@@ -408,7 +408,7 @@ clear_bg_behind_tiles_loop:
 .proc handle_between_wins
     lda menu::curr_column
     inc
-    sta a:game_data + game_data::wins_new
+    sta a:game_data + game_data::wins
     rts
 .endproc
 
@@ -522,7 +522,7 @@ end:
 
 
     ;; wins caret
-    lda a:game_data + game_data::wins_new
+    lda a:game_data + game_data::wins
     dec
     lshift 3
     clc

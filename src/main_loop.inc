@@ -33,17 +33,23 @@ MAIN_LOOP_INC = 1
     cmp #$ffff
     beq set_first_player ;; skip player win increment. no-one wins. no celebrations.
     ;; It was a win. Winner is in Y
-    ;; TODO: check for everyone dead
-    tyx
-    inc wins, x ;; increment wins for player
-    ;; go to win/game over menu state
     bra end_game
 set_first_player:
     ;; everyone dead, so we set menu control player to 1st
     ldy #0
 end_game:
-    jsr init_game_epilogue
+    jsr handle_end_game
 end:
+    rts
+.endproc
+
+
+;; Y - player nr (x2)
+.proc handle_end_game
+    tyx
+    inc wins, x ;; increment wins for player
+    ;; go to win/game over menu state
+    jsr init_game_epilogue
     rts
 .endproc
 
@@ -263,7 +269,6 @@ game_start:
     jsr exit_overlay
     lda #.loword(handle_main_loop)
     sta a:game_data + game_data::game_handler
-    ;; at some point we need to do this
     lda #1
     sta a:game_data + game_data::in_game
 end:
@@ -278,7 +283,36 @@ end:
     lda a:player_table, y
     sta a:game_data + game_data::curr_winner
 
+    lda wins, y
+    cmp game_data + game_data::wins
+    bcc still_in_match
+    ;; otherwise we transition to game over
 
+    ;; set overlay text
+    A8
+    force_vblank
+    A16
+    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + 7)
+    sta VMADD
+    tya
+    lsr
+    jsr print_head
+    lda #.loword(end_match_overlay_text)
+    jsr print_string
+    A8
+    unforce_vblank
+    A16
+
+    ;; some general overlay things
+    ldx #OVERLAY_END_DURATION
+    ldy #OVERLAY_INPUT_MASK
+    jsr set_overlay
+
+    lda #.loword(handle_match_epilogue)
+    sta a:game_data + game_data::game_handler
+    rts
+
+still_in_match:
     ;; set overlay text
     A8
     force_vblank
@@ -314,7 +348,28 @@ end:
 end_epilogue:
     jsr exit_overlay
 
-    lda a:game_data + game_data::curr_winner
+    jsr start_new_game
+end:
+    rts
+.endproc
+
+
+.proc handle_match_epilogue
+    lda a:game_data + game_data::overlay_counter
+    beq end_epilogue
+    dec a:game_data + game_data::overlay_counter
+    jsr handle_main_loop
+    bra end
+end_epilogue:
+    jsr exit_overlay
+
+    ;; I had it so the winner would get control over the
+    ;; menu, but if you're playing by yourself as player 1,
+    ;; now you're stuck. Which doesn't really make sense for a 2 player
+    ;; game, but as this is a game jam game, this migh happen
+    ;; more often than not.
+    ;; lda a:game_data + game_data::curr_winner
+    lda a:player_table
     ldx #.loword(between_games_menu)
     ldy #0
     jsr switch_to_menu
