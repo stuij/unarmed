@@ -287,7 +287,16 @@ end:
     cmp game_data + game_data::wins
     bcc still_in_match
     ;; otherwise we transition to game over
-
+    ;; but first we increment the matches won counter
+    tyx
+    lda matches, x
+    cmp #$9
+    bcs reset_match_count
+    inc matches, x
+    bra after_inc_matches
+reset_match_count:
+    stz matches, x
+after_inc_matches:
     ;; set overlay text
     A8
     force_vblank

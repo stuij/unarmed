@@ -440,6 +440,7 @@ clear_bg_behind_tiles_loop:
 
     cmp #between_rows::start
     bne after_start
+    jsr reset_wins
     jsr start_new_game
     bra end
 after_start:
@@ -627,7 +628,7 @@ loop:
 
     print_pad 2
 
-    lda wins, x
+    lda matches, x
     print_nr
 
     lda a:W5

@@ -55,6 +55,17 @@
 .endproc
 
 
+.i16
+.a16
+.proc reset_matches
+    stz matches
+    stz matches + 2
+    stz matches + 4
+    stz matches + 6
+    rts
+.endproc
+
+
 ;; X - player offset
 .proc player_dec_hp
     lda hp, x

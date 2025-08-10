@@ -153,7 +153,7 @@ between_restart_str:   .asciiz  "  new match >"
 between_edit_str:      .asciiz  "       edit >"
 between_players_str:   .asciiz  "    players 234"
 between_hitpoints_str: .asciiz  "  hitpoints 123456789"
-between_wins_str:      .asciiz  "       wins 123456789"
+between_wins_str:      .asciiz  "       sets 123456789"
 between_level_str:     .asciiz  "      level 123456789"
 
 between_menu_row_table:

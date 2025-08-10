@@ -494,14 +494,18 @@ OVERLAY_INPUT_MASK      = 0
 ASCII_NR_BASE_OFFSET = 48 - 32  ; 48 is ascii position of 0,
                                 ; and our tiles start from ascii nr 32
 
-HUD_WIN_BASE = 4
-HUD_WIN_SKIP = 2
+HUD_WIN_BASE = $1
+HUD_WIN_SKIP = $2
 
-HUD_SCORE_NR_BASE = 5
-HUD_PLAYER_SKIP = 3
+HUD_SET_BASE = $11
+
+HUD_SCORE_HP_BASE = $4
+HUD_SCORE_SET_BASE = $14
+
+HUD_PLAYER_SKIP = $3
 
 HUD_SPRITE_X_BASE = $1a
 HUD_SPRITE_X_SKIP = $38
-HUD_SPRITE_Y = 3
+HUD_SPRITE_Y = $3
 
 .endif ; DEFINES_INC

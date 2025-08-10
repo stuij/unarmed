@@ -146,7 +146,7 @@ INIT_GAME_INC = 1
     lda #4
     sta a:game_data + game_data::no_players_new
     stz a:game_data + game_data::curr_map
-    lda #$5
+    lda #$4
     sta a:game_data + game_data::hitpoints
     lda #$2
     sta a:game_data + game_data::wins
@@ -165,6 +165,7 @@ INIT_GAME_INC = 1
     jsr init_carets
     jsr set_best_keys
     jsr reset_wins
+    jsr reset_matches
 
     jsr init_score_graphics
 
