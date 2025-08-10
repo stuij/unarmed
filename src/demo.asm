@@ -192,10 +192,15 @@ end:
     I8
     jsr dma_OAM
     ;; switch back for sanity
-    A8
     I16
-    lda game_data + ::game_data::in_game
-    beq end
+    ;; basically we're guarding against overwriting vram with
+    ;; in mem representation if we're in draw mode. but we only really
+    ;; care updating every frame for the main loop, so this should be
+    ;; good enough.
+    lda a:game_data + game_data::game_handler
+    cmp #.loword(handle_main_loop)
+    A8
+    bne end
     jsr load_tilemap_to_vram
 end:
     rts
