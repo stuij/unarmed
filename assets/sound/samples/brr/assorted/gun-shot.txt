@@ -1,0 +1,4 @@
+=== gun_shot ===
+set_instrument gun_shot
+
+play_note c+4 $20
