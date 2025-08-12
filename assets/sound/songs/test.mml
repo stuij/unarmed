@@ -1,7 +1,14 @@
-#Title Bangin track
+#Title Bangin' track
 #Composer verzonken
 #Copyright copyleft
 
-#Tempo 90
-#ZenLen 192
+#Tempo 70
 
+@1 square
+@2 triangle
+
+A @1 v6 o2
+A L c r r r | g r r r | f r r r | e r r r
+
+B @2 v12
+B L d e f g | d e g g | d e f g | d e a r

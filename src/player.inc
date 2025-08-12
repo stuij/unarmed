@@ -815,7 +815,7 @@ end:
     lda player::hit_timer
     bne end
     A8
-    lda #SFX::robot_fires_laser
+    lda #SFX::gun_shot
     jsr Tad_QueueSoundEffect_D
     A16
     lda player::nr

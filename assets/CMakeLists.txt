@@ -58,7 +58,7 @@ set(TAD_OUT_FILES ${TAD_PROD}.asm ${TAD_PROD}.bin ${TAD_PROD}.inc)
 
 add_custom_command(
     OUTPUT ${TAD_OUT_FILES}
-    COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-sound.sh ../../terrific-audio-driver/examples/example-project.terrificaudio ${TAD_OUT_FILES}
+    COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-sound.sh ${CMAKE_CURRENT_SOURCE_DIR}/sound/sounds_n_stuff.terrificaudio ${TAD_OUT_FILES}
     )
 
     set(FONT_OUTPUT font.map font.palette font.tiles)

@@ -237,7 +237,7 @@ end:
     jsr init_game_data
 
     ;; play some music
-    lda #1
+    lda #Song::test
     jsr load_song
 
 
