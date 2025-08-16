@@ -2,13 +2,29 @@
 #Composer verzonken
 #Copyright copyleft
 
-#Tempo 70
+#Tempo 50
 
 @1 square
 @2 triangle
+@3 side_stick
+@4 kick
 
 A @1 v6 o2
-A L c r r r | g r r r | f r r r | e r r r
+A L   [ c | g  | f  | e ]8
+A      d2| g2. | c | d2 |o1 a2 | g2. |  e | d2
+A      d2| g2. | c | d2 o2 a2 | g2. |  e | d2
+A
 
-B @2 v12
-B L d e f g | d e g g | d e f g | d e a r
+
+B @2 v12 o4
+B L   [ c16 ]16 [ f16 ]16 [ g16 ]16 [ e16 ]16
+B  	  [ c16 ]16 [ f16 ]16 [ e16 ]16 e & r r r
+B     [ r ]16
+B     [ r ]16
+B o5  [ e16 ]16 [ f16 ]16 [ c16 ]16 [ d16 ]16
+B     [ f16 ]16 [ e16 ]16 o4[ b16 ]16 o5[ c16 ]16
+B     [ r ]16
+B     [ r ]16
+
+C @3
+C L     r4 c16 c16 e16 c8 c16
