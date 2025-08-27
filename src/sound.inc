@@ -24,12 +24,11 @@ set_volume:
     ;; so that's why it seems like we're not immediately
     ;; reacting to turning the music down.
     ;; not totally sure about this though.
-    A8
     jsr Tad_GlobalVolumesPersist
 
     lda #TadCommand::SET_GLOBAL_VOLUMES
     ldx #64
-    ldy #255
+    ldy #$ff
     jsr Tad_QueueCommand
     rts
 .endproc

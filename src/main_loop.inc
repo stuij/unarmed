@@ -372,6 +372,11 @@ end:
 end_epilogue:
     jsr exit_overlay
 
+    A8
+    lda #Song::menu
+    jsr load_song
+    A16
+
     ;; I had it so the winner would get control over the
     ;; menu, but if you're playing by yourself as player 1,
     ;; now you're stuck. Which doesn't really make sense for a 2 player

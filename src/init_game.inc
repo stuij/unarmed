@@ -251,6 +251,11 @@ INIT_GAME_INC = 1
 .a16
 .i16
 .proc start_new_game
+    A8
+    lda #Song::level
+    jsr load_song
+    A16
+
     jsr level_screen_to_fore
     jsr reset_game
     jsr init_game_prologue

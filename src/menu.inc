@@ -1071,10 +1071,6 @@ after_parent_save:
 
     inc a:game_data + game_data::menu_dirty_draw
 
-    A8
-
-    A16
-
     rts
 .endproc
 
