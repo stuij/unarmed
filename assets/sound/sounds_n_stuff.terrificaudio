@@ -160,6 +160,7 @@
     "interruptible": true
   },
   "high_priority_sound_effects": [
+    "sine",
     "gun_shot"
   ],
   "sound_effects": [],

@@ -1,3 +1,8 @@
+=== sine ===
+set_instrument sine
+set_volume 0
+
+play_note c+4 $20
 === gun_shot ===
 set_instrument gun_shot
 
