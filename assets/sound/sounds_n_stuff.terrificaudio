@@ -1,7 +1,7 @@
 {
   "_about": {
     "file_type": "Terrific Audio Driver project file",
-    "version": "0.1.0-beta.1"
+    "version": "0.1.1"
   },
   "instruments": [
     {
@@ -20,7 +20,8 @@
       "name": "slap_bass",
       "source": "samples/brr/Loafspell/Slap Bass(Pop).brr",
       "freq": 500.0,
-      "loop": "none",
+      "loop": "override_brr_loop_point",
+      "loop_setting": 0,
       "evaluator": "default",
       "ignore_gaussian_overflow": false,
       "first_octave": 4,
@@ -47,8 +48,8 @@
       "loop": "none",
       "evaluator": "default",
       "ignore_gaussian_overflow": false,
-      "first_octave": 4,
-      "last_octave": 4,
+      "first_octave": 1,
+      "last_octave": 6,
       "envelope": "adsr 12 2 2 15",
       "comment": null
     },
@@ -99,7 +100,57 @@
       "ignore_gaussian_overflow": false,
       "first_octave": 1,
       "last_octave": 6,
-      "envelope": "adsr 12 1 1 16",
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "snare",
+      "source": "samples/brr/Loafspell/drums/Snare Drum A(Soft).brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 1,
+      "last_octave": 6,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "hi_hat",
+      "source": "samples/brr/Loafspell/drums/Hi-Hat Closed.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 1,
+      "last_octave": 6,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "rumble",
+      "source": "samples/brr/Loafspell/looped/Synth Strings 5ths.brr",
+      "freq": 500.0,
+      "loop": "override_brr_loop_point",
+      "loop_setting": 0,
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 1,
+      "last_octave": 6,
+      "envelope": "adsr 2 2 2 5",
+      "comment": null
+    },
+    {
+      "name": "melody",
+      "source": "samples/wav/Loafspell/80's Synth-Pop Resonator Bass.wav",
+      "freq": 500.0,
+      "loop": "loop_reset_filter",
+      "loop_setting": 0,
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 1,
+      "last_octave": 6,
+      "envelope": "adsr 10 7 7 5",
       "comment": null
     }
   ],
@@ -116,8 +167,12 @@
   "sound_effect_file": "samples/brr/assorted/gun-shot.txt",
   "songs": [
     {
-      "name": "test",
-      "source": "songs/test.mml"
+      "name": "menu",
+      "source": "songs/menu.mml"
+    },
+    {
+      "name": "level",
+      "source": "songs/level.mml"
     }
   ]
 }

@@ -1,0 +1,50 @@
+#Title Bangin' track
+#Composer verzonken
+#Copyright copyleft
+
+#Tempo 157
+
+
+@1 kick
+@2 snare
+@3 hi_hat
+@4 rumble adsr 2 2 2 5
+@5 rumble adsr 14 3 6 4
+@6 melody
+
+
+A @1 v8 o4 l8
+A L grrr rrrr | rrgr rrrr | rrgr rrrr | rrgr rrgr |
+
+B @2 v6 o5 l8
+B L rrrr grrg | rgrr grrr | rrrr grrg | rgrr grrg |
+
+C @3 v6 o5 l8
+C L grgr grgr | grgr grgr | grgr grgr | grgr grgr |
+
+D @5 v4 o2 l1
+D [ rrrr  ] 2
+D L [ g&r | g+&r | g&r | c+&r | g&r | g+&r | g&r | rr |
+D     g&r | g+&r | g&r | c+d  | g&r | g+&r | g&r | rr ] 2
+D     g&r | f+&r | g&r | c+&r | g&r | g+&r | d&r | rr |
+D     g&r | f+&r | g&r | c+d  | g&r | d+&r | e&e | rr |
+D     g&r | f+&r | g&r | c+&r | g&r | g+&r | d&r | rr |
+D     g&r | f+&r | g&r | c+d  | g&r | d+&r |< g&g&g&g >|
+
+
+E @6 v4 o4 l8
+E  [ rrrr rrrr ] 16
+E L [ gr f+r gr gr rr ] 16
+E  [rrrr rrrr]4
+E [ gr f+r gr arrr | gr f+r gr grrr |
+E  gr f+r gr errr | gr f+r gr grrr] 3
+E  [rrrr rrrr]2
+E  gr f+r cr dr  | dr cr f+r gr| > cr < gr f+r dr | cr < ar gr >  cr
+E  gr f+r cr dr  | dr cr f+r gr| cr < gr f+r dr | cr < ar gr >  cr
+E  [rrrr rrrr] 15
+
+
+
+
+
+
