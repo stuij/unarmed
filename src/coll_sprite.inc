@@ -194,7 +194,7 @@ bullet_end:
     ;; we're actually hit hit!!
     ;; play player hit sound
     A8
-    lda #SFX::gun_shot
+    lda #SFX::hurt
     jsr Tad_QueueSoundEffect_D
     A16
     ; set various hit-related bookkeeping things

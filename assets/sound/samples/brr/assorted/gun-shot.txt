@@ -6,4 +6,8 @@ play_note c+4 $20
 === gun_shot ===
 set_instrument gun_shot
 
-play_note c+4 $20
+play_note g3 35
+=== hurt ===
+set_instrument hurt
+
+play_note a3 30

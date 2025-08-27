@@ -815,7 +815,7 @@ end:
     lda player::hit_timer
     bne end
     A8
-    lda #SFX::gun_shot
+    lda #SFX::hurt
     jsr Tad_QueueSoundEffect_D
     A16
     lda player::nr
@@ -1281,6 +1281,11 @@ end:
     ;; we are shooting something!
     ;; save left x and y
     ;; x
+    A8
+    lda #SFX::gun_shot
+    jsr Tad_QueueSoundEffect_D
+    A16
+
     lda sprite::face_dir
     asl
     tax

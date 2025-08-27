@@ -5,18 +5,6 @@
   },
   "instruments": [
     {
-      "name": "gun_shot",
-      "source": "samples/brr/assorted/gun-shot.brr",
-      "freq": 500.0,
-      "loop": "none",
-      "evaluator": "default",
-      "ignore_gaussian_overflow": true,
-      "first_octave": 4,
-      "last_octave": 4,
-      "envelope": "adsr 12 2 2 15",
-      "comment": null
-    },
-    {
       "name": "slap_bass",
       "source": "samples/brr/Loafspell/Slap Bass(Pop).brr",
       "freq": 500.0,
@@ -152,6 +140,30 @@
       "last_octave": 6,
       "envelope": "adsr 10 7 7 5",
       "comment": null
+    },
+    {
+      "name": "gun_shot",
+      "source": "samples/brr/assorted/flaunch.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 1,
+      "last_octave": 6,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "hurt",
+      "source": "samples/brr/assorted/slightscream-08.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 1,
+      "last_octave": 6,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
     }
   ],
   "samples": [],
@@ -161,6 +173,7 @@
   },
   "high_priority_sound_effects": [
     "sine",
+    "hurt",
     "gun_shot"
   ],
   "sound_effects": [],
