@@ -71,6 +71,12 @@
     lda hp, x
     cmp #1
     beq hp_zero
+
+    A8
+    lda #SFX::hurt
+    jsr Tad_QueueSoundEffect_D
+    A16
+
     dec hp, x
     rts
 hp_zero:

@@ -164,17 +164,97 @@
       "last_octave": 6,
       "envelope": "adsr 12 2 2 15",
       "comment": null
+    },
+    {
+      "name": "jump",
+      "source": "samples/brr/assorted/30_Jump_03.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 4,
+      "last_octave": 4,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "land",
+      "source": "samples/brr/assorted/45_Landing_01.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 3,
+      "last_octave": 3,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "death_scream",
+      "source": "samples/brr/assorted/3yell6.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 3,
+      "last_octave": 3,
+      "envelope": "adsr 15 2 2 1",
+      "comment": null
+    },
+    {
+      "name": "parry_bounce",
+      "source": "samples/brr/assorted/qubodupImpactMetal.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 4,
+      "last_octave": 4,
+      "envelope": "adsr 15 2 2 15",
+      "comment": null
+    },
+    {
+      "name": "explode",
+      "source": "samples/brr/assorted/explode.brr",
+      "freq": 500.0,
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "first_octave": 3,
+      "last_octave": 3,
+      "envelope": "adsr 12 2 2 15",
+      "comment": null
     }
   ],
-  "samples": [],
+  "samples": [
+    {
+      "name": "cowbell_high",
+      "source": "samples/brr/nesdoug/Cowbell.brr",
+      "loop": "none",
+      "evaluator": "default",
+      "ignore_gaussian_overflow": false,
+      "sample_rates": [
+        64000
+      ],
+      "envelope": "adsr 8 2 2 15",
+      "comment": null
+    }
+  ],
   "default_sfx_flags": {
     "one_channel": true,
     "interruptible": true
   },
   "high_priority_sound_effects": [
     "sine",
+    "death_scream",
     "hurt",
-    "gun_shot"
+    "gun_shot",
+    "explode",
+    "jump",
+    "land",
+    "parry_bounce",
+    "parry_init",
+    "bullet_bounce"
   ],
   "sound_effects": [],
   "low_priority_sound_effects": [],

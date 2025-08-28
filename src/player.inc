@@ -409,6 +409,11 @@ after_velo_add:
 
 
 .proc init_jump
+    A8
+    lda #SFX::jump
+    jsr Tad_QueueSoundEffect_D
+    A16
+
     lda #V_VELO_INIT
     sta sprite::v_velo
     lda #$0
@@ -744,6 +749,12 @@ store_y_new:
     sta sprite::move_state
   : lda COLL_STACK_POINT_HIT_GROUND + 2, s
     beq store_x_new
+
+    A8
+    lda #SFX::land
+    jsr Tad_QueueSoundEffect_D
+    A16
+
     lda #move_state::idle
     sta sprite::move_state
     lda #$0
@@ -814,10 +825,6 @@ end:
 .proc player_handle_kill
     lda player::hit_timer
     bne end
-    A8
-    lda #SFX::hurt
-    jsr Tad_QueueSoundEffect_D
-    A16
     lda player::nr
     asl
     tax
@@ -833,6 +840,11 @@ end:
 
 ;; in - X: player offset
 .proc player_dead
+    A8
+    lda #SFX::death_scream
+    jsr Tad_QueueSoundEffect_D
+    A16
+
     phd
     lda a:player_table, x
     tcd
@@ -1213,6 +1225,12 @@ end:
     lda player::joy_trigger
     and in_game_keys + igk::parry
     beq end
+
+    A8
+    lda #SFX::parry_init
+    jsr Tad_QueueSoundEffect_D
+    A16
+
     lda #PARRY_COUNT
     sta player::parry_timer
 end:

@@ -11,3 +11,31 @@ play_note g3 35
 set_instrument hurt
 
 play_note a3 30
+=== jump ===
+set_instrument jump
+
+play_note a4 15
+=== land ===
+set_instrument land
+
+play_note b3 10
+=== death_scream ===
+set_instrument death_scream
+
+play_note e3 250
+=== parry_init ===
+set_instrument melody
+
+play_note f3 15
+=== parry_bounce ===
+set_instrument parry_bounce
+
+play_note d4 15
+=== bullet_bounce ===
+set_instrument cowbell_high
+
+play_note 0, 30
+=== explode ===
+set_instrument explode
+
+play_note d3 100

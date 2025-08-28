@@ -69,7 +69,7 @@ select_tiles_max:
 select_tiles_max_end:
 
 
-.segment "BANK2"
+.segment "BANK3"
 
 ;; backgrounds
 
@@ -92,7 +92,7 @@ town_coll:
 town_coll_end:
 
 
-.segment "BANK3"
+.segment "BANK4"
 
 ;; city
 city_tiles:

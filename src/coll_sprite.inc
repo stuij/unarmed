@@ -166,6 +166,11 @@ bullet_end:
 
 
 .proc handle_shield_hit
+    A8
+    lda #SFX::parry_bounce
+    jsr Tad_QueueSoundEffect_D
+    A16
+
     ;; W4 == player offset
     ldy a:W4
     ldx a:player_table, y

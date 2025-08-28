@@ -211,6 +211,19 @@ end:
 
 .a16
 .i16
+.proc do_bullet_impact
+    A8
+    lda #SFX::explode
+    jsr Tad_QueueSoundEffect_D
+    A16
+
+    jsr bullet_retire
+    rts
+.endproc
+
+
+.a16
+.i16
 .proc bullet_coll_end_callback
     lda COLL_STACK_TILE_PROPS + 2, s
     ;; no collision with anything meaningful
@@ -222,9 +235,14 @@ end:
     bit #tile_props::bounce
     ;; no bounce means retire bullet
     bne bounce
-    jsr bullet_retire
+    jsr do_bullet_impact
     bra check_destructo ;; bullet retired, but might still have done damage
 bounce:
+    A8
+    lda #SFX::bullet_bounce
+    jsr Tad_QueueSoundEffect_D
+    A16
+
     lda COLL_STACK_Y_NEW_TMP + 2, s
     bmi flip_v
     ;; x collision occured, save new x.
