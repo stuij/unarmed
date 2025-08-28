@@ -108,4 +108,18 @@ city_palette:
 city_palette_end:
 
 
+;; title screen
+title_screen_tiles:
+.incbin "assets/title-screen.tiles"
+title_screen_tiles_end:
+
+title_screen_map:
+.incbin "assets/title-screen.map"
+title_screen_map_end:
+
+title_screen_palette:
+.incbin "assets/title-screen.palette"
+title_screen_palette_end:
+
+
 .endif ; ASSETS_INC

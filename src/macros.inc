@@ -99,7 +99,7 @@ MACROS_INC = 1
 
 
 .macro force_vblank
-    lda #$8F
+    lda #$80
     sta INIDISP
 .endmacro
 

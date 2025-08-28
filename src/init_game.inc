@@ -5,6 +5,37 @@ INIT_GAME_INC = 1
 
 .a8
 .i16
+.proc init_title_binary
+    ;; palette
+    ldy #(title_screen_palette_end - title_screen_palette) ; # of palette entries
+    sty <W0
+    lda #^title_screen_palette
+    ldx #.loword(title_screen_palette)
+    ldy #$30
+    jsr dma_to_palette
+
+    ;; tiles
+    ldy #(title_screen_tiles_end - title_screen_tiles) ; size of transfer
+    sty <W0
+    lda #^title_screen_tiles
+    ldx #.loword(title_screen_tiles)
+    ldy #VRAM_BG_CHR_BASE
+    jsr dma_to_vram
+
+    ;; map
+    ldy #(title_screen_map_end - title_screen_map) ; size of transfer
+    sty a:W0
+    lda #^title_screen_map
+    ldx #.loword(title_screen_map)
+    ldy #VRAM_MAP_BG_GAME_BASE
+    jsr dma_to_vram
+
+    rts
+.endproc
+
+
+.a8
+.i16
 .proc init_binary_data
     ; let's copy over some binary data
     ;; first the palette
@@ -137,6 +168,79 @@ INIT_GAME_INC = 1
     rts
 .endproc
 
+.a8
+.i16
+.proc title_screen_init
+    jsr init_title_binary
+
+    ; set bg 1 and bg 2 char vram base addr.
+    ; level and menu share character data
+    lda #((VRAM_BG_CHR_BASE >> 12) << 4 )
+    sta BG12NBA
+
+    lda #((VRAM_MAP_BG_GAME_BASE >> 10) << 2)
+    sta BG2SC ; set bg 2 tile map
+
+    stz BG2HOFS
+    stz BG2HOFS
+
+    ;; put vertical offset one below, because of how SNES works
+    lda #BG_V_TOP_ALIGN
+    sta BG2VOFS
+    stz BG2VOFS
+
+    ;; get stuff in place to be able to run input checking
+    A16
+    stz p1 + player::joy_trigger
+
+    lda #$ffff
+    sta a:game_data + game_data::input_mask
+
+    lda #$4
+    sta a:game_data + game_data::no_players
+    A8
+
+    ;; set up bg registers
+    lda #$9 ; mode 1, BG3 prio high
+    sta BGMODE
+
+    lda #$80
+    sta VMAIN
+
+    ; turn on BG1, BG2, BG3 and sprites
+    lda #$2
+    sta TM
+
+    ; Maximum screen brightness
+    lda #$0F
+    sta INIDISP
+
+
+    ; enable NMI, turn on automatic joypad polling
+    lda #$81
+    sta NMITIMEN
+
+    jsr init_sound
+
+    ;; play some music
+    lda #Song::menu
+    jsr load_song
+
+    rts
+.endproc
+
+
+.proc setup_game_proper
+    jsr init_game_data
+
+    ; turn on BG1, BG2, BG3 and sprites
+    lda #$17
+    sta TM
+
+    ; Maximum screen brightness
+    lda #$0F
+    sta INIDISP
+.endproc
 
 .a8
 .i16
@@ -154,7 +258,6 @@ INIT_GAME_INC = 1
     A8
     jsr init_binary_data
     jsr set_game_map
-    jsr init_sound
     jsr init_spawn_boxes
     jsr init_shields
     A16
@@ -186,19 +289,12 @@ INIT_GAME_INC = 1
 
 
     A8
-    ;; set up bg registers
-    lda #$9 ; mode 1, BG3 prio high
-    sta BGMODE
-
     ; set bg 3 and bg4 vram base addr. both the same for now.
     lda #(VRAM_FONT_CHR_BASE >> 12)
     sta BG34NBA
 
     lda #((VRAM_MAP_FONT_BASE >> 10) << 2)
     sta BG3SC ; set bg 1 tile map
-
-    lda #$80
-    sta VMAIN
 
     ; set init program variables
     ldx #$FF   ;; first vertical line is blank, and there's an extra line at the

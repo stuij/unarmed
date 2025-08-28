@@ -4,12 +4,12 @@ target_compile_options( ${PROJECT_NAME}
     PRIVATE "SHELL:-I ${CMAKE_CURRENT_SOURCE_DIR}" )
 
 # list of backgrounds
-list(APPEND BGS town city)
+list(APPEND BGS town city title-screen)
 # list of background palette offsets
 # we don't care about the 'town' bg palette because the maps for that
 # are generated with a python script. However for documentation, currently
 # we use palette entry 2 for that
-list(APPEND BG_PALLS 2 3)
+list(APPEND BG_PALLS 2 3 3)
 
 # add the custom commands for each background tileset
 foreach(BG IN ZIP_LISTS BGS BG_PALLS)

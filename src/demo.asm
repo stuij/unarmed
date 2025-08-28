@@ -234,31 +234,40 @@ end:
     jmp game_loop
 .endproc
 
+
+.a8
+.i16
+.proc wait_for_start_loop
+    loop:
+        jsr wait_nmi
+        jsr read_input
+
+        A16
+        ;; if start, continue
+        lda p1 + player::joy_trigger
+        and #JOY_START
+        A8
+
+        beq loop
+
+    rts
+.endproc
+
+
 ;; ----
 ;; main
 
 .a8
 .i16
 .proc main
-    jsr init_game_data
+    jsr title_screen_init
 
-    ;; play some music
-    lda #Song::menu
-    jsr load_song
-
-
-    ; turn on BG1, BG2, BG3 and sprites
-    lda #$17
-    sta TM
+    jsr wait_for_start_loop
 
     ; Maximum screen brightness
-    lda #$0F
+    lda #$80
     sta INIDISP
 
-
-    ; enable NMI, turn on automatic joypad polling
-    lda #$81
-    sta NMITIMEN
-
+    jsr setup_game_proper
     jmp game_loop
 .endproc
