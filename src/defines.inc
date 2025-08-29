@@ -508,4 +508,10 @@ HUD_SPRITE_X_BASE = $1a
 HUD_SPRITE_X_SKIP = $38
 HUD_SPRITE_Y = $3
 
+;; -------------
+;; intro screens
+
+PRESS_START_FONT_MAP_OFFSET = ($20 * $17) + $a
+LORE_FONT_MAP_OFFSET = ($20 * $4)
+
 .endif ; DEFINES_INC

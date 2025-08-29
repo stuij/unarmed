@@ -14,6 +14,14 @@ INIT_GAME_INC = 1
     ldy #$30
     jsr dma_to_palette
 
+    ldy #(font_palette_end - font_palette) ; # of palette entries
+    sty <W0
+    lda #^font_palette
+    ldx #.loword(font_palette)
+    ldy #$00
+    jsr dma_to_palette
+
+
     ;; tiles
     ldy #(title_screen_tiles_end - title_screen_tiles) ; size of transfer
     sty <W0
@@ -21,6 +29,14 @@ INIT_GAME_INC = 1
     ldx #.loword(title_screen_tiles)
     ldy #VRAM_BG_CHR_BASE
     jsr dma_to_vram
+
+    ldy #(font_tiles_end - font_tiles) ; size of transfer
+    sty <W0
+    lda #^font_tiles
+    ldx #.loword(font_tiles)
+    ldy #VRAM_FONT_CHR_BASE
+    jsr dma_to_vram
+
 
     ;; map
     ldy #(title_screen_map_end - title_screen_map) ; size of transfer
@@ -53,13 +69,6 @@ INIT_GAME_INC = 1
     ldy #$20
     jsr dma_to_palette
 
-    ldy #(font_palette_end - font_palette) ; # of palette entries
-    sty <W0
-    lda #^font_palette
-    ldx #.loword(font_palette)
-    ldy #$00
-    jsr dma_to_palette
-
 
     ;; load tiles
     ldy #(city_tiles_end - city_tiles) ; size of transfer
@@ -75,14 +84,6 @@ INIT_GAME_INC = 1
     ldx #.loword(town_tiles)
     ldy #VRAM_BLOCKS_CHR_BASE
     jsr dma_to_vram
-
-    ldy #(font_tiles_end - font_tiles) ; size of transfer
-    sty <W0
-    lda #^font_tiles
-    ldx #.loword(font_tiles)
-    ldy #VRAM_FONT_CHR_BASE
-    jsr dma_to_vram
-
 
     ;; bg map
     ldy #(city_map_end - city_map) ; size of transfer
@@ -168,6 +169,35 @@ INIT_GAME_INC = 1
     rts
 .endproc
 
+
+.a16
+.i16
+.proc write_title_text
+    lda #(VRAM_MAP_FONT_BASE + PRESS_START_FONT_MAP_OFFSET)
+    sta VMADD
+    lda #.loword(press_start_str)
+    jsr print_string
+    rts
+.endproc
+
+
+.a8
+.i16
+;; X - lore text
+.proc write_lore
+    force_vblank
+    A16
+    lda #(VRAM_MAP_FONT_BASE + LORE_FONT_MAP_OFFSET)
+    sta VMADD
+    txa
+    jsr print_string
+    A8
+    unforce_vblank
+    rts
+.endproc
+
+
+
 .a8
 .i16
 .proc title_screen_init
@@ -189,6 +219,21 @@ INIT_GAME_INC = 1
     sta BG2VOFS
     stz BG2VOFS
 
+    lda #BG3_H_OFFS_DEFAULT
+    sta BG3HOFS
+    stz BG3HOFS
+
+    lda #BG3_V_OFFS_DEFAULT
+    sta BG3VOFS
+    stz BG3VOFS
+
+    ; set bg 3 and bg4 vram base addr. both the same for now.
+    lda #(VRAM_FONT_CHR_BASE >> 12)
+    sta BG34NBA
+
+    lda #((VRAM_MAP_FONT_BASE >> 10) << 2)
+    sta BG3SC ; set bg 1 tile map
+
     ;; get stuff in place to be able to run input checking
     A16
     stz p1 + player::joy_trigger
@@ -204,11 +249,15 @@ INIT_GAME_INC = 1
     lda #$9 ; mode 1, BG3 prio high
     sta BGMODE
 
+    A16
+    jsr write_title_text
+    A8
+
     lda #$80
     sta VMAIN
 
     ; turn on BG1, BG2, BG3 and sprites
-    lda #$2
+    lda #($2 | $4)
     sta TM
 
     ; Maximum screen brightness

@@ -254,6 +254,18 @@ end:
 .endproc
 
 
+.a8
+.i16
+.proc clear_lore_text
+    ldy #(VRAM_MAP_FONT_BASE + LORE_FONT_MAP_OFFSET)
+    ldx #($18 * $20 * 2)
+    stz a:W0
+    jsr dma_fixed_to_vram
+    rts
+.endproc
+
+
+
 ;; ----
 ;; main
 
@@ -261,13 +273,20 @@ end:
 .i16
 .proc main
     jsr title_screen_init
-
     jsr wait_for_start_loop
 
-    ; Maximum screen brightness
+    ldx #.loword(lore_text)
+    jsr write_lore
+    jsr wait_for_start_loop
+
+    ldx #.loword(controls_text)
+    jsr write_lore
+    jsr wait_for_start_loop
+
     lda #$80
     sta INIDISP
 
+    jsr clear_lore_text
     jsr setup_game_proper
     jmp game_loop
 .endproc

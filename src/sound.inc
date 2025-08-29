@@ -26,7 +26,7 @@ set_volume:
     ;; not totally sure about this though.
     jsr Tad_GlobalVolumesPersist
 
-    lda #TadCommand::SET_GLOBAL_VOLUMES
+    lda #TadCommand::SET_GLOBAL_MUSIC_VOLUME
     ldx #64
     ldy #$ff
     jsr Tad_QueueCommand

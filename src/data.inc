@@ -133,28 +133,69 @@ current_tile_map_staging: .res GAME_MAP_SIZE
 .segment "RODATA"
 
 ;; menus
-select_screen_title: .asciiz "Choose tile to draw"
-select_screen_tile_type_desc: .asciiz "type:"
+select_screen_title:                .asciiz "Choose tile to draw"
+select_screen_tile_type_desc:       .asciiz "type:"
 
-menu_legend_between_screen_root: .asciiz "a:choose"
-menu_legend_between_screen_pause: .asciiz "a:choose start:unpause"
-menu_legend_select_screen: .asciiz "a:choose b:back"
-menu_legend_select_screen_pause_1: .asciiz "a:choose b:back"
-menu_legend_select_screen_pause_2: .asciiz "start:unpause"
+menu_legend_between_screen_root:    .asciiz "a:choose"
+menu_legend_between_screen_pause:   .asciiz "a:choose start:unpause"
+menu_legend_select_screen:          .asciiz "a:choose b:back"
+menu_legend_select_screen_pause_1:  .asciiz "a:choose b:back"
+menu_legend_select_screen_pause_2:  .asciiz "start:unpause"
 
-menu_legend_draw_screen_1: .asciiz "a:choose b:back"
-menu_legend_draw_screen_2: .asciiz "x:flip horz y:flip vert"
-menu_legend_draw_screen_pause_1: .asciiz "a:choose b:back start:unpause"
+menu_legend_draw_screen_1:          .asciiz "a:choose b:back"
+menu_legend_draw_screen_2:          .asciiz "x:flip horz y:flip vert"
+menu_legend_draw_screen_pause_1:    .asciiz "a:choose b:back start:unpause"
 
-between_wins: .asciiz "wins"
+between_wins:                       .asciiz "wins"
 
-between_start_str:     .asciiz  "start match >"
-between_restart_str:   .asciiz  "  new match >"
-between_edit_str:      .asciiz  "       edit >"
-between_players_str:   .asciiz  "    players 234"
-between_hitpoints_str: .asciiz  "  hitpoints 123456789"
-between_wins_str:      .asciiz  "games > win 123456789"
-between_level_str:     .asciiz  "      level 123456789"
+between_start_str:                  .asciiz  "start match >"
+between_restart_str:                .asciiz  "  new match >"
+between_edit_str:                   .asciiz  "       edit >"
+between_players_str:                .asciiz  "    players 234"
+between_hitpoints_str:              .asciiz  "  hitpoints 123456789"
+between_wins_str:                   .asciiz  "games > win 123456789"
+between_level_str:                  .asciiz  "      level 123456789"
+
+
+press_start_str:                    .asciiz  "press start"
+
+lore_text:
+.byte   " Lore                           "
+.byte   "                                "
+.byte   " On the planet of Blargg, the   "
+.byte   " slave people of Zlann are      "
+.byte   " born without arms. This is     "
+.byte   " very sad :'(                   "
+.byte   "                                "
+.byte   " But!! If they enter and win    "
+.byte   " in the Arm Games, they are     "
+.byte   " grafted a pair from the flesh  "
+.byte   " of their fallen foes.          "
+.byte   "                                "
+.byte   " If they loose, they die!       "
+.byte   "                                "
+.byte   " They do not want to die!       "
+.asciiz " But they like arms..           "
+
+
+controls_text:
+.byte   " Controls                       "
+.byte   "                                "
+.byte   " left, right - move             "
+.byte   " L           - parry bullets    "
+.byte   " R           - jump             "
+.byte   " X, Y, A, B  - shoot diamond    "
+.byte   " start       - pause/unpause    "
+.byte   "                                "
+.byte   " Press two adjacent shoot       "
+.byte   " buttons to shoot diagonally.   "
+.byte   "                                "
+.byte   "                                "
+.byte   "                                "
+.byte   "                                "
+.byte   "                                "
+.asciiz "                                "
+
 
 between_menu_row_table:
 .word 1                 ; start/restart
