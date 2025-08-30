@@ -718,6 +718,9 @@ end:
     and #tile_props::kill
     beq after_check_kill
     jsr player_handle_kill ;; if so handle kill
+    lda sprite::move_state
+    cmp #move_state::dead
+    beq end
 after_check_kill:
     lda COLL_STACK_TILE_PROPS + 2, s
     and #tile_props::out_of_bounds
@@ -726,8 +729,8 @@ after_check_kill:
     lda sprite::move_state ;; only execute
     cmp #move_state::idle
     beq do_ledge_fall
-    bit #move_state::run
-    bne do_ledge_fall
+    cmp #move_state::run
+    beq do_ledge_fall
     bra store_y_new
 do_ledge_fall:
     jsr handle_ledge_fall
@@ -853,6 +856,7 @@ end:
     sta sprite::move_state
     txa
     lsr
+
     lda #$E00
     sta sprite::y_new
 
@@ -1366,6 +1370,10 @@ player_loop:
     lda a:player_table, x
     tcd
 ;; meat
+    lda sprite::move_state
+    cmp #move_state::dead
+    beq player_end
+
     ;; are we instructed to shoot?
     jsr handle_shot_decision
     beq :+
@@ -1377,6 +1385,7 @@ player_loop:
     phx
     cpx a:game_data + game_data::no_players
     bne player_loop
+player_end:
 ;; epilogue
     plx ; clear the stack
     lda #$0

@@ -221,7 +221,7 @@ INIT_GAME_INC = 1
     A8
         :
         jsr wait_nmi
-        jsl Tad_Process ;; assert(0)
+        jsl Tad_Process
         A16
         dec W4
         lda W4
