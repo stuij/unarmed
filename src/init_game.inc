@@ -197,6 +197,39 @@ INIT_GAME_INC = 1
 .endproc
 
 
+.a8
+.i16
+.proc title_screen_init_music
+    jsr init_sound
+
+    jsr Tad_SongsStartImmediately
+
+    lda #Song::menu
+    jsr load_song
+
+    jsr Tad_GlobalVolumesPersist
+    lda #TadCommand::SET_GLOBAL_MUSIC_VOLUME
+    ldx #64
+    ldy #$ff
+    jsr Tad_QueueCommand
+
+    ;; it takes apparently 16 more cycles to actually get Tad_Process
+    ;; to do the volume lowering
+    A16
+    ldx #$10
+    stx W4
+    A8
+        :
+        jsr wait_nmi
+        jsl Tad_Process ;; assert(0)
+        A16
+        dec W4
+        lda W4
+        A8
+        bne :-
+    rts
+.endproc
+
 
 .a8
 .i16
@@ -269,11 +302,7 @@ INIT_GAME_INC = 1
     lda #$81
     sta NMITIMEN
 
-    jsr init_sound
-
-    ;; play some music
-    lda #Song::menu
-    jsr load_song
+    jsr title_screen_init_music
 
     rts
 .endproc

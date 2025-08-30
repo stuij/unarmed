@@ -9,6 +9,7 @@
 @3 side_stick
 
 A @1 v6 o2
+A r
 A L   [ c | g  | f  | e ]8
 A      d2| g2. | c | d2 |o1 a2 | g2. |  e | d2
 A      d2| g2. | c | d2 o2 a2 | g2. |  e | d2
@@ -16,6 +17,7 @@ A
 
 
 B @2 v12 o4
+B r
 B L   [ c16 ]16 [ f16 ]16 [ g16 ]16 [ e16 ]16
 B  	  [ c16 ]16 [ f16 ]16 [ e16 ]16 e & r r r
 B     [ r ]16
@@ -25,5 +27,6 @@ B     [ f16 ]16 [ e16 ]16 o4[ b16 ]16 o5[ c16 ]16
 B     [ r ]16
 B     [ r ]16
 
-C @3
+C @3 o4
+C r
 C L     r4 c16 c16 e16 c8 c16

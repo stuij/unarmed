@@ -10,26 +10,15 @@ SOUND_INC = 1
     ; Reset TAD State
     ldx     #256
     jsr     Tad_SetTransferSize
-    jsr     Tad_SongsStartImmediately
     pla
     jsr     Tad_LoadSong
 
 loop:
     jsr     Tad_IsSongLoaded
-    bcs     set_volume
+    bcs     end
     jsl     Tad_Process
     bra     loop
-set_volume:
-    ;; I think the volume is incrementally turned down
-    ;; so that's why it seems like we're not immediately
-    ;; reacting to turning the music down.
-    ;; not totally sure about this though.
-    jsr Tad_GlobalVolumesPersist
-
-    lda #TadCommand::SET_GLOBAL_MUSIC_VOLUME
-    ldx #64
-    ldy #$ff
-    jsr Tad_QueueCommand
+end:
     rts
 .endproc
 
