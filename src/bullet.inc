@@ -46,12 +46,12 @@ bullet_sprite_vtable:
 .addr .loword(bullet_coll_point_callback)
 
 bullet_bbox_default:
-.word $1  ;; y
-.word $1  ;; x
+.word $7  ;; y
+.word $5  ;; x
 
 bullet_bbox_default_fine:
-.word $10 ;; y
-.word $10 ;; x
+.word $70 ;; y
+.word $50 ;; x
 
 
 .a8
@@ -109,6 +109,10 @@ loop:
 loop:
     lda a:bullet_table, x
     tcd
+
+    txa
+    lsr
+    sta bullet::nr
 
     A8
     lda #BULLET_SPRITE_OFFSET
@@ -188,7 +192,8 @@ loop:
     tcd
     ;; if bullet is inactive, ignore
     lda sprite::move_state
-    beq loop_end
+    cmp #bullet_state::fly
+    bne loop_end
 
     ;; check if we've overstayed our welcome
     lda bullet::flight_timer
@@ -256,7 +261,7 @@ end:
     jsr Tad_QueueSoundEffect_D
     A16
 
-    jsr bullet_retire
+    jsr bullet_set_explosion
     rts
 .endproc
 
@@ -311,6 +316,17 @@ end:
     rts
 .endproc
 
+
+.proc bullet_set_explosion
+    lda #bullet_state::explosion
+    sta sprite::move_state
+
+    stz sprite::anim_tick
+
+    stz sprite::h_velo
+    stz sprite::v_velo
+    rts
+.endproc
 
 .proc bullet_retire
     jsr bullet_reset
@@ -442,6 +458,56 @@ done:
 
 .a16
 .i16
+;; X - bullet table offset
+;; Y - OAM bullet offset - set at tile address
+.proc anim_bullet
+    lda sprite::move_state
+    cmp #bullet_state::explosion
+    bne end
+
+    ;; we're initializing the explosion
+    ;; (setting OAM entry to right sprite)
+    lda sprite::anim_tick
+    bne after_init
+
+    iny
+    lda #$2a
+    A8
+    sta 0,y
+    A16
+    dey
+after_init:
+    lda sprite::anim_tick
+    rshift 2
+    cmp #EXPLOSION_ANIM_FRAMES
+    bcs explosion_done
+    clc
+    asl
+    adc #EXPLOSION_SPRITE_OFFSET
+    A8
+    sta 0, y
+    A16
+    inc sprite::anim_tick
+    bra end
+
+explosion_done:
+    lda #BULLET_SPRITE_OFFSET
+    A8
+    sta 0, y
+    A16
+    iny
+    lda #$20
+    A8
+    sta 0,y
+    A16
+    jsr bullet_retire
+end:
+    rts
+.endproc
+
+
+.a16
+.i16
 .proc finalize_bullets
     ;; bullets
     ldx #$0
@@ -449,6 +515,7 @@ done:
 bullets_to_oam_loop:
     lda a:bullet_table, x
     tcd
+
     lda sprite::x_new
     sta sprite::x_pos
     rshift 4
@@ -463,6 +530,12 @@ bullets_to_oam_loop:
     sta 0, y
     A16
     iny
+
+    phy
+    phx
+    jsr anim_bullet
+    plx
+    ply
     iny
     iny
 

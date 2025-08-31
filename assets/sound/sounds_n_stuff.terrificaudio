@@ -248,11 +248,11 @@
     "sine",
     "death_scream",
     "hurt",
-    "gun_shot",
     "explode",
+    "parry_bounce",
+    "gun_shot",
     "jump",
     "land",
-    "parry_bounce",
     "parry_init",
     "bullet_bounce"
   ],

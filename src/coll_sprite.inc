@@ -42,7 +42,8 @@ bullet_loop:
 
     ;; don't process if bullet isn't active
     lda sprite::move_state
-    bne :+
+    cmp #bullet_state::fly
+    beq :+
     jmp bullet_end
     :
     ;; you can't get hit by your own bullets, unless rogue is set
@@ -213,7 +214,11 @@ bullet_end:
     sta a:player::hit_v_velo, y
     jsr player_dec_hp
 end:
-    jsr bullet_retire
+    A8
+    lda #SFX::explode
+    jsr Tad_QueueSoundEffect_D
+    A16
+    jsr bullet_set_explosion
     rts
 .endproc
 

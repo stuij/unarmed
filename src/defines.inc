@@ -300,7 +300,7 @@ PARRY_COOLDOWN_ZONE = $7
 ;; -------------
 ;; bullet things
 
-BULLET_OAM_DEFAULT = $00
+BULLET_OAM_DEFAULT = $aa
 BULLET_X_POS_INIT = $150
 BULLET_Y_POS_INIT = $F00
 
@@ -314,6 +314,7 @@ BULLET_V_VELO = $27
 ; and on 7th row of y axis (rows are $10 wide)
 BULLET_SPRITE_OFFSET = $0 + ($6 * $10)
 EXPLOSION_SPRITE_OFFSET = $0 + ($2 * $10)
+EXPLOSION_ANIM_FRAMES = $8
 
 BULLET_MAX_FLIGHT = 2 * 60 ;; 1 sec
 
@@ -321,6 +322,7 @@ BULLET_MAX_FLIGHT = 2 * 60 ;; 1 sec
 .enum bullet_state
     idle
     fly
+    explosion
 .endenum
 
 
@@ -334,7 +336,8 @@ BULLET_MAX_FLIGHT = 2 * 60 ;; 1 sec
     player          .word
     queue_offset    .word
     flight_timer    .word
-    rogue       .word ;; if set, can hit owner
+    rogue           .word ;; if set, can hit owner
+    nr              .word
 .endstruct
 
 
