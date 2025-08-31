@@ -53,6 +53,53 @@ bullet_bbox_default_fine:
 .word $10 ;; y
 .word $10 ;; x
 
+
+.a8
+.i16
+.proc init_explosions
+    A16
+    lda #OAM_EXPLOSION_OFFSET
+    tcd
+    A8
+    ldx #0
+loop:
+        lda #$2a                ; no flip, prio 3, palette 5
+        sta oam_entry::attrs
+
+        ;; current value carets aren't going to change tile id for now
+        lda #EXPLOSION_SPRITE_OFFSET
+        sta oam_entry::tile_pos
+
+        ;; set them offscreen
+        lda #$f0
+        sta oam_entry::y_pos
+        stz oam_entry::x_pos
+    ;; increment OAM entry
+    A16
+    tdc
+    clc
+    adc #4
+    tcd
+    A8
+    inx
+    cpx #((BULLETS_PER_PLAYER / 2) * 4) ; amount of bullets
+    bne loop
+    A16
+    lda #0
+    tcd
+    A8
+
+    ;; set  to 16x16px
+    lda #$aa
+    sta OAM_EXPLOSION_XTRA_PROPS
+    sta OAM_EXPLOSION_XTRA_PROPS + $1
+    sta OAM_EXPLOSION_XTRA_PROPS + $2
+    sta OAM_EXPLOSION_XTRA_PROPS + $3
+
+    rts
+.endproc
+
+
 .a16
 .i16
 ;; game specific

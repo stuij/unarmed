@@ -409,6 +409,7 @@ INIT_GAME_INC = 1
     jsr set_player_no
     jsr init_players
     jsr init_bullets
+    jsr init_explosions
     A8
     jsr hide_menu_carets
     force_vblank

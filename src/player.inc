@@ -1489,8 +1489,7 @@ loop:
         lda #$20                ; no flip, prio 3, palette 0
         sta oam_entry::attrs
 
-        ;; current value carets aren't going to change tile id for now
-        lda #($a + ($4 * $10))
+        lda #SHIELD_SPRITE_OFFSET
         sta oam_entry::tile_pos
 
         ;; set them offscreen
@@ -1505,7 +1504,7 @@ loop:
     tcd
     A8
     inx
-    cpx #4 ; 4 shields
+    cpx #PLAYER_MAX ; 1 shield per player
     bne loop
     A16
     lda #0
