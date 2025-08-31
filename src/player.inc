@@ -205,34 +205,34 @@ loop:
     A8
     ;; p1
     lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_mirror + $3
+    sta OAM_PLAYER_OFFSET + $3
     lda #$20                ; no flip, prio 2, palette 0
-    sta OAM_mirror + $13
+    sta OAM_PLAYER_OFFSET + $13
 
     ;; p2
     lda #$22                ; no flip, prio 2, palette 1
-    sta OAM_mirror + $7
+    sta OAM_PLAYER_OFFSET + $7
     lda #$22                ; no flip, prio 2, palette 1
-    sta OAM_mirror + $17
+    sta OAM_PLAYER_OFFSET + $17
 
     ;; p3
     lda #$24                ; no flip, prio 2, palette 2
-    sta OAM_mirror + $b
+    sta OAM_PLAYER_OFFSET + $b
     lda #$24                ; no flip, prio 2, palette 2
-    sta OAM_mirror + $1b
+    sta OAM_PLAYER_OFFSET + $1b
 
     ;; p4
     lda #$26                ; no flip, prio 2, palette 3
-    sta OAM_mirror + $f
+    sta OAM_PLAYER_OFFSET + $f
     lda #$26                ; no flip, prio 2, palette 3
-    sta OAM_mirror + $1f
+    sta OAM_PLAYER_OFFSET + $1f
 
 
     ; set top bit of x pos for all 4 sprites to 0 so we show them on
     ; screen, and set 8x8 tile.
     ; so a nibble, representing two sprites becomes b0000, aka 0.
-    stz OAM_mirror + $200
-    stz OAM_mirror + $201
+    stz OAM_PLAYER_XTRA_PROPS
+    stz OAM_PLAYER_XTRA_PROPS + $1
     A16
 
     ldx #$0
@@ -331,14 +331,14 @@ loop:
 
 .proc hide_players
     lda #$F0
-    sta OAM_mirror + ::oam_entry::y_pos
-    sta OAM_mirror + ::oam_entry::y_pos + $4
-    sta OAM_mirror + ::oam_entry::y_pos + $8
-    sta OAM_mirror + ::oam_entry::y_pos + $C
-    sta OAM_mirror + ::oam_entry::y_pos + $10
-    sta OAM_mirror + ::oam_entry::y_pos + $14
-    sta OAM_mirror + ::oam_entry::y_pos + $18
-    sta OAM_mirror + ::oam_entry::y_pos + $1C
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $4
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $8
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $C
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $10
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $14
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $18
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $1C
 
     rts
 .endproc
@@ -368,10 +368,10 @@ loop:
 
 set_bits:
     A8
-    ora OAM_mirror + $200
-    sta OAM_mirror + $200
-    ora OAM_mirror + $201
-    sta OAM_mirror + $201
+    ora OAM_PLAYER_XTRA_PROPS
+    sta OAM_PLAYER_XTRA_PROPS
+    ora OAM_PLAYER_XTRA_PROPS + $1
+    sta OAM_PLAYER_XTRA_PROPS + $1
     A16
     rts 
 .endproc
@@ -884,7 +884,7 @@ end:
     clc
     adc #PLAYER_OAM_SHOOT_DIR_BASE
     A8
-    sta OAM_mirror, y
+    sta 0, y
     A16
     rts
 .endproc
@@ -921,7 +921,7 @@ set_sprite:
     clc
     adc #PLAYER_OAM_RUN_ANIM_BASE
     A8
-    sta OAM_mirror, y
+    sta 0, y
     A16
     rts
 .endproc
@@ -934,8 +934,8 @@ set_sprite:
     ;; first zero out the palette bits
     lda #$F1
     A8
-    and OAM_mirror, y
-    sta OAM_mirror, y
+    and 0, y
+    sta 0, y
     A16
     lda ::player::hit_timer
     rshift 4
@@ -949,8 +949,8 @@ hit_palette:
 set_palette:
     asl
     A8
-    ora OAM_mirror, y
-    sta OAM_mirror, y
+    ora 0, y
+    sta 0, y
     A16
     rts
 .endproc
@@ -1059,7 +1059,7 @@ loop:
     txa
     asl
     clc
-    adc #PLAYER_OAM_OFFSET
+    adc #OAM_PLAYER_OFFSET
     tay
 
     lda sprite::x_new
@@ -1067,7 +1067,7 @@ loop:
     rshift 4
     sta a:W0
     A8
-    sta OAM_mirror, y
+    sta 0, y
     A16
     iny
     lda sprite::y_new
@@ -1075,7 +1075,7 @@ loop:
     rshift 4
     sta a:W1
     A8
-    sta OAM_mirror, y
+    sta 0, y
     A16
     ;; sprite animation logic here
     ;; which will deal with the two remaining OAM bytes
@@ -1091,14 +1091,14 @@ loop:
     tay
     lda a:W0
     A8
-    sta OAM_mirror, y
+    sta 0, y
     A16
     iny
     lda a:W1
     clc
     adc #$8
     A8
-    sta OAM_mirror, y
+    sta 0, y
     A16
     iny
     jsr animate_player_movement

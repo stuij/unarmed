@@ -58,26 +58,26 @@ bullet_bbox_default_fine:
 ;; game specific
 .proc init_bullets
     ldx #$0
-    ldy #(BULLET_OAM_OFFSET + $2)
+    ldy #(OAM_BULLET_OFFSET + $2)
 loop:
     lda a:bullet_table, x
     tcd
 
     A8
     lda #BULLET_SPRITE_OFFSET
-    sta OAM_mirror, y
+    sta 0, y
     iny
     txa
     ;; giving bullets colors. this is a bit of a hack depending on
-    ;; exactly giving 8 bullets per player. too lazy today
+    ;; exactly giving 4 bullets per player. too lazy today
     ;; to do this properly
     ;;
     ;; shift to right to get to player nr. then move one to left
     ;; to get into proper palette position
-    rshift 4
+    rshift 3
     asl
     ora #$20                ; no flip, prio 2
-    sta OAM_mirror, y
+    sta 0, y
     iny
     iny
     iny
@@ -118,21 +118,13 @@ loop:
     A8
     ;; handle this blasted table separately
     lda #BULLET_OAM_DEFAULT
-    sta OAM_mirror + $201
+    sta OAM_BULLET_XTRA_PROPS
     lda #BULLET_OAM_DEFAULT
-    sta OAM_mirror + $202
+    sta OAM_BULLET_XTRA_PROPS + $1
     lda #BULLET_OAM_DEFAULT
-    sta OAM_mirror + $203
+    sta OAM_BULLET_XTRA_PROPS + $2
     lda #BULLET_OAM_DEFAULT
-    sta OAM_mirror + $204
-    lda #BULLET_OAM_DEFAULT
-    sta OAM_mirror + $205
-    lda #BULLET_OAM_DEFAULT
-    sta OAM_mirror + $206
-    lda #BULLET_OAM_DEFAULT
-    sta OAM_mirror + $207
-    lda #BULLET_OAM_DEFAULT
-    sta OAM_mirror + $208
+    sta OAM_BULLET_XTRA_PROPS + $3
     A16
 
     rts
@@ -406,7 +398,7 @@ done:
 .proc finalize_bullets
     ;; bullets
     ldx #$0
-    ldy #BULLET_OAM_OFFSET
+    ldy #OAM_BULLET_OFFSET
 bullets_to_oam_loop:
     lda a:bullet_table, x
     tcd
@@ -414,14 +406,14 @@ bullets_to_oam_loop:
     sta sprite::x_pos
     rshift 4
     A8
-    sta OAM_mirror, y
+    sta 0, y
     iny
     A16
     lda sprite::y_new
     sta sprite::y_pos
     rshift 4
     A8
-    sta OAM_mirror, y
+    sta 0, y
     A16
     iny
     iny
