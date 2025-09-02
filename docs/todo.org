@@ -1,5 +1,5 @@
 
-* Can do before game jam starts
+* DONE Can do before game jam starts
 ** DONE properly initialize SNES
 ** DONE getting bg/sprite on screen
 ** DONE make python script to convert Tiled tilemap data into snes backgrounds
@@ -24,9 +24,9 @@
 ** DONE wall type differentiation in code
 ** DONE add font, and some way to put it up on the screen
 ** DONE projectile list implementation to keep track of which projectile next per player
-** do some music experiments to learn the sound engine
+** DONE do some music experiments to learn the sound engine
 * do during game jam
-** bare minimum
+** DONE bare minimum
 *** DONE 1 or more frames of delay on shooting to lock in diagonals
 as it's tricky to press both buttons of a diagonal in the same frame
 *** DONE dying from bullet
@@ -76,19 +76,25 @@ tbh test group seemed to be fine with the floatiness
 **** DONE non-deflecting
 **** DONE walk-through kill block
 **** DONE solid kill block
-*** sound effects
-**** for shooting
-**** getting hit
-**** jumping
-**** dying
-**** parrying
-*** title screen/game start
-**** title screen
-**** lore
-**** controls (?)
+*** DONE sound effects
+**** DONE for shooting
+**** DONE getting hit
+**** DONE jumping
+**** DONE landing
+**** DONE dying
+**** DONE parrying
+***** DONE bullet bounce
+***** DONE parry init
+**** DONE bullets bouncing off the walls
+*** DONE title screen/game start
+**** DONE title screen
+**** DONE lore
+**** DONE controls (?)
+*** DONE when you get hit, some form of explosion?
+*** DONE match count only goes up to 10 before they roll over to 0. Would be nice if they went up to 100.
 *** make music
-**** level music
-**** menu/non-level music
+**** DONE level music
+**** DONE menu/non-level music
 **** win music
 *** make level designs
 **** a couple of current levels have dead ends. would be more fun to be able to move to other places. But also sometimes nice to have level be a shootout area.
@@ -96,13 +102,13 @@ tbh test group seemed to be fine with the floatiness
 *** shield animation
 *** dying animation
 ** bugfixes
-*** bugfix: when you bump into a wall when going right, and you glide down, you can land on killblock and go into idle/running state without triggering killblock ramifications
-*** bugfix: when spawning or taking away tiles, when you're less than a block above a solid block, you hover in idle state, and can walk elevatedly above the block
+*** the first sound effect seems to fire only the first time someone starts a level.
+I've hacked around this by having the first sound effect be silent, but that's of course not ideal.
+*** DONE bugfix: when you bump into a wall when going right, and you glide down, you can land on killblock and go into idle/running state without triggering killblock ramifications
+*** DONE bugfix: when spawning or taking away tiles, when you're less than a block above a solid block, you hover in idle state, and can walk elevatedly above the block
 * nice to have
-** when you get hit, some form of explosion?
 ** when people get hit by bullet, do easing off of impact speed
 ** shooter is pushed back when shooting, by a lot might be fun
-** match count only goes up to 10 before they roll over to 0. Would be nice if they went up to 100.
 ** hold shield upwards
 ** max bullets ricochet
 ** when reflected, a bullet should change color to red to indicate harm to owner
@@ -111,13 +117,13 @@ tbh test group seemed to be fine with the floatiness
 
 ** more types of blocks
 **** warp block
-**** bounce block
+**** person bounce block
 **** ice?
 **** allow climbing
 
 ** coyote time
 (aka some leeway in where the edge of a ledge is when jumping off them while runnining)
-** timer
+** level timer (so say 90 secs for a level)
 ** random map mode
 ** multiple projectile types
 When we then move we move to run state. But we're actually falling, which should be interpreted as jumping state. This might bite us at some point.

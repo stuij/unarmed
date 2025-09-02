@@ -51,7 +51,16 @@ License text section.
   - by [HaelDB](https://opengameart.org/users/haeldb) at [Open Game Art](https://opengameart.org/content/male-gruntyelling-sounds)
   - license: [Creative Commons 0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (public domain)
   - file: assorted/3yell6.wav
-  
+
+
+### Graphics
+
+- explosion
+  - by [BitingChaos](https://opengameart.org/users/bitingchaos) at [Open Game Art](https://opengameart.org/content/16x16-explosion)
+  - license: [Creative Commons 0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (public domain)
+  - file: explosion.aseprite
+  - Modified it by adding three more frames, and cleaned it up a bit to suit my tastes.
+
 
 ### Fonts
 

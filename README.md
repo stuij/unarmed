@@ -38,7 +38,6 @@ Tips so far:
 
 ## acknowledgements (besides above)
 
-- town graphic from [Ansimuz Legacy Collection](https://ansimuz.itch.io/gothicvania-patreon-collection)
 - I've been following the following tutorials:
   - as already mentioned [jeorgjz](https://georgjz.github.io/snesaa01/). Pretty lenghy. In the end
     provides you with quite a decent setup.
