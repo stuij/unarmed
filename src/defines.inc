@@ -170,15 +170,14 @@ PLAYER_OAM_MUG_SHOT = $7 ;; for HUD
 PLAYER_OAM_SHOOT_DIR_BASE = ($0 + ($0 * $0))
 PLAYER_OAM_RUN_ANIM_BASE = ($0 + ($1 * $10))
 
-PLAYER_HP_START = 5
 
 ;; move state of player, potential other things
 H_VELO_INC = $1 ; 1 subpixel
-H_VELO_MAX = $20
+H_VELO_MAX = $10
 H_VELO_INC_OPPOSITE = $5
 H_VELO_INC_RELAX = $2
 
-V_VELO_INIT = $ffd7 ;; -29
+V_VELO_INIT = $ffdb ;; -25
 V_VELO_DEC = $1 ;; we decrease the minus, until we start plussing
 V_VELO_DOWN_MAX = $20
 

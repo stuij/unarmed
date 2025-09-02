@@ -26,14 +26,14 @@ move_table:
 .addr dead
 
 player_start_coords:
-.word $200 ; p1 x
-.word $220 ; p1 y
+.word $280 ; p1 x
+.word $2a0 ; p1 y
 .word $d00 ; p2 x
-.word $ba0 ; p2 y
-.word $e80 ; p3 x
-.word $1a0 ; p3 y
-.word $300 ; p4 x
-.word $b20 ; p4 y
+.word $a20 ; p2 y
+.word $b00 ; p3 x
+.word $3a0 ; p3 y
+.word $480 ; p4 x
+.word $920 ; p4 y
 
 
 player_sprite_vtable:
