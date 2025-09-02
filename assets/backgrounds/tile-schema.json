@@ -1,6 +1,6 @@
 { "schema" : [ 
         ["passthrough",    12,  ""],
-        ["wall",           17,  "w"],
+        ["wall",           17,  "we"],
         ["bounce wall",    17,  "wb"],
         ["bullet pass",    17,  "w"],
         ["kill void",       5,  "k"],

@@ -125,12 +125,14 @@ def prop_list_to_nr(prop_list):
         match prop:
             case "w": # wall
                 nr |= 1
-            case "b": # bounce
+            case "b": # bullet bounce
                 nr |= 1 << 1
             case "d": # destructable
                 nr |= 1 << 2
             case "k": # kill
                 nr |= 1 << 3
+            case "e": # bullet explode
+                nr |= 1 << 4
 
             case _:
                 raise ValueError("unknown propery: {}".format(prop))

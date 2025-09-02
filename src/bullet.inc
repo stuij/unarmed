@@ -279,7 +279,7 @@ end:
     bit #tile_props::bounce
     ;; no bounce means retire bullet
     bne bounce
-    bit #tile_props::wall
+    bit #tile_props::explode
     beq end
     jsr do_bullet_impact
     bra check_destructo ;; bullet retired, but might still have done damage
