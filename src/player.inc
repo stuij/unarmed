@@ -1372,13 +1372,14 @@ player_loop:
 ;; meat
     lda sprite::move_state
     cmp #move_state::dead
-    beq player_end
+    beq next_player
 
     ;; are we instructed to shoot?
     jsr handle_shot_decision
     beq :+
     jsr handle_player_shoot
   : jsr handle_press_shield
+  next_player:
     plx
     inx
     inx
