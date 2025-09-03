@@ -69,6 +69,7 @@ select_tiles_max:
 select_tiles_max_end:
 
 
+
 .segment "BANK3"
 
 ;; backgrounds
@@ -92,6 +93,7 @@ town_coll:
 town_coll_end:
 
 
+
 .segment "BANK4"
 
 ;; city
@@ -110,19 +112,33 @@ city_palette_end:
 
 ;; title screen
 title_screen_tiles:
-; .incbin "assets/title-screen.tiles"
 .incbin "assets/splash-screen-non-text.tiles"
 title_screen_tiles_end:
 
 title_screen_map:
-; .incbin "assets/title-screen.map"
 .incbin "assets/splash-screen-non-text.map"
 title_screen_map_end:
 
 title_screen_palette:
-; .incbin "assets/title-screen.palette"
 .incbin "assets/splash-screen-non-text.palette"
 title_screen_palette_end:
+
+
+
+.segment "BANK5"
+
+;; lore screen
+lore_screen_tiles:
+.incbin "assets/title-screen.tiles"
+lore_screen_tiles_end:
+
+lore_screen_map:
+.incbin "assets/title-screen.map"
+lore_screen_map_end:
+
+lore_screen_palette:
+.incbin "assets/title-screen.palette"
+lore_screen_palette_end:
 
 
 .endif ; ASSETS_INC

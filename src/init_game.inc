@@ -52,6 +52,36 @@ INIT_GAME_INC = 1
 
 .a8
 .i16
+.proc set_lore_background
+    ; palette
+    ldy #(lore_screen_palette_end - lore_screen_palette) ; # of palette entries
+    sty <W0
+    lda #^lore_screen_palette
+    ldx #.loword(lore_screen_palette)
+    ldy #$30
+    jsr dma_to_palette
+
+    ; tiles
+    ldy #(lore_screen_tiles_end - lore_screen_tiles) ; size of transfer
+    sty <W0
+    lda #^lore_screen_tiles
+    ldx #.loword(lore_screen_tiles)
+    ldy #VRAM_BG_CHR_BASE
+    jsr dma_to_vram
+
+    ;; map
+    ldy #(lore_screen_map_end - lore_screen_map) ; size of transfer
+    sty a:W0
+    lda #^lore_screen_map
+    ldx #.loword(lore_screen_map)
+    ldy #VRAM_MAP_BG_GAME_BASE
+    jsr dma_to_vram
+    rts
+.endproc
+
+
+.a8
+.i16
 .proc init_binary_data
     ; let's copy over some binary data
     ;; first the palette
@@ -200,7 +230,6 @@ INIT_GAME_INC = 1
 .a8
 .i16
 .proc title_screen_init_music
-    jsr init_sound
 
     jsr Tad_SongsStartImmediately
 
@@ -301,8 +330,6 @@ INIT_GAME_INC = 1
     ; enable NMI, turn on automatic joypad polling
     lda #$81
     sta NMITIMEN
-
-    jsr title_screen_init_music
 
     rts
 .endproc

@@ -271,9 +271,14 @@ end:
 .a8
 .i16
 .proc main
+    jsr init_sound
     jsr title_screen_init
+    jsr title_screen_init_music
     jsr wait_for_start_loop
 
+    force_vblank
+    jsr set_lore_background
+    unforce_vblank
     ldx #.loword(lore_text)
     jsr write_lore
     jsr wait_for_start_loop
