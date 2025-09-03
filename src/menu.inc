@@ -157,6 +157,7 @@ end:
     jsr draw_init_chosen_tile
     A8
     jsr clear_menu_l3
+    jsr show_players
     A16
     jsr level_screen_to_fore
     lda #.loword(select_tile_menu)
@@ -376,6 +377,7 @@ clear_bg_behind_tiles_loop:
     jsr switch_to_menu
     A8
     jsr hide_menu_carets
+    jsr hide_players
     A16
     rts
 .endproc

@@ -329,21 +329,73 @@ loop:
 .endproc
 
 
+.a8
+.i16
 .proc hide_players
     lda #$F0
+    ;; head
     sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos
     sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $4
     sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $8
     sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $C
+    ;; body
     sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $10
     sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $14
     sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $18
     sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $1C
 
+
     rts
 .endproc
 
 
+.a8
+.i16
+.proc show_players
+    A16
+    lda a:p1 + ::sprite::y_pos
+    rshift 4
+    A8
+    ;; head
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos
+    clc
+    adc #8
+    ;; body
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $10
+
+
+    A16
+    lda a:p2 + ::sprite::y_pos
+    rshift 4
+    A8
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $4
+    clc
+    adc #8
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $14
+
+    A16
+    lda a:p3 + ::sprite::y_pos
+    rshift 4
+    A8
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $8
+    clc
+    adc #8
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $18
+
+    A16
+    lda a:p4 + ::sprite::y_pos
+    rshift 4
+    A8
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $C
+    clc
+    adc #8
+    sta OAM_PLAYER_OFFSET + ::oam_entry::y_pos + $1c
+    rts
+.endproc
+
+
+.a16
+.i16
 ;; a - player number
 .proc set_OAM_player_top_x
     ;; upper part of the 4 players are in OAM $200
