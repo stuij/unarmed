@@ -1,11 +1,12 @@
 { "schema" : [ 
-        ["passthrough",    12,  ""],
+        ["passthrough",    13,  ""],
         ["wall",           17,  "we"],
         ["bounce wall",    17,  "wb"],
         ["bullet pass",    17,  "w"],
+        ["player pass",    17,  "b"],
         ["kill void",       5,  "k"],
-        ["kill block",      2,  "wk"],
-        ["destruct wall",   2,  "wd"],
+        ["kill block",      2,  "wke"],
+        ["destruct wall",   2,  "wde"],
         ["destruct bounce", 2,  "wdb"]
     ]
 }
