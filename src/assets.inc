@@ -110,15 +110,18 @@ city_palette_end:
 
 ;; title screen
 title_screen_tiles:
-.incbin "assets/title-screen.tiles"
+; .incbin "assets/title-screen.tiles"
+.incbin "assets/splash-screen-non-text.tiles"
 title_screen_tiles_end:
 
 title_screen_map:
-.incbin "assets/title-screen.map"
+; .incbin "assets/title-screen.map"
+.incbin "assets/splash-screen-non-text.map"
 title_screen_map_end:
 
 title_screen_palette:
-.incbin "assets/title-screen.palette"
+; .incbin "assets/title-screen.palette"
+.incbin "assets/splash-screen-non-text.palette"
 title_screen_palette_end:
 
 

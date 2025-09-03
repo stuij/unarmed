@@ -13,6 +13,5 @@ superfamiconv -v \
   --out-map ${NAME}.map \
   --out-tiles-image ${NAME}-tiles.png \
   --palette-base-offset ${PALETTE_BASE_OFFSET} \
-  --no-remap \
   ${EXTRA} \
   tiles [ --bpp ${BPP} ]

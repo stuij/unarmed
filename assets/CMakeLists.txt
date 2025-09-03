@@ -4,18 +4,19 @@ target_compile_options( ${PROJECT_NAME}
     PRIVATE "SHELL:-I ${CMAKE_CURRENT_SOURCE_DIR}" )
 
 # list of backgrounds
-list(APPEND BGS town city title-screen)
+list(APPEND BGS town city title-screen splash-screen-non-text)
 # list of background palette offsets
 # we don't care about the 'town' bg palette because the maps for that
 # are generated with a python script. However for documentation, currently
 # we use palette entry 2 for that
-list(APPEND BG_PALLS 2 3 3)
+list(APPEND BG_PALLS 2 3 3 3)
+list(APPEND BG_EXTRA "--no-remap" "--no-remap" "--no-remap" "")
 
 # add the custom commands for each background tileset
-foreach(BG IN ZIP_LISTS BGS BG_PALLS)
+foreach(BG IN ZIP_LISTS BGS BG_PALLS BG_EXTRA)
   add_custom_command(
     OUTPUT ${BG_0}.map ${BG_0}.palette ${BG_0}.tiles
-    COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-bg.sh ${CMAKE_CURRENT_SOURCE_DIR}/backgrounds/${BG_0}.png ${BG_0} 4 ${BG_1}
+    COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-bg.sh ${CMAKE_CURRENT_SOURCE_DIR}/backgrounds/${BG_0}.png ${BG_0} 4 ${BG_1} ${BG_2}
     )
 
   # build a list of all the results
@@ -65,7 +66,7 @@ add_custom_command(
 
 add_custom_command(
   OUTPUT ${FONT_OUTPUT}
-  COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-bg.sh ${CMAKE_CURRENT_SOURCE_DIR}/fonts/boxy_bold.png font 2 0 --no-discard
+  COMMAND ${PROJECT_SOURCE_DIR}/bin/convert-bg.sh ${CMAKE_CURRENT_SOURCE_DIR}/fonts/boxy_bold.png font 2 0 "--no-discard --no-remap"
   )
 
 add_custom_target(ASSETS ALL DEPENDS ${BG_BINS} ${SPRITE_BINS} ${MAP_BINS} ${TAD_OUT_FILES} ${FONT_OUTPUT})
