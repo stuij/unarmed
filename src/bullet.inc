@@ -44,6 +44,17 @@ bullet_sprite_vtable:
 .addr .loword(bullet_coll_end_callback)
 .addr .loword(coll_callback_dummy)
 .addr .loword(bullet_coll_point_callback)
+.addr .loword(bullet_is_collision_callback)
+
+
+.a16
+.i16
+.proc bullet_is_collision_callback
+    lda COLL_STACK_POINT_TILE_PROPS + 2, s
+    bit #(tile_props::bounce | tile_props::explode)
+    rts
+.endproc
+
 
 bullet_bbox_default:
 .word $7  ;; y

@@ -40,6 +40,17 @@ player_sprite_vtable:
 .addr .loword(player_coll_end_callback)
 .addr .loword(player_point_no_coll_callback)
 .addr .loword(coll_callback_dummy)
+.addr .loword(player_is_collision_callback)
+
+
+.a16
+.i16
+;; A - tile props
+.proc player_is_collision_callback
+    lda COLL_STACK_POINT_TILE_PROPS + 2, s
+    bit #tile_props::wall
+    rts
+.endproc
 
 
 player_bbox_default:
@@ -767,17 +778,21 @@ end:
 
 .proc player_coll_end_callback
     lda COLL_STACK_TILE_PROPS + 2, s
-    and #tile_props::kill
+    bit #tile_props::kill
     beq after_check_kill
     jsr player_handle_kill ;; if so handle kill
     lda sprite::move_state
     cmp #move_state::dead
     beq end
 after_check_kill:
+
+    ;; out of bounds
     lda COLL_STACK_TILE_PROPS + 2, s
     and #tile_props::out_of_bounds
     ;; we're calling out of the fn with this one, and are never coming back
     bne player_handle_out_of_bounds
+
+    ;; checking move state
     lda sprite::move_state ;; only execute
     cmp #move_state::idle
     beq do_ledge_fall

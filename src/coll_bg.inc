@@ -149,7 +149,11 @@ point_x_calc:
     beq after_prop_save
     sta COLL_STACK_TILE_PROPS, s
 after_prop_save:
-    bit #tile_props::wall
+    lda sprite::vptr
+    clc
+    adc #sprite_vtable::is_collision_callback
+    tax
+    jsr (0,x)
     bne collision              ; if not zero, collision
     jmp no_coll_for_point ; otherwise, do no collision things
 out_of_bounds:
