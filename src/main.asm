@@ -1,7 +1,7 @@
 .p816   ; 65816 processor
 .smart
 
-.define ROM_NAME "demo" ; max 21 chars
+.define ROM_NAME "Unarmed" ; max 21 chars
 
 .include "defines.inc"
 .include "header.inc"

@@ -1,6 +1,6 @@
 ## what
 
-A demo project to lean how to write SNES games.
+This started as a demo project to lean how to write SNES games, and ended up as a submission for the SNESDEV-2025 game jam
 
 In it I'm slowly building the means to be able to build an actual project.
 

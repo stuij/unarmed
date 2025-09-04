@@ -5,7 +5,7 @@
         "name": "run fceux",
         "type": "node-terminal",
         "request": "launch",
-        "command": "/Applications/Mesen-2.app/Contents/MacOS/Mesen build/demo.sfc",
+        "command": "/Applications/Mesen-2.app/Contents/MacOS/Mesen build/unarmed.sfc",
         "preLaunchTask": "kill Mesen",
         "presentation": {
           "reveal": "always",
