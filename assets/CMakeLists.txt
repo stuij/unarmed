@@ -24,7 +24,6 @@ foreach(BG IN ZIP_LISTS BGS BG_PALLS BG_EXTRA)
 endforeach()
 
 
-
 # add the custom commands for each background map
 set(MAPS town-map)
 

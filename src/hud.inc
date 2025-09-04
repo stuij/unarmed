@@ -9,8 +9,12 @@ HUD_INC = 1
     lda #VRAM_MAP_FONT_BASE
     sta VMADD
     print_pad ::HUD_WIN_BASE
-    print_char 'H'
-    print_char ':'
+
+    lda #BG3_HEART_TILE_OFFSET
+    ora #$2000 ; set priority bit on tile
+    sta VMDATA
+
+    print_char ' '
     ldx #$0
     lda a:game_data + game_data::no_players
     lsr
@@ -31,8 +35,14 @@ HUD_INC = 1
     lda #(VRAM_MAP_FONT_BASE + HUD_SET_BASE)
     sta VMADD
 
-    print_char 'G'
-    print_char ':'
+
+    lda #1
+    lshift 10 ;; set palette
+    ora #BG3_TROPHY_TILE_OFFSET
+    ora #$2000 ; set priority bit on tile
+    sta VMDATA
+
+    print_char ' '
 
     ldx #$0
     lda a:game_data + game_data::no_players
