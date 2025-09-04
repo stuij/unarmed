@@ -112,15 +112,15 @@ city_palette_end:
 
 ;; title screen
 title_screen_tiles:
-.incbin "assets/splash-screen-non-text.tiles"
+.incbin "assets/title-screen.tiles"
 title_screen_tiles_end:
 
 title_screen_map:
-.incbin "assets/splash-screen-non-text.map"
+.incbin "assets/title-screen.map"
 title_screen_map_end:
 
 title_screen_palette:
-.incbin "assets/splash-screen-non-text.palette"
+.incbin "assets/title-screen.palette"
 title_screen_palette_end:
 
 
@@ -129,15 +129,15 @@ title_screen_palette_end:
 
 ;; lore screen
 lore_screen_tiles:
-.incbin "assets/title-screen.tiles"
+.incbin "assets/lore-screen.tiles"
 lore_screen_tiles_end:
 
 lore_screen_map:
-.incbin "assets/title-screen.map"
+.incbin "assets/lore-screen.map"
 lore_screen_map_end:
 
 lore_screen_palette:
-.incbin "assets/title-screen.palette"
+.incbin "assets/lore-screen.palette"
 lore_screen_palette_end:
 
 
