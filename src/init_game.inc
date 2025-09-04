@@ -345,6 +345,7 @@ INIT_GAME_INC = 1
     ; Maximum screen brightness
     lda #$0F
     sta INIDISP
+    rts
 .endproc
 
 .a8
