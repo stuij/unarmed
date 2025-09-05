@@ -167,10 +167,10 @@ lore_text:
 .byte   " born without arms. This is     "
 .byte   " very sad :'(                   "
 .byte   "                                "
-.byte   " But!! If they enter and win    "
-.byte   " in the Arm Games, they are     "
-.byte   " grafted a pair from the flesh  "
-.byte   " of their fallen foes.          "
+.byte   " But!! If they enter the Arm    "
+.byte   " Games and win, they get a      "
+.byte   " a pair of arms made from the   "
+.byte   " flesh of their fallen foes.    "
 .byte   "                                "
 .byte   " If they loose, they die!       "
 .byte   "                                "
@@ -181,19 +181,20 @@ lore_text:
 controls_text:
 .byte   " Controls                       "
 .byte   "                                "
+.byte   " X           - shoot up         "
+.byte   " Y           - shoot left       "
+.byte   " A           - shoot right      "
+.byte   " B           - shoot down       "
+.byte   "                                "
 .byte   " left, right - move             "
+.byte   "                                "
 .byte   " L           - parry bullets    "
 .byte   " R           - jump             "
-.byte   " X, Y, A, B  - shoot diamond    "
+.byte   "                                "
 .byte   " start       - pause/unpause    "
 .byte   "                                "
 .byte   " Press two adjacent shoot       "
 .byte   " buttons to shoot diagonally.   "
-.byte   "                                "
-.byte   "                                "
-.byte   "                                "
-.byte   "                                "
-.byte   "                                "
 .asciiz "                                "
 
 
@@ -208,13 +209,24 @@ between_menu_row_table:
 draw_tile_row_count: .word $1c
 
 start_game_overlay_text:
-.asciiz "    Get set to KILL!"
+.asciiz "  Ready, set, KILL!"
 
 end_game_overlay_text:
-.asciiz " wins game!!!"
+.asciiz " wins the game!!!"
 
 end_match_overlay_text:
-.asciiz " wins match!!!"
+.asciiz " wins the match!!"
+
+end_match_fetch_arms_text:
+.asciiz "Come and fetch your arms"
+end_match_fetch_arms_cont_text:
+.asciiz "in say half an hour."
+
+end_game_no_winner_text:
+.asciiz "No winner!!"
+end_game_no_winner_cont_text:
+.asciiz "Let's try again.."
+
 
 
 ;; So this seems like it is taking the soul a bit out of

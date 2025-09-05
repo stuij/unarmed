@@ -276,9 +276,45 @@ end:
 .endproc
 
 
+.proc no_winner
+    A8
+    force_vblank
+    A16
+
+    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + $3)
+    sta VMADD
+    lda #.loword(end_game_no_winner_text)
+    jsr print_string
+
+    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + $43)
+    sta VMADD
+    lda #.loword(end_game_no_winner_cont_text)
+    jsr print_string
+
+    A8
+    unforce_vblank
+    A16
+
+    ;; some general overlay things
+    ldx #OVERLAY_END_DURATION_GAME
+    ldy #OVERLAY_INPUT_MASK
+    jsr set_overlay
+
+    lda #.loword(handle_game_epilogue)
+    sta a:game_data + game_data::game_handler
+    rts
+.endproc
+
+
 ;; Y - player nr (x2)
 .proc init_game_epilogue
     stz a:game_data + game_data::in_game
+
+    tya
+    ;; if Y is negative (#FFFF), it means that there was no winner
+    ;; so we need to make that clear
+    cmp #$FFFF
+    beq no_winner
 
     lda a:player_table, y
     sta a:game_data + game_data::curr_winner
@@ -301,19 +337,30 @@ after_inc_matches:
     A8
     force_vblank
     A16
-    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + 7)
+    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START)
     sta VMADD
     tya
     lsr
     jsr print_head
     lda #.loword(end_match_overlay_text)
     jsr print_string
+
+    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + $3e)
+    sta VMADD
+    lda #.loword(end_match_fetch_arms_text)
+    jsr print_string
+
+    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + $5e)
+    sta VMADD
+    lda #.loword(end_match_fetch_arms_cont_text)
+    jsr print_string
+
     A8
     unforce_vblank
     A16
 
     ;; some general overlay things
-    ldx #OVERLAY_END_DURATION
+    ldx #OVERLAY_END_DURATION_MATCH
     ldy #OVERLAY_INPUT_MASK
     jsr set_overlay
 
@@ -326,7 +373,7 @@ still_in_match:
     A8
     force_vblank
     A16
-    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + 7)
+    lda #(VRAM_MAP_FONT_BASE + OVERLAY_TEXT_START + 2)
     sta VMADD
     tya
     lsr
@@ -338,7 +385,7 @@ still_in_match:
     A16
 
     ;; some general overlay things
-    ldx #OVERLAY_END_DURATION
+    ldx #OVERLAY_END_DURATION_GAME
     ldy #OVERLAY_INPUT_MASK
     jsr set_overlay
 

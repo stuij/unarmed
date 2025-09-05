@@ -94,7 +94,7 @@ BG4SC = $210A
 
 
 ; BG12NBA - BG1 and BG2 CHR word base address ($210B write)
-;
+
 ; 7  bit  0
 ; ---- ----
 ; BBBB AAAA

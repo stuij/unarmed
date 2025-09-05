@@ -509,7 +509,12 @@ explosion_done:
     sta 0, y
     A16
     iny
-    lda #$20
+    tyx
+    ldy bullet::player
+    lda player::nr, y ;; y will be absolute addressing
+    lshift 1
+    ora #$20 ; no flip, prio 2
+    txy
     A8
     sta 0,y
     A16

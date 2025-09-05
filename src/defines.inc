@@ -460,10 +460,11 @@ BG3_HEAD_CHAR_OFFSET = $60
 ;; -------------
 ;; overlay menus
 
-OVERLAY_TEXT_START      = (($a * $20) + $5)
-OVERLAY_START_DURATION  = (60 * 1) + 30
-OVERLAY_END_DURATION    = (60 * 2)
-OVERLAY_INPUT_MASK      = 0
+OVERLAY_TEXT_START         = (($a * $20) + $5)
+OVERLAY_START_DURATION     = (60 * 1) + 30
+OVERLAY_END_DURATION_GAME  = (60 * 3)
+OVERLAY_END_DURATION_MATCH = (60 * 5)
+OVERLAY_INPUT_MASK         = JOY_START
 
 
 ;; ----------------
