@@ -207,6 +207,11 @@ INIT_GAME_INC = 1
     sta VMADD
     lda #.loword(press_start_str)
     jsr print_string
+
+    lda #(VRAM_MAP_FONT_BASE + BY_FONT_MAP_OFFSET)
+    sta VMADD
+    lda #.loword(by_str)
+    jsr print_string
     rts
 .endproc
 

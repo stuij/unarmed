@@ -156,8 +156,8 @@ between_hitpoints_str:              .asciiz  "  hitpoints 123456789"
 between_wins_str:                   .asciiz  "games > win 123456789"
 between_level_str:                  .asciiz  "      level 123456789"
 
-
 press_start_str:                    .asciiz  "press start"
+by_str:                             .asciiz  "game by verzonken"
 
 lore_text:
 .byte   " Lore                           "
@@ -175,7 +175,12 @@ lore_text:
 .byte   " If they loose, they die!       "
 .byte   "                                "
 .byte   " They do not want to die!       "
-.asciiz " But they like arms..           "
+.byte   " But they like arms..           "
+.byte   "                                "
+.byte   "                                "
+.byte   "          press start           "
+.byte   "                                "
+.asciiz "                                "
 
 
 controls_text:
