@@ -268,7 +268,7 @@ very grateful:
   my hands.
 - RAM blanking code and CMake project code (and maybe some more snippets) by
   [georgjz](https://georgjz.github.io) at
-  (Github)[https://github.com/georgjz/snes-assembly-adventure-code]
+  [Github](https://github.com/georgjz/snes-assembly-adventure-code)
 - some misc library routines (in modified form) by [nesdoug](https://nesdoug.com)
 
 
