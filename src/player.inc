@@ -1332,7 +1332,7 @@ end:
     bne no_shoot
     ;; if shot_delay is now 0, it was 1 before, and we should shoot
     ;; but only if shoot buttons are still firing
-    lda player::joy_held
+    lda player::joy_trigger_held
     and in_game_keys + igk::shoot
     beq no_shoot ;; nothing to do
 
@@ -1343,7 +1343,7 @@ end:
     bra yes_shoot
 
 check_trigger_shot_delay:
-    lda player::joy_trigger
+    lda player::joy_trigger_held
     and in_game_keys + igk::shoot
     beq no_shoot ;; nothing to do
     lda #SHOT_DELAY_AMOUT
