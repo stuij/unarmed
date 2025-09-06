@@ -17,7 +17,8 @@ it (mechanical? biological?) so you can blow each other to bits.
 
 But don't just wacht out for your foes. The fighting arena is full of scary
 things!! Some walls bounce your bullets, some explode, and some walls even kill
-you.
+you. 10 different arenas of goodness. And if you don't like any of them, just
+use the editor and make your own.
 
 So yea, you're not in a cosy happy place. But the rewards for winning are
 big. You'd love to be able to scratch your back even once in your life. That is
@@ -28,21 +29,39 @@ worth a lot.
 
 ### How to play
 
+#### Multiplayer SNES setup
+
+For 2 players, a SNES or emulated SNES will work without any additional
+setup. However a SNES only has two controller ports, so for 3 and 4 players, you
+will need some way to plug in additional controllers. For this you should use a
+so-called SNES [multitap](https://en.wikipedia.org/wiki/Multitap).
+
+For a physical SNES you can still find plenty second-hand. I bought a
+Bomberman-branded one. Works like a charm.
+
+Most emulators or FPGA devices will have an option to use a simulated
+multitap. How to do this will vary from device to device, but the ones I tested
+(Snes9x, Mesen 2 and MiSTer) all worked without issue.
+
+If you are going to play a 3 or 4 player game an you forget to turn on multitap,
+you're going to have a bad time.
+
+
 #### Controls
 
-left, right - move
+- left, right - move
 
-`X`           - shoot up
-`Y`           - shoot left
-`A`           - shoot right
-`B`           - shoot down
+- `X` - shoot up
+- `Y` - shoot left
+- `A` - shoot right
+- `B` - shoot down
 
 Press two adjacent shoot buttons to shoot diagonally.
 
-`L`           - parry bullets
-`R`           - jump
+- `L` - parry bullets
+- `R` - jump
 
-`start`       - pause/unpause
+- `start` - pause/unpause
 
 
 #### Game behaviour
@@ -68,9 +87,13 @@ shield, they can.
 
 ##### Out of bounds and spawn portals
 
-When the game starts, each gladiator emerges from their designated spawn portal. However when a gladiator falls from the bottom of the screen, or when they go off the sides or the top, they didn't just escape. We can't let that happen! They're slaves after all.
+When the game starts, each gladiator emerges from their designated spawn
+portal. However when a gladiator falls from the bottom of the screen, or when
+they go off the sides or the top, they didn't just escape. We can't let that
+happen! They're slaves after all.
 
-Instead they will spawn randomly from one of the four spawn portals, to keep the game interesting.
+Instead they will spawn randomly from one of the four spawn portals, to keep the
+game interesting.
 
 
 #### Matches
@@ -89,7 +112,8 @@ apply).
 
 When in a game, at the top of your screen you see a bunch of gladiator heads.
 
-On the left, next to the heart the numbers next to the heads indicate how many lives they have left.
+On the left, next to the heart the numbers next to the heads indicate how many
+lives they have left.
 
 On the right, next to the trophy the numbers indicate how many games you have won.
 
@@ -98,6 +122,11 @@ On the right, next to the trophy the numbers indicate how many games you have wo
 
 In between matches and during matches when pressing `start` you will have access
 to a config screen. During a match, press `start` again to return to the match.
+
+In between matches player 1 is always the one in control of the menu.
+
+When someone presses `start` during a game to access the menu, it will be that
+person that is in control.
 
 As for meny navigation, move your cursor to the desired option and press
 `A`. When you're in a sub-screen, you can press `B` to go to the previous
@@ -114,9 +143,11 @@ During the match some of these options won't go into effect until you start a ne
   new match.
 - `edit` - Will allow you to edit the game map, also during a game. See the
   `edit` section for more info.
-- `players` - The amount of players in the game. Will go into effect when next match starts. For 3 or 4 players, you will need a multitap setup. See elsewhere in this text.
+- `players` - The amount of players in the game. Will go into effect when next
+  match starts. For 3 or 4 players, you will need a multitap setup. See
+  the `Multitap SNES setup` section at the top.
 - `hitpoints` - Clear enough I think. Will go into effect the next match.
-- `games > win' - Whoever gets to this amount of games first will win the match.
+- `games > win` - Whoever gets to this amount of games first will win the match.
 - `level` - Choose the level you want to play. If you're in a game, the level
   layout you were playing will change immediately, but the current player
   hitpoints and the position of the players and bullets will stay the same.
@@ -128,9 +159,13 @@ During the match some of these options won't go into effect until you start a ne
 
 #### Editing a level
 
-If you choose the `edit` config option, you will be dropped in the tile select screen. This will give you access to all the tile types that are used in the levels.
+If you choose the `edit` config option, you will be dropped in the tile select
+screen. This will give you access to all the tile types that are used in the
+levels.
 
-Every row is made up of different tile, which are of the same type. When you move around with the direction buttons, the text below will tell you the type of the highlighted tile.
+Every row is made up of different tile, which are of the same type. When you
+move around with the direction buttons, the text below will tell you the type of
+the highlighted tile.
 
 Button layout:
 
@@ -143,7 +178,7 @@ Button layout:
 ##### Tile types
 
 - `passthrough` - These tiles are the empty space tiles. You can't interact
-  whith them. All of them act like empty space, and are decorative, even the
+  with them. All of them act like empty space, and are decorative, even the
   cute dog-like mini deamon.
 - `wall` - No frills solid wall tiles. Players can't pass, and bullets explode
   when they hit them.
@@ -165,7 +200,8 @@ Button layout:
 
 ##### Draw mode
 
-When you select a tile from the select screen, you will see the level screen in draw mode where you can paint the level with the tile you selected.
+When you select a tile from the select screen, you will see the level screen in
+draw mode where you can paint the level with the tile you selected.
 
 Button layout for draw mode:
 
@@ -173,7 +209,7 @@ Button layout for draw mode:
 - `A` - Place tile. Hold tile and move cursor to draw the tile as you move
   around.
 - `B` - Go back to the tile select screen.
-- `x` - Flip your chosen tile horizontally.
+- `X` - Flip your chosen tile horizontally.
 - `Y` - Flip your chosen tile vertically.
 - `start` - When in a game, exit the config screen.
 
@@ -182,8 +218,8 @@ You move the caret around the screen with the direction buttons.
 
 ## Build
 
-Disclaimer:
-This setup has only been tested in a unix-like environment, on MacOS to be specific.
+Disclaimer: This setup has only been tested in a unix-like environment, on MacOS
+to be specific.
 
 ### Prerequisites
 
@@ -215,7 +251,8 @@ This setup has only been tested in a unix-like environment, on MacOS to be speci
     $ ninja
 ```
 
-This should create an `unarmed.sfc` SNES binary, and an `unarmed.dbg` file, handy for debugging in Mesen 2.
+This should create an `unarmed.sfc` SNES binary, and an `unarmed.dbg` file,
+handy for debugging in Mesen 2.
 
 
 ## Acknowledgements
@@ -229,9 +266,10 @@ very grateful:
   document. Great piece of software. MML turns out to be quite fun. Will
   hopefully explore it and the SNES sound system when I have a bit more time on
   my hands.
-
-- ram blanking code
-- misc routines
+- RAM blanking code and CMake project code (and maybe some more snippets) by
+  [georgjz](https://georgjz.github.io) at
+  (Github)[https://github.com/georgjz/snes-assembly-adventure-code]
+- some misc library routines (in modified form) by [nesdoug](https://nesdoug.com)
 
 
 ### Graphics
@@ -258,8 +296,8 @@ very grateful:
   website](https://nesdoug.com/2022/01/27/why-b21-cents/#free-samples)
 - hurt sound by [qubodup](https://opengameart.org/users/qubodup) at [Open Game
   Art](https://opengameart.org/content/15-vocal-male-strainhurtpainjump-sounds)
-- shield deflect by [qubodup](https://opengameart.org/users/qubodup) at (Open
-  Game Art)[https://opengameart.org/content/impact]
+- shield deflect by [qubodup](https://opengameart.org/users/qubodup) at [Open
+  Game Art](https://opengameart.org/content/impact)
 - gun shot by Michel Baradari at [Open Game
   Art](https://opengameart.org/content/4-projectile-launches)
 - explosion by Michel Baradari at [Open Game

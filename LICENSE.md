@@ -10,14 +10,14 @@ License text section.
 
 ## Software
 
-- Terrific Audio Driver by Marcus Rowe is licenced under the zlib License.
+- Terrific Audio Driver by Undisbeliever is licenced under the zlib License.
   It's not included in this repo, but it's expected to be downloaded as a
   sub-directory of this repo. I thought to mention it here for completeness.
 - RAM blanking code and CMake project code (and maybe some more snippets) by
   [georgjz](https://georgjz.github.io) at
   (Github)[https://github.com/georgjz/snes-assembly-adventure-code]
   - license: [MIT](https://opensource.org/license/mit)
-- some misc library routines (in modified form) by nesdoug
+- some misc library routines (in modified form) by [nesdoug](https://nesdoug.com)
   - license: public domain
 - CA65 linker file: I'm not sure. My file has elements from all three tutorials
   that I looked at, and those look quite similar to eachother, but mine is
